@@ -1,0 +1,28 @@
+# Pradhan Digital Services - robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pradhandigitalservices.in/sitemap.xml
+
+# Disallow admin and sensitive areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /agent/
+Disallow: /api/
+Disallow: /private/
+
+# Disallow search and filter pages to prevent duplicate content
+Disallow: /*?q=
+Disallow: /*?filter=
+Disallow: /*?page=
+Disallow: /*?sort=
+
+# Allow CSS, JS, and images
+Allow: /_next/static/
+Allow: /images/
+Allow: /uploads/
+
+# Crawl-delay for better server performance
+Crawl-delay: 1

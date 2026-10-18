@@ -76,8 +76,8 @@ export default function OfflineFormsPage() {
                       </div>
                     </div>
                   </div>
-                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${form.price === "Free" ? "bg-green-500/20 text-green-300" : "bg-saffron-500/20 text-saffron-300"}`}>
-                    {form.price === "Free" ? (lang === "hi" ? "मुफ्त" : "FREE") : (lang === "hi" ? "₹5 शुल्क" : "₹5 Fee")}
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${form.price === 0 ? "bg-green-500/20 text-green-300" : "bg-saffron-500/20 text-saffron-300"}`}>
+                    {form.price === 0 ? (lang === "hi" ? "मुफ्त" : "FREE") : (lang === "hi" ? `₹${form.price} शुल्क` : `₹${form.price} Fee`)}
                   </span>
                 </div>
                 
@@ -103,7 +103,7 @@ export default function OfflineFormsPage() {
                   )}
                 </div>
                 
-                {form.price !== "Free" && (
+                {form.price !== 0 && (
                   <p className="text-xs text-saffron-200/50 mt-3 text-center">
                     {lang === "hi" ? "* प्लेटफ़ॉर्म सेवा शुल्क" : "* Platform service fee"}
                   </p>

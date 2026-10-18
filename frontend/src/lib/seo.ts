@@ -134,7 +134,7 @@ export function generateSchema(options: {
       '@context': 'https://schema.org',
       '@type': 'JobPosting',
       title: options.data.title,
-      description: options.data.description,
+      description: options.data.fullDescription || options.data.description,
       datePosted: options.data.postedDate,
       validThrough: options.data.validThrough,
       hiringOrganization: {
@@ -150,7 +150,6 @@ export function generateSchema(options: {
         },
       },
       employmentType: options.data.employmentType,
-      description: options.data.fullDescription,
       identifier: {
         '@type': 'PropertyValue',
         name: options.data.advertisementNumber,

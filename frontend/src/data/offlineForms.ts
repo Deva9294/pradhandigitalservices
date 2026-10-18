@@ -9,6 +9,10 @@ export type OfflineForm = {
   price: number;
   fileSize?: string;
   state?: string;
+  department?: string;
+  language?: string;
+  updated?: string;
+  preview?: string;
 };
 
 export const offlineForms: OfflineForm[] = [

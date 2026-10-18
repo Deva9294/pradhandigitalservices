@@ -249,15 +249,15 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {item.badge === 'pending' && (
+                    {('badge' in item) && item.badge === 'pending' && (
                       <span className="w-2 h-2 bg-yellow-500 rounded-full" />
                     )}
-                    {item.count !== undefined && (
+                    {('count' in item) && item.count !== undefined && (
                       <span className="text-sm text-navy-600 dark:text-navy-300">
                         {item.count}
                       </span>
                     )}
-                    {item.value && (
+                    {('value' in item) && item.value && (
                       <span className="text-sm text-navy-600 dark:text-navy-300">
                         {item.value}
                       </span>

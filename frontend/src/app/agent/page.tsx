@@ -21,7 +21,7 @@ export default function AgentDashboard() {
     totalEarnings: 0,
     todayEarnings: 0
   });
-  const [recentApplications, setRecentApplications] = useState([]);
+  const [recentApplications, setRecentApplications] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();

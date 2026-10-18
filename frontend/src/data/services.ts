@@ -7,7 +7,11 @@ export type ServiceItem = {
   descriptionHi: string;
   price?: string;
   officialPortal?: string;
+  officialUrl?: string;
   popular?: boolean;
+  icon?: "official" | "icon";
+  iconSrc?: string;
+  iconFallback?: string;
 };
 
 export type ServiceCategory = {
@@ -186,7 +190,15 @@ export const serviceCategories: ServiceCategory[] = [
 ];
 
 export const allServices = serviceCategories.flatMap((cat) =>
-  cat.services.map((s) => ({ ...s, category: cat.slug, categoryName: cat.name, categoryNameHi: cat.nameHi }))
+  cat.services.map((s) => ({
+    ...s,
+    category: cat.slug,
+    categoryName: cat.name,
+    categoryNameHi: cat.nameHi,
+    icon: "icon" as const,
+    iconFallback: "file-text" as const,
+    officialUrl: s.officialPortal
+  }))
 );
 
 export const popularServices = allServices.filter((s) => s.popular);

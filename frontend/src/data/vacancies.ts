@@ -8,6 +8,8 @@ export type Vacancy = {
   lastDate: string;
   totalPosts: number;
   category: string;
+  department: string;
+  type: string;
   applyLink: string;
   notificationPdf?: string;
   postedDate: string;
@@ -36,6 +38,8 @@ export const sampleVacancies: Vacancy[] = [
     lastDate: "2026-08-15",
     totalPosts: 17727,
     category: "SSC",
+    department: "SSC",
+    type: "government",
     applyLink: "https://ssc.gov.in",
     postedDate: "2026-07-01",
   },
@@ -49,6 +53,8 @@ export const sampleVacancies: Vacancy[] = [
     lastDate: "2026-08-30",
     totalPosts: 11588,
     category: "Railway",
+    department: "Railways",
+    type: "government",
     applyLink: "https://rrbcdg.gov.in",
     postedDate: "2026-07-10",
   },
@@ -62,6 +68,8 @@ export const sampleVacancies: Vacancy[] = [
     lastDate: "2026-06-20",
     totalPosts: 1056,
     category: "UPSC",
+    department: "UPSC",
+    type: "government",
     applyLink: "https://upsc.gov.in",
     postedDate: "2026-02-01",
   },
@@ -75,6 +83,8 @@ export const sampleVacancies: Vacancy[] = [
     lastDate: "2026-09-01",
     totalPosts: 7500,
     category: "Police",
+    department: "Police",
+    type: "government",
     applyLink: "https://mppolice.gov.in",
     postedDate: "2026-07-15",
   },
@@ -88,6 +98,8 @@ export const sampleVacancies: Vacancy[] = [
     lastDate: "2026-08-10",
     totalPosts: 2000,
     category: "Bank",
+    department: "Banking",
+    type: "government",
     applyLink: "https://sbi.co.in",
     postedDate: "2026-07-05",
   },

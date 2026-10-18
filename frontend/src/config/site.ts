@@ -4,10 +4,10 @@ export const siteConfig = {
   description: "Private facilitation platform for government services, certificates, online forms, job updates, recharge, and bill payments.",
   
   // Contact Information
-  phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+91 98765 43210",
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210",
-  email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@pradhandigital.com",
-  address: "New Delhi, India",
+  phone: process.env.NEXT_PUBLIC_SUPPORT_NUMBER || "+91 9294899787",
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "919294899787",
+  email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@pradhandigitalservices.com",
+  address: "Rehti, Sehore, Madhya Pradesh, India",
   
   // URLs
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.com",

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ExternalLink, ArrowLeft, Shield, Clock, FileText, CheckCircle } from "lucide-react";
 import { allServices } from "@/data/services";
 import { siteConfig } from "@/config/site";
-import { ServiceIcon } from "@/components/ui/ServiceIcon";
+import ServiceIcon from "@/components/common/ServiceIcon";
 import type { Metadata } from "next";
 
 type Props = { params: Promise<{ slug: string }> };

@@ -5,14 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
 import { 
-  FileText, Clock, CheckCircle, XCircle, Wallet, 
-  Bell, Settings, User, Download, MessageCircle, ExternalLink 
+  FileText, Clock, CheckCircle, Wallet, 
+  Settings, User, MessageCircle, ExternalLink 
 } from 'lucide-react';
-import api from '@/lib/api';
+import { applicationApi } from '@/lib/api';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalApplications: 0,
@@ -23,34 +23,40 @@ export default function CustomerDashboard() {
   const [recentApplications, setRecentApplications] = useState([]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const applicationsRes = await applicationApi.mine();
+        if (cancelled) return;
+
+        const applications = applicationsRes.data?.data ?? [];
+
+        setStats({
+          totalApplications: applications.length,
+          pendingApplications: applications.filter((a: { status?: string }) =>
+            ["submitted", "documents_under_review", "processing"].includes(a.status ?? "")
+          ).length,
+          completedApplications: applications.filter((a: { status?: string }) => a.status === "completed").length,
+          walletBalance: user?.walletBalance ?? 0,
+        });
+
+        setRecentApplications(applications.slice(0, 5));
+      } catch {
+        if (!cancelled) {
+          setRecentApplications([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
     fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [applicationsRes] = await Promise.all([
-        api.get('/applications/my')
-      ]);
-
-      const applications = applicationsRes.data.data;
-      
-      setStats({
-        totalApplications: applications.length,
-        pendingApplications: applications.filter((a: any) => 
-          ['submitted', 'documents_under_review', 'processing'].includes(a.status)
-        ).length,
-        completedApplications: applications.filter((a: any) => a.status === 'completed').length,
-        walletBalance: user?.walletBalance || 0
-      });
-
-      setRecentApplications(applications.slice(0, 5));
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.walletBalance]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

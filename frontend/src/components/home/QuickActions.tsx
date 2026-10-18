@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   FileText, Search, Download, Briefcase, Ticket, 
-  Smartphone, Zap, Upload, MessageCircle, MapPin
+  Smartphone, Zap, Upload, MessageCircle
 } from "lucide-react";
+import { whatsAppUrl } from "@/lib/utils";
 
 interface QuickAction {
   icon: any;
@@ -83,7 +84,7 @@ const quickActions: QuickAction[] = [
     icon: MessageCircle,
     label: "WhatsApp Support",
     labelHi: "WhatsApp सहायता",
-    href: "https://wa.me/919294899787",
+    href: whatsAppUrl(),
     color: "bg-green-600"
   },
 ];

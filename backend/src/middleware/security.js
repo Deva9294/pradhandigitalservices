@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import { AppError } from '../utils/AppError.js';
+import AppError from '../utils/AppError.js';
 
 // Rate limiting configuration
 export const rateLimiter = rateLimit({

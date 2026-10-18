@@ -7,8 +7,19 @@ import { authRateLimiter } from '../middleware/security.js';
 
 const router = express.Router();
 
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET must be set in production');
+    }
+    return 'dev-only-jwt-secret-change-before-production';
+  }
+  return secret;
+};
+
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'pradhan-secret-key', {
+  return jwt.sign({ id }, getJwtSecret(), {
     expiresIn: '30d'
   });
 };

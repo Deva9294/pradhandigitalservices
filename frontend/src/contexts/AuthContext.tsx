@@ -7,9 +7,9 @@ type User = {
   name: string;
   email?: string;
   phone: string;
-  role: "user" | "admin";
-  walletBalance: number;
-  referralCode: string;
+  role: string;
+  walletBalance?: number;
+  referralCode?: string;
 };
 
 type AuthContextType = {
@@ -23,16 +23,30 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function parseStoredUser(raw: string | null): User | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as User;
+    if (!parsed?.id || !parsed?.name) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("pds-token");
-    const savedUser = localStorage.getItem("pds-user");
+    const savedUser = parseStoredUser(localStorage.getItem("pds-user"));
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      setUser(savedUser);
+    } else if (savedToken || localStorage.getItem("pds-user")) {
+      localStorage.removeItem("pds-token");
+      localStorage.removeItem("pds-user");
     }
   }, []);
 
@@ -58,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!user,
-        isAdmin: user?.role === "admin",
+        isAdmin: user?.role === "admin" || user?.role === "superadmin",
       }}
     >
       {children}

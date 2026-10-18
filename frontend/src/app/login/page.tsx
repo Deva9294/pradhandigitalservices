@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Phone, Mail, Lock, User, ArrowRight, Shield } from "lucide-react";
+import { Phone, Mail, Lock, User, ArrowRight, Shield, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import BrandLogo from "@/components/ui/BrandLogo";
+import api from "@/lib/api";
+import { normalizeIndianMobile, isValidIndianMobile, isValidEmail } from "@/lib/validation";
 
 export default function LoginPage() {
   const { lang } = useLanguage();
@@ -29,27 +31,32 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Mock API call - replace with actual API call
-      const response = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          method === "phone"
-            ? { phone: formData.phone, password: formData.password }
-            : { email: formData.email, password: formData.password }
-        ),
-      });
+      if (method === "phone" && !isValidIndianMobile(formData.phone)) {
+        throw new Error("Enter a valid 10-digit Indian mobile number");
+      }
+      if (method === "email" && !isValidEmail(formData.email)) {
+        throw new Error("Enter a valid email address");
+      }
 
-      const data = await response.json();
+      const payload =
+        method === "phone"
+          ? { phone: normalizeIndianMobile(formData.phone), password: formData.password }
+          : { email: formData.email.trim(), password: formData.password };
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      const { data } = await api.post("/auth/login", payload);
+
+      if (!data?.token || !data?.user) {
+        throw new Error(data?.message || "Login failed");
       }
 
       login(data.token, data.user);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (err as Error)?.message ||
+        "Login failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -61,27 +68,32 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          password: formData.password,
-        }),
+      if (!isValidIndianMobile(formData.phone)) {
+        throw new Error("Enter a valid 10-digit Indian mobile number");
+      }
+      if (formData.email.trim() && !isValidEmail(formData.email)) {
+        throw new Error("Enter a valid email address");
+      }
+
+      const { data } = await api.post("/auth/register", {
+        name: formData.name.trim(),
+        phone: normalizeIndianMobile(formData.phone),
+        email: formData.email.trim() || undefined,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+      if (!data?.token || !data?.user) {
+        throw new Error(data?.message || "Registration failed");
       }
 
       login(data.token, data.user);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (err as Error)?.message ||
+        "Registration failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -171,8 +183,12 @@ export default function LoginPage() {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-saffron-300" />
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
+                    }
                     placeholder="10-digit phone number"
                     required
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/10 bg-navy-900 text-white focus:outline-none focus:ring-2 focus:ring-saffron-500"
@@ -222,7 +238,10 @@ export default function LoginPage() {
               className="w-full py-3 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
-                "Processing..."
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
               ) : isRegister ? (
                 <>
                   Create Account <ArrowRight className="w-4 h-4" />

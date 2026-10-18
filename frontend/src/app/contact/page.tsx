@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import BrandLogo from "@/components/ui/BrandLogo";
-import { SITE_NAME, WHATSAPP_NUMBER } from "@/lib/utils";
+import { whatsAppUrl, telSupportUrl } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
+import { contactApi } from "@/lib/api";
+import { useToast } from "@/components/common/Toast";
+import { normalizeIndianMobile, validateContactForm } from "@/lib/validation";
 
 export default function ContactPage() {
   const { lang } = useLanguage();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,18 +22,44 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldError(null);
+
+    const validationError = validateContactForm(formData, {
+      emailRequired: true,
+      subjectRequired: true,
+    });
+    if (validationError) {
+      setFieldError(validationError);
+      showToast("error", validationError);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Mock API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await contactApi.submit({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: normalizeIndianMobile(formData.phone),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+        source: "contact-page",
+      });
       setSubmitted(true);
+      showToast(
+        "success",
+        lang === "hi" ? "संदेश सफलतापूर्वक भेजा गया!" : "Message sent successfully!"
+      );
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
-    } catch (error) {
-      console.error("Failed to submit:", error);
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (lang === "hi" ? "संदेश भेजने में विफल" : "Failed to send message");
+      showToast("error", message);
     } finally {
       setLoading(false);
     }
@@ -38,31 +69,31 @@ export default function ContactPage() {
     {
       icon: Phone,
       label: lang === "hi" ? "फोन" : "Phone",
-      value: "+91 98765 43210",
-      link: `tel:+919876543210`,
+      value: siteConfig.phone,
+      link: telSupportUrl(),
     },
     {
       icon: Mail,
       label: lang === "hi" ? "ईमेल" : "Email",
-      value: "support@pradhandigital.com",
-      link: "mailto:support@pradhandigital.com",
+      value: siteConfig.email,
+      link: `mailto:${siteConfig.email}`,
     },
     {
       icon: MapPin,
       label: lang === "hi" ? "पता" : "Address",
-      value: "New Delhi, India",
+      value: siteConfig.address,
       link: null,
     },
     {
       icon: Clock,
       label: lang === "hi" ? "कार्य समय" : "Working Hours",
-      value: "9:00 AM - 6:00 PM",
+      value: "9:00 AM - 7:00 PM (Mon–Sat)",
       link: null,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-navy-50 dark:bg-navy-950">
+    <div className="min-h-screen bg-navy-50 dark:bg-navy-950 overflow-x-hidden">
       <div className="container mx-auto px-4 py-10">
         <div className="text-center mb-12">
           <div className="mx-auto mb-4 inline-flex rounded-full bg-white/90 dark:bg-navy-800 p-3 shadow-xl">
@@ -72,14 +103,32 @@ export default function ContactPage() {
             {lang === "hi" ? "संपर्क करें" : "Contact Us"}
           </h1>
           <p className="text-navy-600 dark:text-navy-400">
-            {lang === "hi" ? "हमसे जुड़ें, हम आपकी मदद करने के लिए यहाँ हैं" : "Get in touch, we're here to help"}
+            {lang === "hi" ? "हमसे जुड़ें, हम आपकी मदद करने के लिए यहाँ हैं" : "Get in touch — we're here to help"}
           </p>
         </div>
 
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10 max-w-xl mx-auto">
+          <a
+            href={whatsAppUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-500 transition"
+          >
+            <MessageSquare className="w-5 h-5" />
+            {lang === "hi" ? "WhatsApp पूछताछ" : "Direct WhatsApp Inquiry"}
+          </a>
+          <a
+            href={telSupportUrl()}
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 transition"
+          >
+            <Phone className="w-5 h-5" />
+            {lang === "hi" ? "अभी कॉल करें" : "Call Now"}
+          </a>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {/* Contact Info */}
           <div className="space-y-6">
-            <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-xl p-8">
+            <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-xl p-6 sm:p-8">
               <h2 className="text-xl font-bold text-navy-900 dark:text-white mb-6">
                 {lang === "hi" ? "संपर्क जानकारी" : "Contact Information"}
               </h2>
@@ -89,64 +138,26 @@ export default function ContactPage() {
                     <div className="w-12 h-12 rounded-xl bg-saffron-100 dark:bg-saffron-900/30 flex items-center justify-center shrink-0">
                       <info.icon className="w-6 h-6 text-saffron-600" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-sm text-navy-600 dark:text-navy-400">{info.label}</div>
                       {info.link ? (
                         <a
                           href={info.link}
-                          className="font-medium text-navy-900 dark:text-white hover:text-saffron-600 transition"
+                          className="font-medium text-navy-900 dark:text-white hover:text-saffron-600 transition break-words"
                         >
                           {info.value}
                         </a>
                       ) : (
-                        <div className="font-medium text-navy-900 dark:text-white">{info.value}</div>
+                        <div className="font-medium text-navy-900 dark:text-white break-words">{info.value}</div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="mt-6 pt-6 border-t border-navy-200 dark:border-navy-700">
-                <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  {lang === "hi" ? "WhatsApp पर संपर्क करें" : "Chat on WhatsApp"}
-                </a>
-              </div>
-            </div>
-
-            {/* FAQ Preview */}
-            <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-xl p-8">
-              <h2 className="text-xl font-bold text-navy-900 dark:text-white mb-4">
-                {lang === "hi" ? "अक्सर पूछे जाने वाले प्रश्न" : "Frequently Asked Questions"}
-              </h2>
-              <div className="space-y-3">
-                <div className="p-4 bg-navy-50 dark:bg-navy-900 rounded-xl">
-                  <div className="font-medium text-navy-900 dark:text-white text-sm">
-                    {lang === "hi" ? "सेवा कितने समय में पूरी होगी?" : "How long will the service take?"}
-                  </div>
-                  <div className="text-xs text-navy-600 dark:text-navy-400 mt-1">
-                    {lang === "hi" ? "अधिकांश सेवाएं 3-7 दिनों में पूरी होती हैं" : "Most services complete in 3-7 days"}
-                  </div>
-                </div>
-                <div className="p-4 bg-navy-50 dark:bg-navy-900 rounded-xl">
-                  <div className="font-medium text-navy-900 dark:text-white text-sm">
-                    {lang === "hi" ? "भुगतान कैसे करें?" : "How to make payment?"}
-                  </div>
-                  <div className="text-xs text-navy-600 dark:text-navy-400 mt-1">
-                    {lang === "hi" ? "UPI, कार्ड, नेट बैंकिंग और वॉलेट से भुगतान करें" : "Pay via UPI, Card, Net Banking & Wallet"}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-xl p-8">
+          <div className="bg-white dark:bg-navy-800 rounded-3xl shadow-xl p-6 sm:p-8">
             <h2 className="text-xl font-bold text-navy-900 dark:text-white mb-6">
               {lang === "hi" ? "संदेश भेजें" : "Send us a message"}
             </h2>
@@ -163,6 +174,7 @@ export default function ContactPage() {
                   {lang === "hi" ? "हम जल्द ही आपसे संपर्क करेंगे" : "We'll get back to you soon"}
                 </p>
                 <button
+                  type="button"
                   onClick={() => setSubmitted(false)}
                   className="mt-4 text-saffron-600 hover:underline"
                 >
@@ -170,10 +182,15 @@ export default function ContactPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                {fieldError && (
+                  <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                    {fieldError}
+                  </p>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-2">
-                    {lang === "hi" ? "नाम" : "Name"}
+                    {lang === "hi" ? "नाम" : "Name"} *
                   </label>
                   <input
                     type="text"
@@ -185,10 +202,10 @@ export default function ContactPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-2">
-                      {lang === "hi" ? "ईमेल" : "Email"}
+                      {lang === "hi" ? "ईमेल" : "Email"} *
                     </label>
                     <input
                       type="email"
@@ -201,13 +218,20 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-2">
-                      {lang === "hi" ? "फोन" : "Phone"}
+                      {lang === "hi" ? "फोन" : "Phone"} *
                     </label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="10-digit number"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+                        })
+                      }
+                      placeholder="10-digit mobile"
                       required
                       className="w-full px-4 py-3 rounded-xl border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
                     />
@@ -216,7 +240,7 @@ export default function ContactPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-2">
-                    {lang === "hi" ? "विषय" : "Subject"}
+                    {lang === "hi" ? "विषय" : "Subject"} *
                   </label>
                   <input
                     type="text"
@@ -230,7 +254,7 @@ export default function ContactPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-navy-700 dark:text-navy-300 mb-2">
-                    {lang === "hi" ? "संदेश" : "Message"}
+                    {lang === "hi" ? "संदेश" : "Message"} *
                   </label>
                   <textarea
                     value={formData.message}
@@ -248,7 +272,10 @@ export default function ContactPage() {
                   className="w-full py-4 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    lang === "hi" ? "भेज रहा है..." : "Sending..."
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {lang === "hi" ? "भेज रहा है..." : "Sending..."}
+                    </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" /> {lang === "hi" ? "संदेश भेजें" : "Send Message"}

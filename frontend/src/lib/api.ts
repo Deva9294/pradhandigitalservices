@@ -3,6 +3,7 @@ import { API_URL } from "@/lib/utils";
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 20000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -13,6 +14,20 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== "undefined" && error?.response?.status === 401) {
+      const path = window.location.pathname;
+      if (path.startsWith("/dashboard") || path.startsWith("/admin") || path.startsWith("/agent")) {
+        localStorage.removeItem("pds-token");
+        localStorage.removeItem("pds-user");
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
 
@@ -52,4 +67,30 @@ export const adminApi = {
   getUsers: () => api.get("/admin/users"),
   getOrders: () => api.get("/admin/orders"),
   getPayments: () => api.get("/admin/payments"),
+};
+
+export const contactApi = {
+  submit: (payload: {
+    name: string;
+    email: string;
+    phone: string;
+    subject?: string;
+    message: string;
+    source?: string;
+  }) => api.post("/contact", payload),
+};
+
+export const rechargeApi = {
+  mobile: (payload: { phoneNumber: string; provider: string; amount: number }) =>
+    api.post("/recharge/mobile", payload),
+  dth: (payload: { customerId: string; provider: string; amount: number }) =>
+    api.post("/recharge/dth", payload),
+  bill: (payload: { service: string; accountNumber: string; amount: number }) =>
+    api.post("/recharge/bill", payload),
+};
+
+export const applicationApi = {
+  mine: () => api.get("/applications/my"),
+  track: (applicationId: string, phone: string) =>
+    api.get(`/applications/track/${encodeURIComponent(applicationId)}`, { params: { phone } }),
 };

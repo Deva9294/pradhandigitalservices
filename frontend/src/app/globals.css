@@ -1,126 +1,73 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme inline {
-  /* Primary Navy - Updated to match specifications */
-  --color-navy-50: #F5F7FA;
-  --color-navy-100: #E8EDF3;
-  --color-navy-200: #D1DBE6;
-  --color-navy-300: #B4C2D3;
-  --color-navy-400: #8FA3B8;
-  --color-navy-500: #6B84A0;
-  --color-navy-600: #4A6382;
-  --color-navy-700: #334E68;
-  --color-navy-800: #1E3A5F;
-  --color-navy-900: #0A2E5D;
-  --color-navy-950: #05152E;
-
-  /* Saffron Accent - Updated to match specifications */
-  --color-saffron-50: #FEF7ED;
-  --color-saffron-100: #FDE8D1;
-  --color-saffron-200: #FAD0A7;
-  --color-saffron-300: #F7B37D;
-  --color-saffron-400: #F58220;
-  --color-saffron-500: #F58220;
-  --color-saffron-600: #E5751C;
-  --color-saffron-700: #C46218;
-  --color-saffron-800: #A35214;
-  --color-saffron-900: #824410;
-
-  /* Success Green - Updated to match specifications */
-  --color-green-50: #F0FDF4;
-  --color-green-100: #DCFCE7;
-  --color-green-200: #BBF7D0;
-  --color-green-300: #86EFAC;
-  --color-green-400: #4ADE80;
-  --color-green-500: #22C55E;
-  --color-green-600: #138808;
-  --color-green-700: #15803D;
-  --color-green-800: #166534;
-  --color-green-900: #14532D;
-
-  /* Error Red - Updated to match specifications */
-  --color-red-50: #FEF2F2;
-  --color-red-100: #FEE2E2;
-  --color-red-200: #FECACA;
-  --color-red-300: #FCA5A5;
-  --color-red-400: #F87171;
-  --color-red-500: #EF4444;
-  --color-red-600: #D92D20;
-  --color-red-700: #B91C1C;
-  --color-red-800: #991B1B;
-  --color-red-900: #7F1D1D;
-
-  /* Text Colors - Updated to match specifications */
-  --color-text-primary: #172033;
-  --color-text-muted: #667085;
-  --color-text-light: #9CA3AF;
-
-  /* Background Colors - Updated to match specifications */
-  --color-bg-light: #F5F7FA;
-  --color-bg-white: #FFFFFF;
-
-  /* Fonts - Added Noto Sans Devanagari for Hindi */
-  --font-sans: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-hindi: "Noto Sans Devanagari", system-ui, sans-serif;
+* {
+  box-sizing: border-box;
 }
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-bg-light text-text-primary antialiased;
-    font-family: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-  }
-
-  /* Hindi text optimization */
-  [lang="hi"], .hindi-text {
-    font-family: "Noto Sans Devanagari", system-ui, sans-serif;
-    line-height: 1.8;
-  }
-
-  /* Dark mode */
-  .dark body {
-    @apply bg-navy-950 text-white;
-  }
-
-  /* Focus states for accessibility */
-  *:focus-visible {
-    @apply outline-none ring-2 ring-saffron-500 ring-offset-2 ring-offset-white;
-  }
-
-  .dark *:focus-visible {
-    @apply ring-offset-navy-950;
-  }
-
-  /* Heading hierarchy */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-navy-900 dark:text-white;
-    line-height: 1.2;
-  }
-
-  h1 { @apply text-3xl md:text-4xl lg:text-5xl; }
-  h2 { @apply text-2xl md:text-3xl lg:text-4xl; }
-  h3 { @apply text-xl md:text-2xl lg:text-3xl; }
-  h4 { @apply text-lg md:text-xl lg:text-2xl; }
-  h5 { @apply text-base md:text-lg lg:text-xl; }
-  h6 { @apply text-sm md:text-base lg:text-lg; }
-
-  /* Link styles */
-  a {
-    @apply text-saffron-600 hover:text-saffron-700 transition-colors;
-  }
-
-  .dark a {
-    @apply text-saffron-400 hover:text-saffron-300;
-  }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
-@layer utilities {
-  /* Professional card styles (replacing excessive glass effects) */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  @apply bg-bg-light text-text-primary antialiased;
+  font-family: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Hindi text optimization */
+[lang="hi"], .hindi-text {
+  font-family: "Noto Sans Devanagari", system-ui, sans-serif;
+  line-height: 1.8;
+}
+
+/* Dark mode */
+.dark body {
+  @apply bg-navy-950 text-white;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  @apply outline-none ring-2 ring-saffron-500 ring-offset-2 ring-offset-white;
+}
+
+.dark *:focus-visible {
+  @apply ring-offset-navy-950;
+}
+
+/* Heading hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold text-navy-900 dark:text-white;
+  line-height: 1.2;
+}
+
+h1 { @apply text-3xl md:text-4xl lg:text-5xl; }
+h2 { @apply text-2xl md:text-3xl lg:text-4xl; }
+h3 { @apply text-xl md:text-2xl lg:text-3xl; }
+h4 { @apply text-lg md:text-xl lg:text-2xl; }
+h5 { @apply text-base md:text-lg lg:text-xl; }
+h6 { @apply text-sm md:text-base lg:text-lg; }
+
+/* Link styles */
+a {
+  @apply text-saffron-600 hover:text-saffron-700 transition-colors;
+}
+
+.dark a {
+  @apply text-saffron-400 hover:text-saffron-300;
+}
+
+@layer components {
   .card {
     @apply bg-white dark:bg-navy-800 border border-navy-200 dark:border-navy-700 rounded-lg shadow-sm;
   }
@@ -129,7 +76,6 @@
     @apply card hover:shadow-md hover:border-saffron-300 dark:hover:border-saffron-600 transition-all duration-200;
   }
 
-  /* Professional button styles */
   .btn-primary {
     @apply bg-saffron-600 hover:bg-saffron-700 text-white font-medium rounded-lg transition-colors duration-200;
   }
@@ -142,7 +88,6 @@
     @apply border-2 border-saffron-600 text-saffron-600 hover:bg-saffron-50 dark:hover:bg-saffron-900/20 font-medium rounded-lg transition-colors duration-200;
   }
 
-  /* Badge styles */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
@@ -163,7 +108,6 @@
     @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
   }
 
-  /* Skeleton loader */
   .skeleton {
     @apply bg-navy-200 dark:bg-navy-700 animate-pulse rounded;
   }
@@ -180,12 +124,10 @@
     @apply skeleton h-10 w-10 rounded-full;
   }
 
-  /* Loading states */
   .loading-spinner {
     @apply animate-spin rounded-full h-4 w-4 border-2 border-saffron-600 border-t-transparent;
   }
 
-  /* Empty state */
   .empty-state {
     @apply flex flex-col items-center justify-center py-12 text-center;
   }
@@ -197,8 +139,9 @@
   .empty-state-text {
     @apply text-navy-600 dark:text-navy-400 text-sm;
   }
+}
 
-  /* Professional shadow system */
+@layer utilities {
   .shadow-sm {
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
@@ -215,7 +158,6 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
-  /* Animation utilities (light and professional) */
   .animate-fade-in {
     animation: fade-in 0.3s ease-out;
   }
@@ -225,12 +167,8 @@
   }
 
   @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slide-up {
@@ -244,7 +182,6 @@
     }
   }
 
-  /* Responsive text sizes */
   .text-responsive-xs {
     @apply text-xs sm:text-sm;
   }
@@ -261,7 +198,6 @@
     @apply text-lg sm:text-xl lg:text-2xl;
   }
 
-  /* Container utilities */
   .container-narrow {
     @apply container mx-auto px-4 max-w-4xl;
   }
@@ -270,7 +206,6 @@
     @apply container mx-auto px-4 max-w-7xl;
   }
 
-  /* Section spacing */
   .section {
     @apply py-12 md:py-16 lg:py-20;
   }
@@ -279,7 +214,6 @@
     @apply py-8 md:py-12;
   }
 
-  /* Grid utilities */
   .grid-responsive {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
   }
@@ -288,7 +222,6 @@
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
   }
 
-  /* Accessibility utilities */
   .sr-only {
     @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
   }
@@ -297,7 +230,6 @@
     @apply static w-auto h-auto p-0 m-0 overflow-visible whitespace-normal;
   }
 
-  /* Skip link for accessibility */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-saffron-600 focus:text-white focus:px-4 focus:py-2 focus:rounded;
   }

@@ -16,7 +16,11 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const secret = process.env.JWT_SECRET;
+    const secret =
+      process.env.JWT_SECRET ||
+      (process.env.NODE_ENV !== 'production'
+        ? 'dev-only-jwt-secret-change-before-production'
+        : undefined);
     if (!secret) {
       return res.status(500).json({
         success: false,

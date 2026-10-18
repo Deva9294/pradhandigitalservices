@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Smartphone, Tv, IndianRupee, Zap, Clock, Shield, Lightbulb, Droplets, Flame, CreditCard, Wifi, Car, Home, AlertCircle } from "lucide-react";
+import { Smartphone, Tv, IndianRupee, Zap, Clock, Shield, Lightbulb, Droplets, Flame, CreditCard, Wifi, Car, AlertCircle, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { siteConfig } from "@/config/site";
+import { whatsAppUrl } from "@/lib/utils";
+import { rechargeApi } from "@/lib/api";
+import { useToast } from "@/components/common/Toast";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/validation";
 
 type RechargeType = "mobile" | "dth" | "electricity" | "water" | "gas" | "broadband" | "fastag" | "creditcard";
 
 export default function RechargePage() {
   const { lang } = useLanguage();
+  const { showToast } = useToast();
   const [type, setType] = useState<RechargeType>("mobile");
   const [number, setNumber] = useState("");
   const [provider, setProvider] = useState("");
@@ -44,33 +48,52 @@ export default function RechargePage() {
 
   const handleRecharge = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      const endpoint = type === "mobile" ? "/api/recharge/mobile" : type === "dth" ? "/api/recharge/dth" : "/api/recharge/bill";
-      const payload = type === "mobile" 
-        ? { phoneNumber: number, provider, amount: parseInt(amount) }
-        : type === "dth"
-        ? { customerId: number, provider, amount: parseInt(amount) }
-        : { service: type, accountNumber: number, amount: parseInt(amount) };
-
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Recharge failed");
+      if ((type === "mobile" || type === "dth") && !provider) {
+        throw new Error(lang === "hi" ? "प्रोवाइडर चुनें" : "Select a provider");
+      }
+      if (type === "mobile" && !isValidIndianMobile(number)) {
+        throw new Error(lang === "hi" ? "वैध 10 अंकों का मोबाइल नंबर दर्ज करें" : "Enter a valid 10-digit mobile number");
+      }
+      if (type !== "mobile" && !number.trim()) {
+        throw new Error(lang === "hi" ? "खाता विवरण दर्ज करें" : "Enter account details");
+      }
+      const parsedAmount = parseInt(amount, 10);
+      if (!parsedAmount || parsedAmount < 10) {
+        throw new Error(lang === "hi" ? "वैध राशि दर्ज करें" : "Enter a valid amount");
       }
 
-      alert(lang === "hi" ? "रिचार्ज सफल!" : "Recharge successful!");
+      setLoading(true);
+
+      const { data } =
+        type === "mobile"
+          ? await rechargeApi.mobile({
+              phoneNumber: normalizeIndianMobile(number),
+              provider,
+              amount: parsedAmount,
+            })
+          : type === "dth"
+            ? await rechargeApi.dth({ customerId: number.trim(), provider, amount: parsedAmount })
+            : await rechargeApi.bill({ service: type, accountNumber: number.trim(), amount: parsedAmount });
+
+      showToast("success", data?.message || (lang === "hi" ? "रिचार्ज सफल!" : "Recharge successful!"));
       setNumber("");
       setAmount("");
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (error as Error)?.message ||
+        (lang === "hi" ? "रिचार्ज विफल" : "Recharge failed");
+      showToast(
+        "error",
+        status === 401
+          ? lang === "hi"
+            ? "भुगतान के लिए लॉगिन करें"
+            : "Please login to continue payment"
+          : message
+      );
     } finally {
       setLoading(false);
     }
@@ -229,10 +252,14 @@ export default function RechargePage() {
                 disabled={loading}
                 className="w-full py-4 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading 
-                  ? lang === "hi" ? "प्रक्रिया में..." : "Processing..."
-                  : `${lang === "hi" ? "भुगतान करें" : "Pay"} ₹${amount}`
-                }
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {lang === "hi" ? "प्रक्रिया में..." : "Processing..."}
+                  </span>
+                ) : (
+                  `${lang === "hi" ? "भुगतान करें" : "Pay"} ₹${amount || "0"}`
+                )}
               </button>
             </form>
 
@@ -251,7 +278,7 @@ export default function RechargePage() {
             {/* Contact Support */}
             <div className="mt-4 text-center">
               <a 
-                href={`https://wa.me/${siteConfig.whatsapp}`}
+                href={whatsAppUrl(`Hi, I need help with a ${type} recharge on Pradhan Digital Services.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-saffron-400 hover:text-saffron-300"

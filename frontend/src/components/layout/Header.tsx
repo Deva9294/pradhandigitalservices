@@ -11,7 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import BrandLogo from "@/components/ui/BrandLogo";
-import { cn, WHATSAPP_NUMBER, SUPPORT_NUMBER } from "@/lib/utils";
+import { cn, telSupportUrl, whatsAppUrl } from "@/lib/utils";
 
 const MAIN_NAV_LINKS = [
   { href: "/", key: "home" as const },
@@ -84,6 +84,13 @@ export default function Header() {
     setCurrentDate(now.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", options));
   }, [lang]);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   const toggleCategory = (title: string) => {
     setExpandedCategories(prev => ({ ...prev, [title]: !prev[title] }));
   };
@@ -126,20 +133,20 @@ export default function Header() {
               </span>
               
               <a 
-                href={`tel:${SUPPORT_NUMBER}`} 
+                href={telSupportUrl()} 
                 className="flex items-center gap-1 hover:text-saffron-300 transition"
-                aria-label="Call support"
+                aria-label="Call Now"
               >
                 <Phone className="w-3 h-3" />
-                <span className="hidden sm:inline">{SUPPORT_NUMBER}</span>
+                <span className="hidden sm:inline">Call Now</span>
               </a>
               
               <a 
-                href={`https://wa.me/${WHATSAPP_NUMBER}`} 
+                href={whatsAppUrl()} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center gap-1 hover:text-saffron-300 transition"
-                aria-label="WhatsApp support"
+                aria-label="Direct WhatsApp Inquiry"
               >
                 <Phone className="w-3 h-3" />
                 <span className="hidden sm:inline">WhatsApp</span>
@@ -203,17 +210,21 @@ export default function Header() {
             </Link>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-xl mx-8">
+            <form
+              action="/services"
+              className="hidden md:flex flex-1 max-w-xl mx-8"
+            >
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
                 <input
                   type="search"
+                  name="q"
                   id="global-search"
                   placeholder={lang === "hi" ? "आधार, पैन, आयुष्मान, पीएम किसान खोजें..." : "Search Aadhaar, PAN, Ayushman, PM Kisan..."}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-navy-200 dark:border-navy-700 bg-navy-50 dark:bg-navy-800 text-navy-900 dark:text-white placeholder-navy-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 focus:border-transparent transition"
                 />
               </div>
-            </div>
+            </form>
 
             <div className="flex items-center gap-2 md:gap-3">
               {/* Track Application Button */}
@@ -319,21 +330,22 @@ export default function Header() {
 
       {/* Mobile Menu */}
       <div className={cn(
-        "lg:hidden overflow-hidden transition-all duration-300 bg-white dark:bg-navy-950 border-t border-navy-200 dark:border-navy-700",
-        open ? "max-h-screen" : "max-h-0"
+        "lg:hidden overflow-y-auto transition-all duration-300 bg-white dark:bg-navy-950 border-t border-navy-200 dark:border-navy-700",
+        open ? "max-h-[80vh]" : "max-h-0 overflow-hidden"
       )}>
         <div className={`container mx-auto px-4 py-4 ${textSizeClass}`}>
           {/* Mobile Search */}
-          <div className="mb-4">
+          <form action="/services" className="mb-4" onSubmit={() => setOpen(false)}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400" />
               <input
                 type="search"
+                name="q"
                 placeholder={lang === "hi" ? "सेवाएँ खोजें..." : "Search services..."}
                 className="w-full pl-10 pr-4 py-3 rounded-lg border border-navy-200 dark:border-navy-700 bg-navy-50 dark:bg-navy-800 text-navy-900 dark:text-white placeholder-navy-400 focus:outline-none focus:ring-2 focus:ring-saffron-500"
               />
             </div>
-          </div>
+          </form>
 
           {/* Mobile Track Application */}
           <Link 

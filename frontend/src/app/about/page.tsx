@@ -1,3 +1,5 @@
+"use client";
+
 import { ShieldCheck, Target, Users, HandHeart, Phone, Mail, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { siteConfig } from "@/config/site";

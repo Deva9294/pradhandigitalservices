@@ -235,7 +235,7 @@ export const cropSignature = catchAsync(async (req, res) => {
     const imageBuffer = await fs.readFile(outputPath);
 
     res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Content-Disposition: 'attachment; filename="signature_cropped.jpg"');
+    res.setHeader('Content-Disposition', 'attachment; filename="signature_cropped.jpg"');
     res.send(imageBuffer);
 
   } finally {

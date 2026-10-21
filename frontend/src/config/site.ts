@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Pradhan Digital Services",
-  tagline: "Digital Seva Portal",
+  tagline: "Digital Solutions | Real Results | Better Tomorrow",
   description: "Private facilitation platform for government services, certificates, online forms, job updates, recharge, and bill payments.",
   
   // Contact Information

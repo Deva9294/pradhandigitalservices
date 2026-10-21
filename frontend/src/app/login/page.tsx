@@ -104,9 +104,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="glass-panel rounded-[36px] border border-white/10 shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="mx-auto mb-4 rounded-full bg-saffron-500/15 p-4 shadow-xl inline-flex">
-              <BrandLogo compact />
-            </div>
+            <Link href="/" className="inline-block mx-auto mb-4 group" title="Return to Home">
+              <div className="relative transition-transform transform group-hover:scale-105 duration-300">
+                <div className="absolute -inset-2 rounded-3xl bg-amber-500/25 blur-lg opacity-60 group-hover:opacity-100 transition duration-300" />
+                <BrandLogo compact size="xl" className="relative shadow-2xl" />
+              </div>
+            </Link>
             <h1 className="text-2xl font-bold text-white">
               {isRegister
                 ? lang === "hi"

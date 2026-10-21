@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { siteConfig } from "@/config/site";
+import BrandLogo from "@/components/ui/BrandLogo";
 
 export default function Footer() {
   const { lang, t } = useLanguage();
@@ -19,11 +20,10 @@ export default function Footer() {
     <footer className="bg-gradient-to-b from-navy-900 to-navy-950 text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-bold text-xl mb-4 text-saffron-400">{siteConfig.name}</h3>
-            <p className="text-sm text-navy-300 leading-relaxed mb-4">
-              {siteConfig.tagline}
-            </p>
+          <div className="space-y-4">
+            <Link href="/" className="inline-block group">
+              <BrandLogo size="lg" tagline="Digital Solutions | Real Results | Better Tomorrow" />
+            </Link>
             <p className="text-xs text-navy-400 leading-relaxed">
               {siteConfig.description}
             </p>

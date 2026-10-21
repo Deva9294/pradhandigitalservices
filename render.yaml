@@ -1,5 +1,5 @@
 services:
-  # Backend API Service
+  # 1. Backend API Service
   - type: web
     name: pradhan-backend
     env: node
@@ -7,6 +7,8 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
@@ -15,8 +17,12 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: FRONTEND_URL
+        value: https://pradhandigitalservices.in,https://pradhan-frontend.onrender.com
+      - key: ADMIN_DEFAULT_PASSWORD
+        sync: false
+      - key: AGENT_DEFAULT_PASSWORD
         sync: false
       - key: RAZORPAY_KEY_ID
         sync: false
@@ -42,5 +48,24 @@ services:
         sync: false
       - key: SMTP_FROM_NAME
         sync: false
-      - key: API_KEY
-        sync: false
+
+  # 2. Frontend Next.js Web Service
+  - type: web
+    name: pradhan-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://pradhandigitalservices.in
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: pradhan-backend
+          property: host

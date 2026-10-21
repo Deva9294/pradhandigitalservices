@@ -7,13 +7,19 @@ export function cn(...inputs: ClassValue[]) {
 
 export const SITE_NAME = "Pradhan Digital Services";
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.in";
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://pradhan-backend.onrender.com/api"
+    : "http://localhost:8000/api");
 
 /** Express origin (no /api suffix) for fetch calls that include /api/... in the path */
 export const API_ORIGIN =
   process.env.NEXT_PUBLIC_API_ORIGIN ||
   API_URL.replace(/\/api\/?$/, "") ||
-  "http://localhost:8000";
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://pradhan-backend.onrender.com"
+    : "http://localhost:8000");
 
 export const WHATSAPP_PREFILL =
   "Hi, I need help with Pradhan Digital Services (Rehti, Sehore, MP).";

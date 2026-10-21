@@ -58,8 +58,13 @@ export const walletApi = {
 };
 
 export const vacancyApi = {
-  getAll: (params?: Record<string, string>) => api.get("/vacancies", { params }),
+  getAll: (params?: Record<string, string | number | boolean>) => api.get("/vacancies", { params }),
   getById: (id: string) => api.get(`/vacancies/${id}`),
+  getBySlug: (slug: string) => api.get(`/vacancies/${slug}`),
+  getSummaryCounts: () => api.get("/vacancies/summary/counts"),
+  applyAssistance: (vacancyId: string, payload: Record<string, any>) =>
+    api.post(`/vacancies/${vacancyId}/apply-assistance`, payload),
+  manualSync: () => api.post("/vacancies/sync/manual"),
 };
 
 export const adminApi = {

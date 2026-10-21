@@ -51,7 +51,7 @@ export default function Footer() {
               {[
                 ["/", "Home"],
                 ["/services", t.nav.services],
-                ["/vacancies", t.nav.vacancies],
+                ["/vacancy-update", t.nav.vacancies],
                 ["/offline-forms", t.nav.forms],
                 ["/recharge", t.nav.recharge],
                 ["/news", t.nav.news],

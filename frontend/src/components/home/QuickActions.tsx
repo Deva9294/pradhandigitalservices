@@ -40,9 +40,9 @@ const quickActions: QuickAction[] = [
   },
   {
     icon: Briefcase,
-    label: "Latest Vacancy",
-    labelHi: "नवीनतम भर्ती",
-    href: "/vacancies",
+    label: "Vacancy Update",
+    labelHi: "वैकेंसी अपडेट",
+    href: "/vacancy-update",
     color: "bg-orange-500"
   },
   {

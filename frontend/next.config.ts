@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
+  async redirects() {
+    return [
+      {
+        source: "/vacancies",
+        destination: "/vacancy-update",
+        permanent: true,
+      },
+      {
+        source: "/vacancies/:id",
+        destination: "/vacancy-update/:id",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

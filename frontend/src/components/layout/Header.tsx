@@ -17,7 +17,7 @@ const MAIN_NAV_LINKS = [
   { href: "/", key: "home" as const },
   { href: "/services", key: "services" as const },
   { href: "/government-schemes", key: "schemes" as const },
-  { href: "/vacancies", key: "vacancies" as const },
+  { href: "/vacancy-update", key: "vacancies" as const },
   { href: "/admit-cards", key: "admitCards" as const },
   { href: "/results", key: "results" as const },
   { href: "/exam-calendar", key: "examCalendar" as const },
@@ -42,7 +42,7 @@ const MOBILE_NAV_CATEGORIES = [
   {
     title: "Jobs & Exams",
     items: [
-      { href: "/vacancies", label: "Latest Vacancies" },
+      { href: "/vacancy-update", label: "Vacancy Update" },
       { href: "/admit-cards", label: "Admit Cards" },
       { href: "/results", label: "Results" },
       { href: "/exam-calendar", label: "Exam Calendar" },

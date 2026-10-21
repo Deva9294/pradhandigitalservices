@@ -19,41 +19,41 @@ const sampleMarqueeItems: MarqueeItem[] = [
   {
     id: "1",
     type: "vacancy",
-    title: "MP Police Constable Recruitment 2026 - 4000 Posts",
-    titleHi: "एमपी पुलिस कांस्टेबल भर्ती 2026 - 4000 पद",
-    url: "/vacancies/mp-police-constable-2026",
+    title: "MP Police Constable (GD & Radio) 2026 - 7500 Posts Open",
+    titleHi: "एमपी पुलिस आरक्षक (जीडी व रेडियो) 2026 - 7500 पद आवेदन शुरू",
+    url: "/vacancy-update/mp-police-constable-gd-radio-recruitment-2026",
     priority: "urgent"
   },
   {
     id: "2",
     type: "deadline",
-    title: "UPSC CSE 2026 Application Deadline: March 31",
-    titleHi: "यूपीएससी सीएसई 2026 आवेदन की अंतिम तिथि: 31 मार्च",
-    url: "/vacancies/upsc-cse-2026",
+    title: "Railway RRB ALP & Technician - Deadline Approaching!",
+    titleHi: "रेलवे आरआरबी एएलपी एवं तकनीशियन - अंतिम तिथि निकट!",
+    url: "/vacancy-update/rrb-alp-technician-centralized-recruitment-2026",
     priority: "critical"
   },
   {
     id: "3",
-    type: "admit_card",
-    title: "SSC CGL 2026 Tier 1 Admit Card Released",
-    titleHi: "एसएससी सीजीएल 2026 टियर 1 प्रवेश पत्र जारी",
-    url: "/admit-cards/ssc-cgl-2026",
-    priority: "normal"
+    type: "vacancy",
+    title: "MPESB Sub Engineer & Group 3 Combined Exam 2026 - Apply Online",
+    titleHi: "एमपीईएसबी उप अभियंता एवं ग्रुप-3 भर्ती 2026 - ऑनलाइन आवेदन जारी",
+    url: "/vacancy-update/mpesb-group-3-sub-engineer-recruitment-2026",
+    priority: "urgent"
   },
   {
     id: "4",
-    type: "result",
-    title: "CBSE Board Exam 2026 Class 10 Results Declared",
-    titleHi: "सीबीएसई बोर्ड परीक्षा 2026 कक्षा 10 के परिणाम घोषित",
-    url: "/results/cbse-class-10-2026",
+    type: "admit_card",
+    title: "SSC CGL 2026 Application Portal Active - Live Photo Standard",
+    titleHi: "एसएससी सीजीएल 2026 आवेदन पोर्टल सक्रिय - लाइव फोटो नियम लागू",
+    url: "/vacancy-update/ssc-combined-graduate-level-cgl-exam-2026",
     priority: "normal"
   },
   {
     id: "5",
     type: "scheme",
-    title: "PM Kisan 15th Installment Released - Check Status",
-    titleHi: "पीएम किसान 15वीं किस्त जारी - स्थिति जांचें",
-    url: "/government-schemes/pm-kisan-15th-installment",
+    title: "PM Kisan Samman Nidhi & Ladli Behna Yojana Status Verification",
+    titleHi: "पीएम किसान सम्मान निधि एवं लाड़ली बहना योजना स्थिति जांचें",
+    url: "/services",
     priority: "urgent"
   },
 ];

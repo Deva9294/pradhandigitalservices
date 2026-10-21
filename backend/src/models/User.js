@@ -22,7 +22,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
     trim: true,
-    sparse: true
+    sparse: true,
+    default: undefined,
+    set: function(val) {
+      if (!val || typeof val !== 'string' || val.trim() === '') return undefined;
+      return val.toLowerCase().trim();
+    }
   },
   phone: {
     type: String,
@@ -38,8 +43,14 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'agent', 'staff', 'editor', 'admin', 'superadmin'],
-    default: 'customer'
+    enum: ['customer', 'user', 'agent', 'staff', 'editor', 'admin', 'superadmin'],
+    default: 'customer',
+    set: function(val) {
+      if (!val) return 'customer';
+      const clean = String(val).toLowerCase().trim();
+      if (clean === 'user') return 'customer';
+      return clean;
+    }
   },
   roleRef: {
     type: mongoose.Schema.Types.ObjectId,
@@ -155,6 +166,17 @@ const userSchema = new mongoose.Schema({
   deletedAt: Date
 }, {
   timestamps: true
+});
+
+// Normalize and validate before schema validation
+userSchema.pre('validate', function(next) {
+  if (this.role === 'user') {
+    this.role = 'customer';
+  }
+  if (!this.email || (typeof this.email === 'string' && this.email.trim() === '')) {
+    this.email = undefined;
+  }
+  next();
 });
 
 // Hash password before saving

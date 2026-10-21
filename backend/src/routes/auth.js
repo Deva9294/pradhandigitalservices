@@ -64,7 +64,9 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     });
   }
 
-  email = email ? email.toLowerCase().trim() : undefined;
+  email = (email && typeof email === 'string' && email.trim() !== '')
+    ? email.toLowerCase().trim()
+    : undefined;
 
   // Build query to check duplicates
   const duplicateQuery = [{ phone }];

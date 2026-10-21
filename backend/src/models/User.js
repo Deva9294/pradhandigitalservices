@@ -20,15 +20,15 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Please provide an email'],
-    unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    sparse: true
   },
   phone: {
     type: String,
     required: [true, 'Please provide a phone number'],
-    unique: true
+    unique: true,
+    trim: true
   },
   password: {
     type: String,
@@ -172,6 +172,5 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.index({ email: 1, isActive: 1 });
 userSchema.index({ phone: 1, isActive: 1 });
 userSchema.index({ role: 1 });
-userSchema.index({ referralCode: 1 });
 
 export default mongoose.model('User', userSchema);

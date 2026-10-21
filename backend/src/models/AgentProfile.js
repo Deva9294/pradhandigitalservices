@@ -96,8 +96,6 @@ const agentProfileSchema = new mongoose.Schema({
   timestamps: true
 });
 
-agentProfileSchema.index({ user: 1 });
-agentProfileSchema.index({ agentCode: 1 });
 agentProfileSchema.index({ kycStatus: 1, isActive: 1 });
 
 export default mongoose.model('AgentProfile', agentProfileSchema);

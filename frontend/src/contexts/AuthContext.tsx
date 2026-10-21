@@ -2,14 +2,18 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type User = {
+export type UserRole = "customer" | "agent" | "staff" | "editor" | "admin" | "superadmin";
+
+export type User = {
   id: string;
   name: string;
   email?: string;
   phone: string;
-  role: string;
+  role: UserRole | string;
   walletBalance?: number;
   referralCode?: string;
+  agentCode?: string;
+  avatar?: string;
 };
 
 type AuthContextType = {
@@ -19,6 +23,9 @@ type AuthContextType = {
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isAgent: boolean;
+  isCustomer: boolean;
+  getRoleRedirect: (overrideRole?: string) => string;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +39,16 @@ function parseStoredUser(raw: string | null): User | null {
   } catch {
     return null;
   }
+}
+
+export function getRoleRedirect(role?: string): string {
+  if (role === "admin" || role === "superadmin") {
+    return "/admin";
+  }
+  if (role === "agent" || role === "staff") {
+    return "/agent";
+  }
+  return "/dashboard";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -64,6 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("pds-user");
   };
 
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isAgent = user?.role === "agent" || user?.role === "staff";
+  const isCustomer = !isAdmin && !isAgent;
+
   return (
     <AuthContext.Provider
       value={{
@@ -72,7 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!user,
-        isAdmin: user?.role === "admin" || user?.role === "superadmin",
+        isAdmin,
+        isAgent,
+        isCustomer,
+        getRoleRedirect: (overrideRole) => getRoleRedirect(overrideRole || user?.role),
       }}
     >
       {children}

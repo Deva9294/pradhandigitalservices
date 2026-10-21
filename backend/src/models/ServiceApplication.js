@@ -193,7 +193,6 @@ serviceApplicationSchema.pre('save', function generateApplicationId(next) {
 });
 
 // Indexes
-serviceApplicationSchema.index({ applicationId: 1 });
 serviceApplicationSchema.index({ user: 1, status: 1 });
 serviceApplicationSchema.index({ agent: 1 });
 serviceApplicationSchema.index({ service: 1 });

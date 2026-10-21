@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, ExternalLink } from "lucide-react";
+import { Play, Pause, ExternalLink, FileText, Clock, Ticket, BarChart3, Gift, Bell } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Link from "next/link";
 
@@ -71,15 +71,14 @@ export default function MarqueeSection() {
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const renderTypeIcon = (type: string) => {
     switch (type) {
-      case "vacancy": return "📋";
-      case "deadline": return "⏰";
-      case "admit_card": return "🎫";
-      case "result": return "📊";
-      case "scheme": return "🎁";
-      case "notice": return "📢";
-      default: return "📌";
+      case "vacancy": return <FileText className="w-3.5 h-3.5 text-blue-400" />;
+      case "deadline": return <Clock className="w-3.5 h-3.5 text-red-400" />;
+      case "admit_card": return <Ticket className="w-3.5 h-3.5 text-purple-400" />;
+      case "result": return <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />;
+      case "scheme": return <Gift className="w-3.5 h-3.5 text-saffron-400" />;
+      default: return <Bell className="w-3.5 h-3.5 text-amber-400" />;
     }
   };
 
@@ -124,7 +123,7 @@ export default function MarqueeSection() {
                   <div className={`w-2 h-2 rounded-full ${getPriorityColor(item.priority)}`} />
                   
                   {/* Type Icon */}
-                  <span className="text-lg">{getTypeIcon(item.type)}</span>
+                  <span className="flex items-center">{renderTypeIcon(item.type)}</span>
                   
                   {/* Title */}
                   <span className="text-sm text-navy-700 dark:text-navy-200 group-hover:text-saffron-600 dark:group-hover:text-saffron-400 transition">

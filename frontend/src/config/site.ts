@@ -5,7 +5,7 @@ export const siteConfig = {
   tagline: "TRUST | DIGITAL | INNOVATION",
   taglineHi: "भरोसा | डिजिटल | नवाचार",
   description: "Private digital assistance platform for government services, certificates, online forms, job updates, recharge, and bill payments.",
-  managedBy: "DevaCore Studio",
+  managedBy: "DevaCore Studios",
   
   // Contact Information
   phone: process.env.NEXT_PUBLIC_SUPPORT_NUMBER || "+91 9294899787",

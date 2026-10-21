@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Phone, MessageCircle, CheckCircle } from "lucide-react";
+import { Search, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
-import { WHATSAPP_NUMBER, SUPPORT_NUMBER } from "@/lib/utils";
+import { DigitalServicesHeroIllustration } from "@/components/ui/VectorIllustrations";
 
 export default function HeroSection() {
   const { lang } = useLanguage();
@@ -14,144 +14,127 @@ export default function HeroSection() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) router.push(`/services?q=${encodeURIComponent(query.trim())}`);
+    if (query.trim()) {
+      router.push(`/services?q=${encodeURIComponent(query.trim())}`);
+    }
   };
 
   const popularSearches = lang === "hi" 
-    ? ["आधार", "पैन कार्ड", "आयुष्मान", "पीएम किसान", "जीएसटी", "वोटर कार्ड"]
-    : ["Aadhaar", "PAN Card", "Ayushman", "PM Kisan", "GST", "Voter ID"];
-
-  const trustIndicators = lang === "hi"
-    ? [
-        { icon: CheckCircle, text: "आधिकारिक पोर्टल लिंक" },
-        { icon: CheckCircle, text: "सुरक्षित दस्तावेज़ हैंडलिंग" },
-        { icon: CheckCircle, text: "पारदर्शी सेवा शुल्क" },
-        { icon: CheckCircle, text: "हिंदी/अंग्रेज़ी सहायता" },
-      ]
-    : [
-        { icon: CheckCircle, text: "Official Portal Links" },
-        { icon: CheckCircle, text: "Secure Document Handling" },
-        { icon: CheckCircle, text: "Transparent Service Charges" },
-        { icon: CheckCircle, text: "Hindi/English Assistance" },
-      ];
+    ? ["आधार कार्ड", "पैन कार्ड", "समग्र ई-केवाईसी", "पीएम किसान", "वैकेंसी", "आय प्रमाण पत्र"]
+    : ["Aadhaar", "PAN Card", "Samagra KYC", "PM Kisan", "Jobs", "Income Certificate"];
 
   return (
-    <section className="relative overflow-hidden bg-navy-900 text-white">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-saffron-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-green-500 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-      </div>
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#0A1B4D] via-[#0D1F57] to-[#0A1B4D] text-white pt-6 pb-12 border-b border-white/10">
+      {/* Subtle background ambient lights */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-saffron-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 py-16 md:py-24 lg:py-32 relative">
-        <div className="max-w-5xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-saffron-500/10 border border-saffron-500/30 rounded-full text-saffron-300 text-sm mb-8">
-            🇮🇳 {lang === "hi" ? "भारत का विश्वसनीय डिजिटल सेवा पोर्टल" : "India's Trusted Digital Seva Portal"}
-          </div>
-
-          {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            {lang === "hi" ? "सभी डिजिटल सेवाएँ, एक ही स्थान पर" : "All Digital Services, One Place"}
-          </h1>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-saffron-300 font-medium mb-4">
-            {lang === "hi" 
-              ? "सरकारी फॉर्म, ऑनलाइन आवेदन, भर्ती अपडेट, बिल भुगतान, रिचार्ज और दस्तावेज़ सेवाएँ—अब आसान और भरोसेमंद तरीके से।"
-              : "Government forms, online applications, recruitment updates, bill payments, recharge and document services — now easy and reliable."
-            }
-          </p>
-
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-navy-400" />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={lang === "hi" ? "आधार, पैन, आयुष्मान, पीएम किसान, जीएसटी खोजें..." : "Search Aadhaar, PAN, Ayushman, PM Kisan, GST..."}
-                className="w-full pl-12 pr-4 py-4 rounded-lg bg-white text-navy-900 placeholder-navy-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 shadow-lg"
-              />
-            </div>
+          {/* Left Text & Search Column (7 Cols on desktop) */}
+          <div className="lg:col-span-7 space-y-4">
             
-            {/* Popular Searches */}
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="text-sm text-navy-300">{lang === "hi" ? "लोकप्रिय:" : "Popular:"}</span>
-              {popularSearches.map((search) => (
-                <button
-                  key={search}
-                  type="button"
-                  onClick={() => setQuery(search)}
-                  className="text-sm text-saffron-300 hover:text-saffron-200 transition"
-                >
-                  {search}
-                </button>
-              ))}
+            {/* Trust Pill */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-saffron-500/15 border border-saffron-500/30 text-saffron-300 text-xs font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{lang === "hi" ? "विश्वसनीय निजी डिजिटल सेवा मंच" : "Trusted Digital Assistance Platform"}</span>
             </div>
-          </form>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Link 
-              href="/services" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-saffron-600 text-white font-semibold rounded-lg hover:bg-saffron-700 transition shadow-lg"
-            >
-              {lang === "hi" ? "सभी सेवाएँ देखें" : "View All Services"} <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link 
-              href="/track-application" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition"
-            >
-              {lang === "hi" ? "आवेदन ट्रैक करें" : "Track Application"}
-            </Link>
-            <a 
-              href={`https://wa.me/${WHATSAPP_NUMBER}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-lg"
-            >
-              <MessageCircle className="w-4 h-4" />
-              {lang === "hi" ? "WhatsApp सहायता" : "WhatsApp Support"}
-            </a>
-          </div>
+            {/* Clear Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              {lang === "hi" ? "अब ऑनलाइन काम, घर बैठे" : "Digital & Govt Services, From Home"}
+            </h1>
 
-          {/* Trust Indicators */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-12">
-            {trustIndicators.map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-2 justify-center p-3 bg-white/5 rounded-lg border border-white/10">
-                <Icon className="w-5 h-5 text-saffron-400 flex-shrink-0" />
-                <span className="text-sm text-navy-200">{text}</span>
+            {/* Sub-headline */}
+            <p className="text-sm md:text-base text-saffron-200/90 max-w-xl leading-relaxed">
+              {lang === "hi"
+                ? "आधार, पैन, प्रमाण पत्र, सरकारी योजनाएं, भर्ती फॉर्म एवं बिल भुगतान — साइबर कैफे जाए बिना, घर बैठे पूर्ण कराएं।"
+                : "Aadhaar, PAN, certificates, government schemes, recruitment forms, and bill payments — processed safely without visiting cyber cafes."}
+            </p>
+
+            {/* Prominent Search Bar */}
+            <form onSubmit={handleSearch} className="max-w-xl pt-1">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-saffron-400" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं? (उदा. आधार, पैन, खसरा...)" : "What service are you looking for? (e.g. Aadhaar, PAN...)"}
+                  className="w-full pl-10 pr-24 py-3 rounded-2xl bg-white text-navy-950 placeholder-navy-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-saffron-500 shadow-xl"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-4 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-navy-950 font-bold text-xs transition flex items-center gap-1 shadow"
+                >
+                  <span>{lang === "hi" ? "खोजें" : "Search"}</span>
+                </button>
               </div>
-            ))}
+
+              {/* Popular Searches */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2.5 text-xs text-saffron-200/80">
+                <span className="font-semibold">{lang === "hi" ? "लोकप्रिय:" : "Popular:"}</span>
+                {popularSearches.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => {
+                      setQuery(item);
+                      router.push(`/services?q=${encodeURIComponent(item)}`);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white text-[11px] transition"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </form>
+
+            {/* Primary Actions: "सेवा चुनें" & "अपना Status देखें" */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link
+                href="/services"
+                className="px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-extrabold text-sm transition flex items-center gap-2 shadow-lg hover:shadow-saffron-500/20"
+              >
+                <span>{lang === "hi" ? "सेवा चुनें" : "Select Service"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                href="/track-application"
+                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-sm transition flex items-center gap-2"
+              >
+                <Search className="w-4 h-4 text-saffron-300" />
+                <span>{lang === "hi" ? "अपना Status देखें" : "Track Status"}</span>
+              </Link>
+            </div>
+
+            {/* Quick Guarantees */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-3 text-xs text-white/80">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{lang === "hi" ? "आधिकारिक पोर्टल सत्यापन" : "Official Portal Links"}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{lang === "hi" ? "सुरक्षित दस्तावेज़ हैंडलिंग" : "Secure Document Vault"}</span>
+              </div>
+              <div className="flex items-center gap-1.5 col-span-2 sm:col-span-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{lang === "hi" ? "घर बैठे स्पीड पोस्ट डिलीवरी" : "Home Speed Post Delivery"}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Contact Support */}
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-navy-300">
-            <a 
-              href={`tel:${SUPPORT_NUMBER}`} 
-              className="flex items-center gap-2 hover:text-saffron-300 transition"
-            >
-              <Phone className="w-4 h-4" />
-              {SUPPORT_NUMBER}
-            </a>
-            <span>|</span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              {lang === "hi" ? "सुरक्षित भुगतान" : "Secure Payment"}
-            </span>
-            <span>|</span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              {lang === "hi" ? "24/7 सहायता" : "24/7 Support"}
-            </span>
+          {/* Right Vector Illustration Column (5 Cols on desktop) */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end">
+            <div className="relative p-2 rounded-3xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-sm">
+              <DigitalServicesHeroIllustration className="w-full max-w-sm sm:max-w-md h-auto" />
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Bottom gradient line */}
-      <div className="h-1 bg-gradient-to-r from-saffron-600 via-white to-green-600" />
     </section>
   );
 }

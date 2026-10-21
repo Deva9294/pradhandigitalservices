@@ -4,31 +4,54 @@ import QuickActions from "@/components/home/QuickActions";
 import TrustBar from "@/components/home/TrustBar";
 import { PopularServicesSection, AllServicesSection } from "@/components/home/ServicesSections";
 import VacancySection from "@/components/home/VacancySection";
-import RechargeSection from "@/components/home/RechargeSection";
-import FormsSection from "@/components/home/FormsSection";
-import NewsSection from "@/components/home/NewsSection";
 import HowItWorks from "@/components/home/HowItWorks";
-import WhyChooseUsSection from "@/components/home/TestimonialsSection";
+import DeliverySection from "@/components/home/DeliverySection";
+import PremiumAndAppSection from "@/components/home/PremiumAndAppSection";
+import FormsSection from "@/components/home/FormsSection";
+import RechargeSection from "@/components/home/RechargeSection";
 import FAQSection from "@/components/home/FAQSection";
 import ContactSection from "@/components/home/ContactSection";
 
 export default function HomePage() {
   return (
-    <>
-      <HeroSection />
+    <main className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white">
+      {/* C. Latest Updates Ticker */}
       <MarqueeSection />
+
+      {/* D. Hero with original vector illustration & prominent search */}
+      <HeroSection />
+
+      {/* E. Service Categories & Quick Action Pill Cards */}
       <QuickActions />
+
+      {/* Trust & Transparency Bar */}
       <TrustBar />
+
+      {/* F. Popular Services with clear pricing & document criteria */}
       <PopularServicesSection />
+
+      {/* Complete Category Catalog */}
       <AllServicesSection />
+
+      {/* G. Vacancy Section (Open Vacancies, Admit Cards, Results -> /vacancy-update) */}
       <VacancySection />
-      <RechargeSection />
-      <FormsSection />
-      <NewsSection />
+
+      {/* H. How it Works (3 Clear Stages: Submitted -> Review/Pending -> Done) */}
       <HowItWorks />
-      <WhyChooseUsSection />
+
+      {/* I. PDF Download & Doorstep Speed Post Delivery Section */}
+      <DeliverySection />
+
+      {/* J & K. Premium Plans (Monthly/Yearly) & Real PWA Add to Home Screen Section */}
+      <PremiumAndAppSection />
+
+      {/* Offline Forms & Utility Bill Payments */}
+      <FormsSection />
+      <RechargeSection />
+
+      {/* L. FAQ and Support Desk */}
       <FAQSection />
       <ContactSection />
-    </>
+    </main>
   );
 }

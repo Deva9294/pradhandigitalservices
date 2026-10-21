@@ -7,6 +7,12 @@ import { MASTER_DOCUMENT_TYPES } from '../data/masterDocuments.js';
 import { MASTER_CATEGORIES } from '../data/masterCategories.js';
 import { MASTER_SERVICES } from '../data/masterCatalogue.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config();
 
 export async function seedCatalogue() {

@@ -5,7 +5,10 @@ import { body } from 'express-validator';
 
 const router = Router();
 
-// All routes require authentication
+// Public route - Track application
+router.get('/track/:applicationId', ctrl.trackApplication);
+
+// All remaining routes require authentication
 router.use(protect);
 
 // Create application
@@ -31,8 +34,5 @@ router.patch('/:id/status', ctrl.updateStatus);
 
 // Add remarks
 router.patch('/:id/remarks', ctrl.addRemarks);
-
-// Track application (public)
-router.get('/track/:applicationId', ctrl.trackApplication);
 
 export default router;

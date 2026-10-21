@@ -1,16 +1,20 @@
 export const siteConfig = {
   name: "Pradhan Digital Services",
-  tagline: "Digital Solutions | Real Results | Better Tomorrow",
-  description: "Private facilitation platform for government services, certificates, online forms, job updates, recharge, and bill payments.",
+  brand: "Pradhan Digital Services",
+  founder: "Ravi Pradhan",
+  tagline: "TRUST | DIGITAL | INNOVATION",
+  taglineHi: "भरोसा | डिजिटल | नवाचार",
+  description: "Private digital assistance platform for government services, certificates, online forms, job updates, recharge, and bill payments.",
+  managedBy: "DevaCore Studio",
   
   // Contact Information
   phone: process.env.NEXT_PUBLIC_SUPPORT_NUMBER || "+91 9294899787",
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "919294899787",
-  email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@pradhandigitalservices.com",
+  email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "help@pradhandigitalservices.in",
   address: "Rehti, Sehore, Madhya Pradesh, India",
   
   // URLs
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.in",
   apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
   
   // Social Media
@@ -30,10 +34,10 @@ export const siteConfig = {
     transparentCharges: true,
   },
   
-  // Disclaimer
+  // Non-negotiable Disclaimer
   disclaimer: {
-    en: "Pradhan Digital Services is a private facilitation platform and is not affiliated with or endorsed by the Government of India or any State Government unless explicitly stated. Government services are accessed through their respective official portals.",
-    hi: "प्रधान डिजिटल सेवाएं एक निजी सुविधा मंच है और यह किसी भी सरकारी विभाग से संबद्ध या समर्थित नहीं है। सरकारी सेवाएं उनके आधिकारिक पोर्टल के माध्यम से प्राप्त की जाती हैं।",
+    en: "Pradhan Digital Services is a private digital assistance platform. Government services are processed through official portals and applicable government rules. We are not a government department.",
+    hi: "प्रधान डिजिटल सेवाएं एक निजी डिजिटल सहायता मंच है। सरकारी सेवाएं आधिकारिक पोर्टलों और लागू सरकारी नियमों के माध्यम से संसाधित की जाती हैं। हम कोई सरकारी विभाग नहीं हैं।",
   },
   
   // Current Year

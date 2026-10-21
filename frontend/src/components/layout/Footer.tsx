@@ -22,7 +22,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <Link href="/" className="inline-block group">
-              <BrandLogo size="lg" tagline="Digital Solutions | Real Results | Better Tomorrow" />
+              <BrandLogo size="lg" tagline="TRUST | DIGITAL | INNOVATION" />
             </Link>
             <p className="text-xs text-navy-400 leading-relaxed">
               {siteConfig.description}
@@ -99,9 +99,12 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-navy-800 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-navy-400">
-          <p>© {siteConfig.currentYear} {siteConfig.name}. All Rights Reserved.</p>
-          <div className="flex gap-4">
+        <div className="mt-6 pt-6 border-t border-navy-800 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-navy-400">
+          <div>
+            <p>© {siteConfig.currentYear} {siteConfig.name}. Founder: {siteConfig.founder}. All Rights Reserved.</p>
+            <p className="text-[11px] text-navy-500 mt-0.5">Design &amp; Managed By {siteConfig.managedBy}</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
             <Link href="/privacy" className="hover:text-saffron-400">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-saffron-400">Terms of Service</Link>
             <Link href="/refund" className="hover:text-saffron-400">Refund Policy</Link>

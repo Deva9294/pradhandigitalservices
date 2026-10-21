@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const SITE_NAME = "Pradhan Digital Services";
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.com";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.in";
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 /** Express origin (no /api suffix) for fetch calls that include /api/... in the path */
@@ -24,14 +24,14 @@ export function whatsAppUrl(text = WHATSAPP_PREFILL) {
 
 export function telSupportUrl() {
   const digits = SUPPORT_NUMBER.replace(/\D/g, "");
-  return digits ? `tel:+${digits.startsWith("91") ? digits : `91${digits}`}` : "#";
+  return digits ? `tel:+${digits.startsWith("91") ? digits : `91${digits}`}` : "tel:+919294899787";
 }
 export const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP || "919294899787";
 export const SUPPORT_NUMBER = process.env.NEXT_PUBLIC_SUPPORT_NUMBER || "+91 9294899787";
 export const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
 
 export const DISCLAIMER =
-  "Pradhan Digital Services is a private facilitation platform and is NOT a government website. We assist citizens in accessing government services through official portals. All government information is sourced from official government websites.";
+  "Pradhan Digital Services is a private digital assistance platform. Government services are processed through official portals and applicable government rules. We are not a government department.";
 
 export const DISCLAIMER_HI =
-  "प्रधान डिजिटल सेवाएं एक निजी सुविधा मंच है और यह कोई सरकारी वेबसाइट नहीं है। हम नागरिकों को आधिकारिक पोर्टल के माध्यम से सरकारी सेवाओं तक पहुंचने में सहायता करते हैं।";
+  "प्रधान डिजिटल सेवाएं एक निजी डिजिटल सहायता मंच है। सरकारी सेवाएं आधिकारिक पोर्टलों और लागू सरकारी नियमों के माध्यम से संसाधित की जाती हैं। हम कोई सरकारी विभाग नहीं हैं।";

@@ -39,7 +39,19 @@ const PORT = process.env.PORT || 8000;
 
 app.set('trust proxy', 1);
 
-connectDB().catch(() => {
+connectDB().then(async () => {
+  try {
+    const Service = (await import('./models/Service.js')).default;
+    const count = await Service.countDocuments();
+    if (count < 20) {
+      console.log('🔄 Initializing Master Service Catalogue...');
+      const { seedCatalogue } = await import('./utils/seedCatalogue.js');
+      await seedCatalogue();
+    }
+  } catch (err) {
+    console.error('Catalogue initialization notice:', err.message);
+  }
+}).catch(() => {
   console.log('⚠️ MongoDB connection failed. Running without database.');
 });
 

@@ -14,7 +14,7 @@ export default function BrandLogo({
   compact = false, 
   size = "md",
   showTagline = true,
-  tagline = "Digital Solutions | Real Results",
+  tagline = "TRUST | DIGITAL | INNOVATION",
   className,
   variant = "badge"
 }: BrandLogoProps) {

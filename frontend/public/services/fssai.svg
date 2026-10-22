@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#388E3C" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E8F5E9"/>
+
+  <!-- Food Bowl & Sprouting Leaves (FSSAI Logo geometry) -->
+  <path d="M 38 52 C 38 68 82 68 82 52 Z" fill="#388E3C"/>
+  <ellipse cx="60" cy="52" rx="22" ry="5" fill="#66BB6A"/>
+  
+  <!-- Tricolor Leaves rising from bowl -->
+  <path d="M 52 50 C 44 42 48 30 54 36 Z" fill="#FF7A00"/>
+  <path d="M 60 49 C 60 36 68 36 68 44 Z" fill="#2E7D32"/>
+  <path d="M 68 50 C 76 42 72 30 66 36 Z" fill="#1565C0"/>
+
+  <!-- Banner -->
+  <rect x="22" y="84" width="76" height="17" rx="8.5" fill="#2E7D32"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">FSSAI</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#1B5E20" text-anchor="middle">खाद्य सुरक्षा एवं मानक</text>
+</svg>

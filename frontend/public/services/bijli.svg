@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0277BD" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E1F5FE"/>
+
+  <!-- Power Tower / Transmission Grid Silhouette -->
+  <polygon points="60,25 54,65 66,65" fill="none" stroke="#01579B" stroke-width="2"/>
+  <line x1="45" y1="42" x2="75" y2="42" stroke="#01579B" stroke-width="2"/>
+  <line x1="48" y1="55" x2="72" y2="55" stroke="#01579B" stroke-width="2"/>
+  
+  <!-- High Voltage Flash Bolt in Gold/Orange -->
+  <polygon points="63,26 50,46 59,46 54,68 70,44 60,44" fill="#FFC107" stroke="#FF8F00" stroke-width="1.5"/>
+
+  <!-- Banner -->
+  <rect x="20" y="84" width="80" height="17" rx="8.5" fill="#0277BD"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">BIJLI BILL</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#01579B" text-anchor="middle">म.प्र. विद्युत वितरण (MPPKVVCL)</text>
+</svg>

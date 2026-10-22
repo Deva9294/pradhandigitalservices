@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="passportNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A1E3F"/>
+      <stop offset="100%" stop-color="#14346B"/>
+    </linearGradient>
+    <linearGradient id="passportGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082"/>
+      <stop offset="100%" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#passportNavy)" stroke="#FFB300" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="52" fill="none" stroke="#FFB300" stroke-width="1" stroke-dasharray="2,2"/>
+
+  <!-- Passport Book Shape -->
+  <rect x="36" y="28" width="48" height="60" rx="3" fill="#07152B" stroke="url(#passportGold)" stroke-width="1.5"/>
+  
+  <!-- Ashok Stambh Emblem in Center -->
+  <g transform="translate(60, 50)" fill="url(#passportGold)">
+    <!-- Lion Head representation -->
+    <path d="M -8 -10 C -8 -16 8 -16 8 -10 C 8 -7 6 -5 4 -3 L 4 4 L -4 4 L -4 -3 C -6 -5 -8 -7 -8 -10 Z"/>
+    <rect x="-6" y="4" width="12" height="2"/>
+    <!-- Wheel Base -->
+    <circle cx="0" cy="8" r="3" fill="none" stroke="#FFB300" stroke-width="1"/>
+    <rect x="-10" y="12" width="20" height="2.5" rx="0.5"/>
+  </g>
+
+  <text x="60" y="38" font-family="Arial, sans-serif" font-size="5" font-weight="bold" fill="url(#passportGold)" text-anchor="middle" letter-spacing="1">PASSPORT</text>
+  <text x="60" y="80" font-family="Arial, sans-serif" font-size="4.5" font-weight="bold" fill="url(#passportGold)" text-anchor="middle">REPUBLIC OF INDIA</text>
+
+  <!-- Title Bottom -->
+  <rect x="20" y="96" width="80" height="15" rx="7.5" fill="#FFB300"/>
+  <text x="60" y="106.5" font-family="Arial, sans-serif" font-size="7.5" font-weight="900" fill="#0A1E3F" text-anchor="middle" letter-spacing="1">PASSPORT SEVA</text>
+</svg>

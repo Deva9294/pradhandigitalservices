@@ -10,6 +10,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MASTER_SERVICES, ServiceCatalogueItem } from "@/data/servicesCatalogue";
 import { whatsAppUrl } from "@/lib/utils";
+import ServiceIcon from "@/components/common/ServiceIcon";
 
 const CATEGORIES_LIST = [
   { slug: "all", name: "All Services", nameHi: "सभी सेवाएं" },
@@ -151,17 +152,30 @@ function ServicesContent() {
                     )}
                   </div>
 
-                  {/* Service Titles */}
-                  <Link href={`/services/${service.slug}`} className="block group-hover:text-saffron-600 transition">
-                    <h3 className="font-bold text-lg text-navy-900 dark:text-white leading-tight">
-                      {service.name}
-                    </h3>
-                    {service.nameHi && (
-                      <div className="text-sm font-semibold text-saffron-600 dark:text-saffron-400 mt-1">
-                        {service.nameHi}
-                      </div>
-                    )}
-                  </Link>
+                  {/* Service Logo & Titles */}
+                  <div className="flex items-start gap-3.5 mb-3">
+                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-navy-800 border border-navy-100 dark:border-navy-700/80 shadow-sm flex items-center justify-center p-1.5 shrink-0 group-hover:scale-110 group-hover:border-saffron-400 group-hover:shadow-md transition">
+                      <ServiceIcon
+                        slug={service.slug}
+                        department={service.department}
+                        name={service.name}
+                        alt={service.name}
+                        size={36}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/services/${service.slug}`} className="block group-hover:text-saffron-600 transition">
+                        <h3 className="font-bold text-base sm:text-lg text-navy-900 dark:text-white leading-tight truncate">
+                          {service.name}
+                        </h3>
+                        {service.nameHi && (
+                          <div className="text-xs sm:text-sm font-semibold text-saffron-600 dark:text-saffron-400 mt-0.5 truncate">
+                            {service.nameHi}
+                          </div>
+                        )}
+                      </Link>
+                    </div>
+                  </div>
 
                   {/* Description */}
                   <p className="text-xs text-navy-600 dark:text-navy-300 line-clamp-2 mt-2 leading-relaxed">

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0080C6" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#F0F8FF"/>
+
+  <!-- SBI Iconic Blue Keyhole Circle -->
+  <circle cx="60" cy="50" r="25" fill="#0080C6"/>
+  <!-- White Center Keyhole Notch -->
+  <circle cx="60" cy="50" r="7" fill="#FFFFFF"/>
+  <rect x="57" y="50" width="6" height="25" fill="#FFFFFF"/>
+
+  <!-- Banner -->
+  <rect x="22" y="86" width="76" height="17" rx="8.5" fill="#0080C6"/>
+  <text x="60" y="98" font-family="Arial, sans-serif" font-size="9" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">SBI BANK</text>
+  <text x="60" y="24" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" fill="#0080C6" text-anchor="middle">STATE BANK OF INDIA</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0B3C5D" stroke-width="2.5"/>
+  
+  <!-- Three concentric colored ring arcs (Saffron, Blue, Green) -->
+  <path d="M 32 45 A 32 32 0 0 1 88 45" fill="none" stroke="#FF7A00" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 38 60 A 24 24 0 0 1 82 60" fill="none" stroke="#1D2731" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 44 75 A 16 16 0 0 1 76 75" fill="none" stroke="#328CC1" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Stylized U Letterform in Center -->
+  <path d="M 48 40 L 48 58 A 12 12 0 0 0 72 58 L 72 40" fill="none" stroke="#0B3C5D" stroke-width="7" stroke-linecap="round"/>
+
+  <rect x="22" y="86" width="76" height="17" rx="8.5" fill="#0B3C5D"/>
+  <text x="60" y="98" font-family="Arial, sans-serif" font-size="9" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">UMANG</text>
+  <text x="60" y="22" font-family="Arial, sans-serif" font-size="6.5" font-weight="bold" fill="#328CC1" text-anchor="middle">एक मंच - सभी सरकारी सेवाएं</text>
+</svg>

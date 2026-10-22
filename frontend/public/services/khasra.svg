@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#2E7D32" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E8F5E9"/>
+
+  <!-- Cadastral Land Survey Map Geometry -->
+  <polygon points="30,40 55,30 85,38 90,65 65,75 35,68" fill="#C8E6C9" stroke="#2E7D32" stroke-width="2"/>
+  <!-- Sub-plot boundary lines (Khasra numbers) -->
+  <line x1="55" y1="30" x2="65" y2="75" stroke="#2E7D32" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="30" y1="52" x2="90" y2="52" stroke="#2E7D32" stroke-width="1.5" stroke-dasharray="2,2"/>
+
+  <!-- Plot markers -->
+  <circle cx="45" cy="42" r="3" fill="#FF7A00"/>
+  <text x="45" y="43" font-family="Arial, sans-serif" font-size="3" font-weight="bold" fill="#FFFFFF" text-anchor="middle">12</text>
+
+  <circle cx="72" cy="44" r="3" fill="#1565C0"/>
+  <text x="72" y="45" font-family="Arial, sans-serif" font-size="3" font-weight="bold" fill="#FFFFFF" text-anchor="middle">13</text>
+
+  <circle cx="50" cy="62" r="3" fill="#2E7D32"/>
+  <text x="50" y="63" font-family="Arial, sans-serif" font-size="3" font-weight="bold" fill="#FFFFFF" text-anchor="middle">14</text>
+
+  <!-- Banner -->
+  <rect x="18" y="84" width="84" height="17" rx="8.5" fill="#1B5E20"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">MP BHULEKH</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#2E7D32" text-anchor="middle">खसरा / खतौनी / नक्शा</text>
+</svg>

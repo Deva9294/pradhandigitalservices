@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#B71C1C" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#FFEBEE"/>
+
+  <!-- SSC Blue & Red Circular Crest -->
+  <circle cx="60" cy="50" r="24" fill="#0D47A1"/>
+  <circle cx="60" cy="50" r="18" fill="#FFFFFF"/>
+  <circle cx="60" cy="50" r="15" fill="#B71C1C"/>
+  <text x="60" y="54" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle">SSC</text>
+
+  <!-- Banner -->
+  <rect x="18" y="84" width="84" height="17" rx="8.5" fill="#B71C1C"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">STAFF SELECTION</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#0D47A1" text-anchor="middle">कर्मचारी चयन आयोग</text>
+</svg>

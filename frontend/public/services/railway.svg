@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0D47A1" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E8EAF6"/>
+
+  <!-- Circular Wheel with Stars & Ashok Emblem -->
+  <circle cx="60" cy="50" r="25" fill="#0D47A1"/>
+  <circle cx="60" cy="50" r="21" fill="#FFFFFF"/>
+
+  <!-- Train Engine Front Silhouette -->
+  <rect x="48" y="38" width="24" height="20" rx="3" fill="#C2185B"/>
+  <rect x="52" y="42" width="6" height="5" rx="1" fill="#FFFFFF"/>
+  <rect x="62" y="42" width="6" height="5" rx="1" fill="#FFFFFF"/>
+  <circle cx="60" cy="52" r="3" fill="#FFEB3B"/> <!-- Headlight -->
+  <rect x="46" y="58" width="28" height="4" fill="#212121"/>
+  <!-- Track Cowcatcher -->
+  <polygon points="50,62 70,62 74,66 46,66" fill="#424242"/>
+
+  <!-- Banner -->
+  <rect x="16" y="84" width="88" height="17" rx="8.5" fill="#0D47A1"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">INDIAN RAILWAYS</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#C2185B" text-anchor="middle">रेलवे भर्ती / IRCTC</text>
+</svg>

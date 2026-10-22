@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0288D1" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E1F5FE"/>
+
+  <!-- FASTag Badge Card Shape -->
+  <rect x="25" y="36" width="70" height="42" rx="4" fill="#0288D1"/>
+  <!-- Orange streak -->
+  <polygon points="25,36 45,36 35,78 25,78" fill="#FF7A00"/>
+  <!-- White Center Strip -->
+  <rect x="42" y="44" width="48" height="26" rx="2" fill="#FFFFFF"/>
+
+  <!-- RFID Waves Symbol -->
+  <g stroke="#0288D1" fill="none" stroke-width="2" stroke-linecap="round">
+    <path d="M 54 52 A 8 8 0 0 1 54 62"/>
+    <path d="M 50 48 A 14 14 0 0 1 50 66"/>
+    <path d="M 46 44 A 20 20 0 0 1 46 70"/>
+  </g>
+
+  <text x="73" y="60" font-family="Arial, sans-serif" font-size="9" font-weight="900" fill="#0288D1">TAG</text>
+
+  <!-- Banner -->
+  <rect x="22" y="86" width="76" height="17" rx="8.5" fill="#01579B"/>
+  <text x="60" y="98" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">FASTag</text>
+  <text x="60" y="26" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#0288D1" text-anchor="middle">NPCI ई-टोल सेवा</text>
+</svg>

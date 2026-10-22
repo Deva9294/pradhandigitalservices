@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="panBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B2046"/>
+      <stop offset="100%" stop-color="#1A3B70"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082"/>
+      <stop offset="50%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#FFA000"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#panBg)" stroke="#FFB300" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="52" fill="none" stroke="#FFB300" stroke-width="1" stroke-dasharray="2,2"/>
+  
+  <!-- PAN Card Outline in Center -->
+  <rect x="24" y="38" width="72" height="44" rx="4" fill="#FFFFFF" stroke="#FFB300" stroke-width="1.5"/>
+  <!-- Card Header Strip -->
+  <rect x="24" y="38" width="72" height="10" rx="3" fill="#0B2046"/>
+  <text x="60" y="45.5" font-family="Arial, sans-serif" font-size="5.5" font-weight="bold" fill="#FFB300" text-anchor="middle">INCOME TAX DEPARTMENT</text>
+  
+  <!-- Gold Chip -->
+  <rect x="30" y="52" width="12" height="9" rx="1.5" fill="url(#goldGrad)" stroke="#B78103" stroke-width="0.5"/>
+  <line x1="30" y1="56.5" x2="42" y2="56.5" stroke="#B78103" stroke-width="0.5"/>
+  <line x1="36" y1="52" x2="36" y2="61" stroke="#B78103" stroke-width="0.5"/>
+  
+  <!-- Photo placeholder -->
+  <rect x="74" y="52" width="14" height="18" rx="1" fill="#E0E0E0" stroke="#9E9E9E" stroke-width="0.5"/>
+  <circle cx="81" cy="58" r="3" fill="#757575"/>
+  <path d="M 76 68 C 76 64 78 63 81 63 C 84 63 86 64 86 68 Z" fill="#757575"/>
+
+  <!-- Lines representing details -->
+  <rect x="30" y="65" width="38" height="2" fill="#424242"/>
+  <rect x="30" y="70" width="28" height="2" fill="#757575"/>
+  <rect x="30" y="74" width="34" height="2" fill="#757575"/>
+
+  <!-- Top arc text -->
+  <text x="60" y="24" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" fill="#FFE082" text-anchor="middle" letter-spacing="1">आयकर विभाग</text>
+  <!-- Bottom PAN bold text -->
+  <text x="60" y="104" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="#FFB300" text-anchor="middle" letter-spacing="2">PAN CARD</text>
+</svg>

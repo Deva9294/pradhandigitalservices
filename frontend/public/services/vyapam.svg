@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#283593" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E8EAF6"/>
+
+  <!-- Graduation Cap & Open Book -->
+  <!-- Cap Top Diamond -->
+  <polygon points="60,28 85,38 60,48 35,38" fill="#283593"/>
+  <polygon points="46,43 46,54 74,54 74,43" fill="#1A237E"/>
+  <!-- Tassel -->
+  <line x1="80" y1="40" x2="84" y2="52" stroke="#FFB300" stroke-width="1.8"/>
+  <circle cx="84" cy="53" r="1.5" fill="#FFB300"/>
+
+  <!-- Open Book below -->
+  <path d="M 60 58 Q 44 54 36 60 L 36 76 Q 46 72 60 76 Q 74 72 84 76 L 84 60 Q 76 54 60 58 Z" fill="#FFFFFF" stroke="#283593" stroke-width="1.5"/>
+  <line x1="60" y1="58" x2="60" y2="76" stroke="#283593" stroke-width="1.5"/>
+
+  <!-- Banner -->
+  <rect x="18" y="84" width="84" height="17" rx="8.5" fill="#283593"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">MPESB / व्यापम</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#1A237E" text-anchor="middle">कर्मचारी चयन मंडल म.प्र.</text>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5722"/>
+      <stop offset="50%" stop-color="#FF9800"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF3E0"/>
+      <stop offset="100%" stop-color="#FFE0B2"/>
+    </radialGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#FF9800" stroke-width="2"/>
+  
+  <!-- Aadhaar Sun Rays (16 radiant rays) -->
+  <g fill="url(#sunGrad)">
+    <polygon points="60,8 63,22 57,22"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(22.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(45 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(67.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(90 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(112.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(135 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(157.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(180 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(202.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(225 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(247.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(270 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(292.5 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(315 60 60)"/>
+    <polygon points="60,8 63,22 57,22" transform="rotate(337.5 60 60)"/>
+  </g>
+
+  <!-- Sun Disc -->
+  <circle cx="60" cy="60" r="34" fill="url(#sunGrad)"/>
+  <circle cx="60" cy="60" r="28" fill="url(#centerGlow)"/>
+
+  <!-- Fingerprint Stylized Arcs -->
+  <g fill="none" stroke="#D84315" stroke-width="2.2" stroke-linecap="round">
+    <path d="M 60 44 A 16 16 0 0 1 76 60"/>
+    <path d="M 60 48 A 12 12 0 0 1 72 60"/>
+    <path d="M 60 52 A 8 8 0 0 1 68 60"/>
+    <path d="M 52 60 A 8 8 0 0 1 60 52"/>
+    <path d="M 48 60 A 12 12 0 0 1 60 48"/>
+    <path d="M 44 60 A 16 16 0 0 1 60 44"/>
+    <path d="M 50 64 C 50 70 54 74 60 74 C 66 74 70 70 70 64"/>
+    <path d="M 54 64 C 54 68 57 70 60 70 C 63 70 66 68 66 64"/>
+    <circle cx="60" cy="62" r="1.5" fill="#D84315"/>
+  </g>
+
+  <!-- Bottom Tricolor Strip -->
+  <g transform="translate(0, 88)">
+    <rect x="25" y="0" width="70" height="4" fill="#FF9933" rx="1"/>
+    <rect x="25" y="4" width="70" height="4" fill="#FFFFFF"/>
+    <circle cx="60" cy="6" r="1.8" fill="#000080"/>
+    <rect x="25" y="8" width="70" height="4" fill="#138808" rx="1"/>
+  </g>
+  <text x="60" y="112" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#D84315" text-anchor="middle" letter-spacing="1.5">AADHAAR</text>
+</svg>

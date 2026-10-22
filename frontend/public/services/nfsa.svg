@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#FFF8E1"/>
+
+  <!-- Wheat Ear Stalks Left and Right -->
+  <g stroke="#F57F17" fill="#FFD54F" stroke-width="1">
+    <!-- Left Stalk -->
+    <path d="M 32 60 Q 32 35 48 25" fill="none" stroke-width="2"/>
+    <ellipse cx="36" cy="48" rx="4" ry="2" transform="rotate(40 36 48)"/>
+    <ellipse cx="40" cy="40" rx="4" ry="2" transform="rotate(40 40 40)"/>
+    <ellipse cx="44" cy="32" rx="4" ry="2" transform="rotate(40 44 32)"/>
+    <!-- Right Stalk -->
+    <path d="M 88 60 Q 88 35 72 25" fill="none" stroke-width="2"/>
+    <ellipse cx="84" cy="48" rx="4" ry="2" transform="rotate(-40 84 48)"/>
+    <ellipse cx="80" cy="40" rx="4" ry="2" transform="rotate(-40 80 40)"/>
+    <ellipse cx="76" cy="32" rx="4" ry="2" transform="rotate(-40 76 32)"/>
+  </g>
+
+  <!-- Grain Bowl in Center -->
+  <path d="M 40 55 C 40 72 80 72 80 55 Z" fill="#E65100"/>
+  <ellipse cx="60" cy="55" rx="20" ry="5" fill="#FFA726"/>
+  <!-- Food Grains heap -->
+  <path d="M 42 55 Q 60 42 78 55 Z" fill="#FFF3E0"/>
+
+  <!-- NFSA Banner -->
+  <rect x="22" y="82" width="76" height="17" rx="8.5" fill="#E65100"/>
+  <text x="60" y="94" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">RATION CARD</text>
+  <text x="60" y="110" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#BF360C" text-anchor="middle">खाद्य एवं नागरिक आपूर्ति</text>
+</svg>

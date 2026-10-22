@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#FFF3E0"/>
+
+  <!-- MSME Gear & Plant Shoot -->
+  <circle cx="60" cy="50" r="22" fill="#E65100"/>
+  <circle cx="60" cy="50" r="15" fill="#FFFFFF"/>
+  <!-- Growing Sprout -->
+  <path d="M 60 62 L 60 44" stroke="#2E7D32" stroke-width="2.5"/>
+  <path d="M 60 50 C 52 46 52 40 60 40 Z" fill="#4CAF50"/>
+  <path d="M 60 45 C 68 41 68 35 60 35 Z" fill="#81C784"/>
+
+  <!-- Banner -->
+  <rect x="20" y="84" width="80" height="17" rx="8.5" fill="#E65100"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">UDYAM MSME</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#BF360C" text-anchor="middle">सूक्ष्म, लघु एवं मध्यम उद्यम</text>
+</svg>

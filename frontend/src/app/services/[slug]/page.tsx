@@ -5,6 +5,7 @@ import {
   Phone, MessageCircle, HelpCircle, Check, AlertCircle, Building2, UploadCloud, Info
 } from "lucide-react";
 import { MASTER_SERVICES, ServiceCatalogueItem } from "@/data/servicesCatalogue";
+import ServiceIcon from "@/components/common/ServiceIcon";
 import { allServices } from "@/data/services";
 import { siteConfig } from "@/config/site";
 import { whatsAppUrl, telSupportUrl } from "@/lib/utils";
@@ -151,7 +152,17 @@ export default async function ServiceDetailPage({ params }: Props) {
         {/* Hero Header Card */}
         <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-navy-100 dark:border-navy-800">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-3xl">
+            <div className="flex items-start gap-5 max-w-3xl">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white dark:bg-navy-800 border-2 border-navy-100 dark:border-navy-700/80 p-2.5 shadow-md shrink-0 flex items-center justify-center">
+                <ServiceIcon
+                  slug={service.slug}
+                  department={service.department}
+                  name={service.name}
+                  alt={service.name}
+                  size={72}
+                />
+              </div>
+              <div className="space-y-2 flex-1">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-saffron-50 dark:bg-saffron-950/40 text-saffron-700 dark:text-saffron-300 text-xs font-semibold">
                 <Building2 className="w-3.5 h-3.5" />
                 <span>{service.department || "Official Portal Service"}</span>
@@ -172,6 +183,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                   {service.descriptionHi}
                 </p>
               )}
+              </div>
             </div>
 
             {/* Price Badge on Desktop */}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#0D47A1" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#F5F5F5"/>
+
+  <!-- GST Tricolor Ribbon Swirl -->
+  <path d="M 35 48 C 35 34 60 30 75 35 C 85 39 85 50 75 54 C 65 58 40 50 40 64 C 40 76 65 76 85 68" fill="none" stroke="#FF7A00" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 40 55 C 40 42 62 40 72 45 C 80 48 80 56 72 60 C 62 64 45 58 45 70 C 45 78 68 80 82 72" fill="none" stroke="#138808" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- GST Bold Typography -->
+  <text x="60" y="66" font-family="Arial, sans-serif" font-size="18" font-weight="900" fill="#0D47A1" text-anchor="middle" letter-spacing="1">GST</text>
+
+  <!-- Banner -->
+  <rect x="18" y="86" width="84" height="17" rx="8.5" fill="#0D47A1"/>
+  <text x="60" y="98" font-family="Arial, sans-serif" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">GOODS &amp; SERVICES</text>
+  <text x="60" y="22" font-family="Arial, sans-serif" font-size="6.5" font-weight="bold" fill="#0D47A1" text-anchor="middle">वस्तु एवं सेवा कर</text>
+</svg>

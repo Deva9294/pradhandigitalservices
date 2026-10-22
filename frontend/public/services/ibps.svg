@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#00796B" stroke-width="2.5"/>
+  <circle cx="60" cy="60" r="53" fill="#E0F2F1"/>
+
+  <!-- IBPS Crest -->
+  <circle cx="60" cy="50" r="23" fill="#00796B"/>
+  <circle cx="60" cy="50" r="17" fill="#FFFFFF"/>
+  <!-- Scales of banking -->
+  <rect x="59" y="38" width="2" height="20" fill="#00796B"/>
+  <line x1="48" y1="44" x2="72" y2="44" stroke="#00796B" stroke-width="2"/>
+  <polygon points="48,46 44,54 52,54" fill="#FFB300"/>
+  <polygon points="72,46 68,54 76,54" fill="#FFB300"/>
+
+  <rect x="22" y="84" width="76" height="17" rx="8.5" fill="#00796B"/>
+  <text x="60" y="96" font-family="Arial, sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">IBPS</text>
+  <text x="60" y="111" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#004D40" text-anchor="middle">बैंकिंग भर्ती परीक्षा</text>
+</svg>

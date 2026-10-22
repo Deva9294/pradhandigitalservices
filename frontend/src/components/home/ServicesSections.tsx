@@ -39,18 +39,20 @@ export function PopularServicesSection() {
             Array.from({ length: 12 }).map((_, i) => <ServiceCardSkeleton key={i} />)
           }>
             {popularServices.slice(0, 12).map((service) => (
-              <div key={service.id} className="group p-4 bg-white/90 dark:bg-navy-800/90 rounded-[28px] border border-navy-100 dark:border-navy-700 hover:border-saffron-300 hover:shadow-2xl transition-all hover:-translate-y-1 text-center">
+              <div key={service.id} className="group p-4 bg-white/95 dark:bg-navy-800/90 rounded-[28px] border border-navy-100 dark:border-navy-700/80 hover:border-saffron-400 hover:shadow-2xl transition-all hover:-translate-y-1 text-center flex flex-col justify-between">
                 <Link href={`/services/${service.slug}`} className="block">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-saffron-50 dark:bg-saffron-900/20 flex items-center justify-center group-hover:scale-110 transition">
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white dark:bg-navy-900/90 border border-navy-100 dark:border-navy-700/60 shadow-sm flex items-center justify-center p-1.5 group-hover:scale-110 group-hover:border-saffron-400 group-hover:shadow-md transition">
                     <ServiceIcon
                       type={service.icon}
                       src={service.iconSrc}
+                      slug={service.slug}
+                      name={service.name}
                       fallback={service.iconFallback}
                       alt={service.name}
-                      size={32}
+                      size={42}
                     />
                   </div>
-                  <h3 className="text-sm font-semibold text-navy-900 dark:text-white leading-tight mb-2">
+                  <h3 className="text-sm font-semibold text-navy-900 dark:text-white leading-tight mb-2 group-hover:text-saffron-600 dark:group-hover:text-saffron-400 transition">
                     {lang === "hi" ? service.nameHi : service.name}
                   </h3>
                 </Link>
@@ -59,7 +61,7 @@ export function PopularServicesSection() {
                     href={service.officialUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-saffron-600 hover:text-saffron-500 font-medium"
+                    className="inline-flex items-center justify-center gap-1 text-[11px] text-saffron-600 hover:text-saffron-500 font-semibold mt-1 py-1 px-2 rounded-lg bg-saffron-50 dark:bg-saffron-950/40 hover:bg-saffron-100 transition"
                   >
                     <ExternalLink className="w-3 h-3" />
                     {lang === "hi" ? "आधिकारिक पोर्टल" : "Official Portal"}

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -126,7 +127,23 @@ app.get(['/', '/health'], (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Pradhan Digital Services API is running' });
+  const dbState = mongoose.connection.readyState;
+  const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  const rawUri = process.env.MONGODB_URI || '';
+
+  res.json({
+    status: dbState === 1 ? 'ok' : 'degraded',
+    service: 'Pradhan Digital Services Backend API',
+    database: {
+      status: states[dbState] || 'unknown',
+      readyState: dbState,
+      isConfigured: Boolean(rawUri && !rawUri.includes('localhost')),
+      uriType: rawUri.startsWith('mongodb+srv://') ? 'Atlas Cloud' : (rawUri ? 'Custom' : 'None (Default Localhost)'),
+      hasPasswordPlaceholder: rawUri.includes('<password>'),
+      troubleshooting: dbState !== 1 ? 'Add MONGODB_URI to Render Dashboard > Environment, and in MongoDB Atlas > Network Access > add 0.0.0.0/0' : undefined
+    },
+    timestamp: new Date()
+  });
 });
 
 app.use((req, res) => {

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
@@ -42,6 +43,25 @@ function cleanPhone(phone) {
   }
   return digits.slice(-10);
 }
+
+// Pre-flight Database Health & Reconnect Check
+router.use(async (req, res, next) => {
+  if (req.path === '/me' && !req.headers.authorization) return next();
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      const { connectDB } = await import('../utils/db.js');
+      await connectDB();
+      return next();
+    } catch (err) {
+      return res.status(503).json({
+        success: false,
+        message: 'डेटाबेस कनेक्शन उपलब्ध नहीं है (Database unavailable). कृपया Render Dashboard में MONGODB_URI जोड़ें एवं MongoDB Atlas Network Access में 0.0.0.0/0 IP Whitelist करें।',
+        detail: err.message
+      });
+    }
+  }
+  next();
+});
 
 // @route   POST /api/auth/register
 // @desc    Register a new user (Customer or Agent)

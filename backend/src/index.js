@@ -34,7 +34,7 @@ if (jwtSecret.length < 32) {
 }
 
 const app = express();
-const PORT = process.env.BACKEND_PORT || process.env.PORT || 8000;
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 8000;
 
 app.set('trust proxy', 1);
 
@@ -155,7 +155,7 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
 });

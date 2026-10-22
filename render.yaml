@@ -19,7 +19,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://pradhandigitalservices.in,https://pradhan-frontend.onrender.com
+        value: https://pradhandigitalservices.in,https://pradhan-frontend.onrender.com,https://pradhan-frontend-4g39.onrender.com
       - key: ADMIN_DEFAULT_PASSWORD
         sync: false
       - key: AGENT_DEFAULT_PASSWORD

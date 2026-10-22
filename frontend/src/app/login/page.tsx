@@ -550,6 +550,21 @@ function LoginContent() {
                       </button>
                     )}
                   </div>
+                  {demoOtpNotice && (
+                    <div className="p-2.5 rounded-xl bg-saffron-500/20 border border-saffron-500/40 text-saffron-300 flex items-center justify-between text-xs mt-2">
+                      <span className="font-mono font-bold">🔑 {demoOtpNotice}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const code = demoOtpNotice.replace(/\D/g, "");
+                          if (code) setFormData((prev) => ({ ...prev, otp: code }));
+                        }}
+                        className="px-2.5 py-1 bg-saffron-500 text-navy-950 rounded-lg font-bold hover:bg-saffron-400 transition text-[11px]"
+                      >
+                        Auto-Fill Code
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

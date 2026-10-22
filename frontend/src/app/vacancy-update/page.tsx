@@ -43,6 +43,26 @@ export default function VacancyUpdatePage() {
   const [mode, setMode] = useState<"all" | "online" | "offline">("all");
   const [feeExemptOnly, setFeeExemptOnly] = useState(false);
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
+  const [syncing, setSyncing] = useState(false);
+
+  const handleLiveSync = async () => {
+    try {
+      setSyncing(true);
+      await vacancyApi.sync();
+      const res = await vacancyApi.getAll({ tab: activeTab });
+      if (res.data?.success && Array.isArray(res.data.vacancies)) {
+        setVacancies(res.data.vacancies);
+      }
+      const countsRes = await vacancyApi.getSummaryCounts();
+      if (countsRes.data?.success && countsRes.data.counts) {
+        setTabCounts(countsRes.data.counts);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Fetch real data from backend API with fallback
   useEffect(() => {
@@ -212,7 +232,16 @@ export default function VacancyUpdatePage() {
             </div>
 
             {/* Quick Helpline Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleLiveSync}
+                disabled={syncing}
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-navy-800 hover:bg-navy-700 border border-saffron-500/30 text-saffron-300 text-xs font-bold shadow-md transition disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin text-saffron-400" : ""}`} />
+                <span>{syncing ? (lang === "hi" ? "सिंक हो रहा है..." : "Syncing...") : (lang === "hi" ? "ताज़ा भर्तियां सिंक करें" : "Live Sync")}</span>
+              </button>
               <a
                 href={whatsAppUrl("नमस्ते, मुझे भर्ती/वैकेंसी फॉर्म भरने में सहायता चाहिए।")}
                 target="_blank"

@@ -532,6 +532,20 @@ router.delete('/:id', protect, authorize('admin'), asyncHandler(async (req, res)
 }));
 
 /**
+ * Public & Admin Sync Trigger
+ * GET/POST /api/vacancies/sync
+ */
+router.all('/sync', asyncHandler(async (req, res) => {
+  const syncModule = await import('../vacancy-sync/sync.js');
+  const summary = await syncModule.syncAllVacancies();
+  res.json({
+    success: true,
+    message: 'भर्तियां सफलतापूर्वक सिंक और अपडेट की गईं (Vacancies synced successfully)',
+    summary
+  });
+}));
+
+/**
  * Manual Sync Trigger
  */
 router.post('/sync/manual', protect, authorize('admin'), asyncHandler(async (req, res) => {

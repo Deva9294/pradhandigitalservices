@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import Payment from '../models/Payment.js';
 import ServiceApplication from '../models/ServiceApplication.js';
 import PaymentAdapterFactory from '../services/paymentAdapter.js';
@@ -193,7 +194,6 @@ export const processRefund = catchAsync(async (req, res) => {
 export const razorpayWebhook = catchAsync(async (req, res) => {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   const signature = req.headers['x-razorpay-signature'];
-  const crypto = require('crypto');
 
   const shasum = crypto.createHmac('sha256', secret);
   shasum.update(JSON.stringify(req.body));

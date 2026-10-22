@@ -5,15 +5,6 @@ export interface PostDetail {
   qualification?: string;
   ageLimit?: string;
   salary?: string;
-  categoryBreakdown?: {
-    ur?: number;
-    ews?: number;
-    obc?: number;
-    sc?: number;
-    st?: number;
-    female?: number;
-    pwd?: number;
-  };
 }
 
 export interface DocumentChecklistItem {
@@ -23,7 +14,6 @@ export interface DocumentChecklistItem {
   stage: 'application' | 'examination' | 'document_verification';
   allowedFormats?: string[];
   maxSizeKB?: number;
-  dimensions?: string;
   notificationReference?: string;
 }
 
@@ -44,7 +34,6 @@ export interface FeeStructure {
   female?: number;
   pwd?: number;
   portalCharges?: number;
-  exemptions?: string[];
   note?: string;
 }
 
@@ -60,71 +49,63 @@ export interface Vacancy {
   recruitingAuthority?: string;
   advertisementNumber?: string;
   recruitmentYear?: string;
-  locationScope?: 'MP' | 'All India' | 'State' | 'District';
+  locationScope?: 'MP' | 'All India' | 'State' | string;
   state: string;
-  category: string;
-  employmentType?: string;
-  applicationMode?: 'online' | 'offline' | 'both';
-  totalPosts: number;
-  salary?: string;
   qualification: string;
   qualificationLevel?: string;
   qualificationTags?: string[];
-  ageMinimum?: number;
-  ageMaximum?: number;
-  ageCalculationDate?: string;
-  ageRelaxation?: string;
-  domicileRequirement?: string;
-  physicalRequirements?: string;
-  startDate?: string;
   lastDate: string;
+  startDate?: string;
   feeLastDate?: string;
   correctionDate?: string;
   correctionEndDate?: string;
   examDate?: string;
   examDateNote?: string;
-  citySlipDate?: string;
   admitCardDate?: string;
-  answerKeyDate?: string;
+  admitCardUrl?: string;
   resultDate?: string;
-  status: 'active' | 'closing_soon' | 'upcoming' | 'closed' | 'archived' | 'cancelled';
+  resultUrl?: string;
+  scorecardUrl?: string;
+  meritListUrl?: string;
+  answerKeyDate?: string;
+  answerKeyUrl?: string;
+  syllabusUrl?: string;
+  totalPosts: number;
+  category: string;
+  employmentType?: string;
+  applicationMode?: 'online' | 'offline' | 'both' | string;
+  salary?: string;
+  status: string;
   dynamicStatus?: string;
-  isFeeExempt?: boolean;
+  ageMinimum?: number;
+  ageMaximum?: number;
+  ageRelaxation?: string;
+  domicileRequirement?: string;
   feeDetails?: FeeStructure;
   pdsAssistance?: {
     isAvailable: boolean;
     fee: number;
     notes?: string;
   };
-  documentChecklist?: DocumentChecklistItem[];
-  selectionProcess?: SelectionStage[];
-  applicationInstructions?: string;
-  applicationInstructionsHi?: string;
   offlineFormDetails?: {
     formPdfUrl?: string;
     submissionAddress?: string;
-    deadlineType?: 'dispatch' | 'receipt';
+    submissionGuidelines?: string;
+    deadlineType?: string;
   };
+  documentChecklist?: DocumentChecklistItem[];
+  selectionProcess?: SelectionStage[];
+  postDetails?: PostDetail[];
   officialWebsiteUrl?: string;
   applyUrl?: string;
-  applyLink?: string; // Legacy alias
+  applyLink?: string;
   notificationPdf?: string;
-  syllabusUrl?: string;
-  admitCardUrl?: string;
-  answerKeyUrl?: string;
-  resultUrl?: string;
-  scorecardUrl?: string;
-  meritListUrl?: string;
-  postedDate?: string;
-  type?: string;
-  isFeatured?: boolean;
+  isFeeExempt?: boolean;
 }
 
 export const indianStates = [
   "All India", "Madhya Pradesh", "Uttar Pradesh", "Bihar", "Rajasthan", "Delhi",
-  "Chhattisgarh", "Haryana", "Maharashtra", "Jharkhand", "Gujarat", "Punjab",
-  "Uttarakhand", "Himachal Pradesh", "West Bengal", "Odisha", "Assam", "Andhra Pradesh",
-  "Karnataka", "Tamil Nadu", "Kerala", "Telangana"
+  "Chhattisgarh", "Haryana", "Maharashtra", "Jharkhand", "Gujarat", "Punjab"
 ];
 
 export const qualifications = [
@@ -133,573 +114,877 @@ export const qualifications = [
 
 export const recruitmentAuthorities = [
   "All Authorities", "MPESB", "MPPSC", "MP Police", "MP High Court", "NHM MP",
-  "SSC", "UPSC", "RRB", "SBI", "India Post", "WCD MP"
+  "SSC", "UPSC", "RRB", "SBI", "India Post", "WCD MP", "IBPS", "MP Apex Bank"
 ];
 
-export const sampleVacancies: Vacancy[] = [
+function relDateStr(daysOffset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  return d.toISOString().split('T')[0];
+}
+
+export const sampleVacancies: Vacancy[] = ([
   {
-    id: "mpesb-sub-eng-2026",
-    slug: "mpesb-group-3-sub-engineer-recruitment-2026",
-    title: "MPESB Sub Engineer, Draftsman & Other Group-3 Combined Recruitment 2026",
-    titleHi: "एमपीईएसबी उप अभियंता, मानचित्रकार एवं अन्य पद समूह-3 संयुक्त भर्ती 2026",
-    organization: "MPESB Bhopal",
-    organizationHi: "एमपीईएसबी, भोपाल",
-    department: "Madhya Pradesh Employees Selection Board (MPESB)",
-    departmentHi: "मध्य प्रदेश कर्मचारी चयन मंडल (MPESB / व्यापम)",
-    recruitingAuthority: "MPESB",
-    advertisementNumber: "MPESB/2026/GRP3/01",
-    recruitmentYear: "2026",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "Diploma / Degree in Civil / Electrical / Mechanical Engineering",
-    qualificationLevel: "Diploma",
-    qualificationTags: ["Diploma", "B.E.", "B.Tech", "Engineering"],
-    lastDate: "2026-05-15",
-    startDate: "2026-03-01",
-    feeLastDate: "2026-05-15",
-    examDate: "2026-06-25",
-    totalPosts: 892,
-    category: "engineering",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹32,800 - ₹1,03,600 (Level 8)",
-    status: "active",
-    dynamicStatus: "active",
-    ageMinimum: 18,
-    ageMaximum: 40,
-    ageRelaxation: "5 Years relaxation for SC/ST/OBC and Women candidates of MP domicile",
-    domicileRequirement: "Must have valid MP Rojgar Panjiyan & MP Domicile",
-    feeDetails: {
-      isUnknown: false,
-      general: 500,
-      obc: 250,
-      ews: 250,
-      sc: 250,
-      st: 250,
-      female: 250,
-      pwd: 250,
-      portalCharges: 60,
-      note: "Unreserved ₹500 + ₹60 portal charge. MP SC/ST/OBC ₹250 + ₹60 portal charge."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 60,
-      notes: "MP Rojgar renewal, Vyapam profile creation, photo-signature resizing & receipt printout."
-    },
-    documentChecklist: [
-      { documentName: "MP Rojgar Panjiyan", documentNameHi: "एमपी रोजगार पंजीयन", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 200 },
-      { documentName: "MPESB Profile Template with Photo & Sign", documentNameHi: "व्यापम प्रोफाइल टेम्पलेट", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 200 },
-      { documentName: "Engineering Diploma / Degree Marksheet", documentNameHi: "डिप्लोमा / डिग्री अंकसूची", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 }
+    "id": "mpesb-sub-eng-2026",
+    "slug": "mpesb-group-3-sub-engineer-recruitment-2026",
+    "title": "MPESB Sub Engineer, Draftsman & Other Group-3 Combined Recruitment 2026",
+    "titleHi": "एमपीईएसबी उप अभियंता, मानचित्रकार एवं अन्य पद समूह-3 संयुक्त भर्ती परीक्षा 2026",
+    "department": "Madhya Pradesh Employees Selection Board (MPESB / Vyapam)",
+    "departmentHi": "मध्य प्रदेश कर्मचारी चयन मंडल (MPESB / व्यापम)",
+    "organization": "MPESB, Bhopal",
+    "organizationHi": "एमपीईएसबी, भोपाल",
+    "recruitingAuthority": "MPESB",
+    "advertisementNumber": "MPESB/2026/GRP3/01",
+    "recruitmentYear": "2026",
+    "vacancyType": "state",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "engineering",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 892,
+    "salary": "₹32,800 - ₹1,03,600 (Level 8)",
+    "qualification": "3 Years Diploma or B.E. / B.Tech in Civil / Electrical / Mechanical Engineering",
+    "qualificationLevel": "Diploma",
+    "qualificationTags": [
+      "Diploma",
+      "B.E.",
+      "B.Tech",
+      "Engineering"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Online CBT Examination (200 Marks)", titleHi: "ऑनलाइन लिखित परीक्षा", description: "100 Non-Technical (GK, Hindi, English, Maths, Reasoning, Science, Computer) + 100 Technical Core Questions." },
-      { stageNumber: 2, title: "Document Verification", titleHi: "दस्तावेज़ सत्यापन", description: "Verification of educational and domicile credentials at Bhopal." }
-    ],
-    officialWebsiteUrl: "https://esb.mp.gov.in",
-    applyUrl: "https://esb.mponline.gov.in",
-    applyLink: "https://esb.mponline.gov.in",
-    notificationPdf: "https://esb.mp.gov.in/Rulebooks/RB_2026/Group3_SubEngineer_Rulebook.pdf",
-    syllabusUrl: "https://esb.mp.gov.in/Syllabus/Group3_2026.pdf",
-    postedDate: "2026-03-01",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 40,
+    "ageRelaxation": "5 Years relaxation for SC/ST/OBC and Female candidates of MP domicile",
+    "domicileRequirement": "Must be a registered resident of Madhya Pradesh with valid MP Rojgar Panjiyan",
+    "startOffset": -10,
+    "lastOffset": 24,
+    "status": "active",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 60,
+    "officialWebsiteUrl": "https://esb.mp.gov.in",
+    "applyUrl": "https://esb.mponline.gov.in",
+    "notificationPdf": "https://esb.mp.gov.in/Rulebooks/RB_2026/Group3_SubEngineer_Rulebook.pdf"
   },
   {
-    id: "mppsc-sse-2026",
-    slug: "mppsc-state-service-examination-2026",
-    title: "MPPSC State Service Examination (SSE) 2026",
-    titleHi: "एमपीपीएससी राज्य सेवा परीक्षा 2026",
-    organization: "MPPSC Indore",
-    organizationHi: "एमपीपीएससी, इंदौर",
-    department: "Madhya Pradesh Public Service Commission (MPPSC)",
-    departmentHi: "मध्य प्रदेश लोक सेवा आयोग (MPPSC)",
-    recruitingAuthority: "MPPSC",
-    advertisementNumber: "01/EXAM/2026",
-    recruitmentYear: "2026",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "Bachelor Degree in any discipline from a recognized University",
-    qualificationLevel: "Graduate",
-    qualificationTags: ["Graduate", "B.A.", "B.Com", "B.Sc.", "B.Tech"],
-    lastDate: "2026-04-28",
-    startDate: "2026-01-19",
-    feeLastDate: "2026-04-28",
-    examDate: "2026-06-21",
-    admitCardDate: "2026-06-12",
-    totalPosts: 235,
-    category: "government",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹56,100 - ₹1,77,500 (Pay Level 12 / 10)",
-    status: "active",
-    dynamicStatus: "active",
-    ageMinimum: 21,
-    ageMaximum: 40,
-    ageRelaxation: "5 Years for SC/ST/OBC and Women candidates of MP",
-    domicileRequirement: "Open to all Indian citizens; quota reserved for MP domicile",
-    feeDetails: {
-      isUnknown: false,
-      general: 500,
-      obc: 250,
-      ews: 250,
-      sc: 250,
-      st: 250,
-      female: 250,
-      pwd: 250,
-      portalCharges: 40,
-      note: "MP SC/ST/OBC ₹250 + ₹40 portal charges. All others and out-of-state candidates ₹500 + ₹40."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 80,
-      notes: "OTR form checking, service preference selection, and guaranteed submission receipt."
-    },
-    documentChecklist: [
-      { documentName: "MP Rojgar Registration Slip", documentNameHi: "एमपी रोजगार पंजीयन पर्ची", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 200 },
-      { documentName: "Graduation Marksheet / Degree", documentNameHi: "स्नातक अंकसूची", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 },
-      { documentName: "Recent Color Passport Photograph", documentNameHi: "पासपोर्ट आकार फोटो", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 100 }
+    "id": "mppsc-sse-2026",
+    "slug": "mppsc-state-service-examination-2026",
+    "title": "MPPSC State Service Examination (SSE) & State Forest Service 2026",
+    "titleHi": "एमपीपीएससी राज्य सेवा परीक्षा एवं राज्य वन सेवा परीक्षा 2026",
+    "department": "Madhya Pradesh Public Service Commission (MPPSC)",
+    "departmentHi": "मध्य प्रदेश लोक सेवा आयोग (MPPSC), इंदौर",
+    "organization": "MPPSC Indore",
+    "organizationHi": "एमपीपीएससी इंदौर",
+    "recruitingAuthority": "MPPSC",
+    "advertisementNumber": "01/EXAM/2026",
+    "recruitmentYear": "2026",
+    "vacancyType": "state",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "administrative",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 227,
+    "salary": "₹56,100 - ₹1,77,500 (Deputy Collector / DSP Level)",
+    "qualification": "Bachelor Degree in Any Stream from Recognized University (Final Year Eligible)",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "B.A.",
+      "B.Sc.",
+      "B.Com",
+      "B.Tech"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Preliminary Examination", titleHi: "प्रारंभिक परीक्षा (Objective)", description: "GS Paper 1 (200 marks) + CSAT Paper 2 (200 marks)." },
-      { stageNumber: 2, title: "Main Written Examination", titleHi: "मुख्य परीक्षा (Descriptive)", description: "6 subjective papers totaling 1400 marks." },
-      { stageNumber: 3, title: "Interview / Personality Test", titleHi: "साक्षात्कार (175 अंक)", description: "Conducted at MPPSC head office Indore." }
-    ],
-    officialWebsiteUrl: "https://mppsc.mp.gov.in",
-    applyUrl: "https://mppsc.mp.gov.in",
-    applyLink: "https://mppsc.mp.gov.in",
-    notificationPdf: "https://mppsc.mp.gov.in/uploads/files/SSE_2026_Advt.pdf",
-    syllabusUrl: "https://mppsc.mp.gov.in/uploads/files/MPPSC_Syllabus_Revised.pdf",
-    postedDate: "2026-01-19",
-    type: "government"
+    "ageMinimum": 21,
+    "ageMaximum": 40,
+    "ageRelaxation": "5 Years relaxation for MP SC/ST/OBC/Women candidates (Max 45 years)",
+    "domicileRequirement": "Candidates from all states eligible; reservation benefits for MP domicile only",
+    "startOffset": -12,
+    "lastOffset": 26,
+    "status": "active",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 40,
+    "officialWebsiteUrl": "https://mppsc.mp.gov.in",
+    "applyUrl": "https://mppsc.mp.gov.in/applyonline",
+    "notificationPdf": "https://mppsc.mp.gov.in/Uploads/Advertisements/SSE_2026_Notification.pdf"
   },
   {
-    id: "mp-police-constable-2026",
-    slug: "mp-police-constable-gd-radio-recruitment-2026",
-    title: "MP Police Constable (GD & Radio) Recruitment 2026",
-    titleHi: "मध्य प्रदेश पुलिस आरक्षक (जीडी व रेडियो) भर्ती 2026",
-    organization: "MP Police / MPESB",
-    organizationHi: "एमपी पुलिस / एमपीईएसबी",
-    department: "Madhya Pradesh Police Headquarters, Bhopal",
-    departmentHi: "मध्य प्रदेश पुलिस मुख्यालय, भोपाल",
-    recruitingAuthority: "MPESB",
-    advertisementNumber: "PHQ/CONST/2026/02",
-    recruitmentYear: "2026",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "10th / 12th Pass (8th Pass for ST). ITI/Diploma for Radio",
-    qualificationLevel: "10th",
-    qualificationTags: ["10th", "12th", "ITI", "Police"],
-    lastDate: "2026-05-10",
-    startDate: "2026-03-10",
-    feeLastDate: "2026-05-10",
-    examDate: "2026-07-15",
-    totalPosts: 7500,
-    category: "police",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹19,500 - ₹62,000 (Level 4)",
-    status: "active",
-    dynamicStatus: "active",
-    ageMinimum: 18,
-    ageMaximum: 36,
-    feeDetails: {
-      isUnknown: false,
-      general: 500,
-      obc: 250,
-      ews: 250,
-      sc: 250,
-      st: 250,
-      female: 250,
-      pwd: 0,
-      portalCharges: 60,
-      note: "General ₹500 + ₹60 portal. Reserved categories ₹250 + ₹60."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 60,
-      notes: "Complete form assistance with photo-name-date standard compliance."
-    },
-    documentChecklist: [
-      { documentName: "10th Class Marksheet", documentNameHi: "10वीं अंकसूची", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 200 },
-      { documentName: "MP Rojgar Registration Slip", documentNameHi: "रोजगार पंजीयन रसीद", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 200 }
+    "id": "mp-police-constable-2026",
+    "slug": "mp-police-constable-gd-radio-recruitment-2026",
+    "title": "Madhya Pradesh Police Constable (GD & Radio Operator) Recruitment 2026",
+    "titleHi": "मध्य प्रदेश पुलिस आरक्षक (जीडी एवं रेडियो ऑपरेटर) भर्ती 2026",
+    "department": "MP Police Headquarters (PHQ) Bhopal",
+    "departmentHi": "म.प्र. पुलिस मुख्यालय, भोपाल",
+    "organization": "MP Police & MPESB",
+    "organizationHi": "म.प्र. पुलिस एवं कर्मचारी चयन मंडल",
+    "recruitingAuthority": "MP Police",
+    "advertisementNumber": "MPP/PHQ/2026/CONST/02",
+    "recruitmentYear": "2026",
+    "vacancyType": "police",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "police",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 7090,
+    "salary": "₹19,500 - ₹62,000",
+    "qualification": "10th / 12th Pass (8th Pass for ST candidates in scheduled areas)",
+    "qualificationLevel": "10th Pass",
+    "qualificationTags": [
+      "10th Pass",
+      "12th Pass",
+      "Police"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Computer Based Test (CBT)", titleHi: "ऑनलाइन लिखित परीक्षा (100 अंक)", description: "GK, Reasoning, Elementary Maths." },
-      { stageNumber: 2, title: "Physical Efficiency Test (PET)", titleHi: "शारीरिक दक्षता परीक्षा (PET)", description: "Running, Shot-put, and Long Jump." }
-    ],
-    officialWebsiteUrl: "https://esb.mp.gov.in",
-    applyUrl: "https://esb.mponline.gov.in",
-    applyLink: "https://esb.mponline.gov.in",
-    notificationPdf: "https://esb.mp.gov.in/Rulebooks/RB_2026/MP_Police_Constable_2026.pdf",
-    postedDate: "2026-03-10",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 36,
+    "domicileRequirement": "MP Domicile required for state reservations",
+    "startOffset": -45,
+    "lastOffset": -10,
+    "status": "active",
+    "resultDateOffset": -3,
+    "resultUrl": "https://esb.mp.gov.in/results/Result_2026/Police_Constable_Result.pdf",
+    "scorecardUrl": "https://esb.mponline.gov.in/scorecard",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 60,
+    "officialWebsiteUrl": "https://esb.mp.gov.in",
+    "applyUrl": "https://esb.mponline.gov.in"
   },
   {
-    id: "ssc-cgl-2026",
-    slug: "ssc-combined-graduate-level-cgl-exam-2026",
-    title: "SSC Combined Graduate Level (CGL) Examination 2026",
-    titleHi: "एसएससी संयुक्त स्नातक स्तरीय परीक्षा (CGL) 2026",
-    organization: "Staff Selection Commission",
-    organizationHi: "कर्मचारी चयन आयोग",
-    department: "Staff Selection Commission (SSC)",
-    departmentHi: "कर्मचारी चयन आयोग (SSC), भारत सरकार",
-    recruitingAuthority: "SSC",
-    advertisementNumber: "HQ-PPII03(2)/2026-PP_II",
-    recruitmentYear: "2026",
-    locationScope: "All India",
-    state: "All India",
-    qualification: "Bachelor Degree in any discipline from a recognized University",
-    qualificationLevel: "Graduate",
-    qualificationTags: ["Graduate", "B.A.", "B.Com", "B.Sc.", "B.Tech", "Central Govt"],
-    lastDate: "2026-05-24",
-    startDate: "2026-03-24",
-    feeLastDate: "2026-05-25",
-    examDate: "2026-09-10",
-    totalPosts: 14250,
-    category: "government",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹35,400 to ₹1,42,400 (Level 4 to Level 7)",
-    status: "active",
-    dynamicStatus: "active",
-    ageMinimum: 18,
-    ageMaximum: 32,
-    feeDetails: {
-      isUnknown: false,
-      general: 100,
-      obc: 100,
-      ews: 100,
-      sc: 0,
-      st: 0,
-      female: 0,
-      pwd: 0,
-      portalCharges: 0,
-      exemptions: ["Female candidates, SC, ST, and PwD applicants are officially 100% fee-exempt."],
-      note: "Fee ₹100 for UR/OBC Male. 100% Free for all women and SC/ST/PwD candidates."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 50,
-      notes: "SSC new portal live photo capture, post preference entry, and fee payment verification."
-    },
-    documentChecklist: [
-      { documentName: "SSC OTR (One Time Registration)", documentNameHi: "एसएससी ओटीआर पंजीयन", requirementType: "mandatory", stage: "application", allowedFormats: ["Text"] },
-      { documentName: "Live Webcam Photograph", documentNameHi: "लाइव वेबकैम फोटो", requirementType: "mandatory", stage: "application", allowedFormats: ["Live Camera"] },
-      { documentName: "Scanned Signature", documentNameHi: "हस्ताक्षर", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 20 }
+    "id": "mp-high-court-jja-2026",
+    "slug": "mp-high-court-junior-judicial-assistant-recruitment-2026",
+    "title": "MP High Court Junior Judicial Assistant (JJA) & Stenographer Recruitment 2026",
+    "titleHi": "मध्य प्रदेश उच्च न्यायालय कनिष्ठ न्यायिक सहायक (JJA) एवं आशुलिपिक भर्ती 2026",
+    "department": "High Court of Madhya Pradesh, Jabalpur",
+    "departmentHi": "उच्च न्यायालय मध्य प्रदेश, जबलपुर",
+    "organization": "MP High Court",
+    "organizationHi": "एमपी हाई कोर्ट, जबलपुर",
+    "recruitingAuthority": "MP High Court",
+    "advertisementNumber": "MPHC/EXAM/2026/412",
+    "recruitmentYear": "2026",
+    "vacancyType": "court",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "judicial",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 460,
+    "salary": "₹25,300 - ₹80,500 (Level 6)",
+    "qualification": "Bachelor Degree with CPCT Score Card (Hindi Typing 30 WPM) and 1-Year Computer Diploma",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "CPCT",
+      "Typing",
+      "Computer Diploma"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Tier-1 Computer Based Examination", titleHi: "टियर-1 ऑनलाइन परीक्षा (Qualifying)", description: "100 Questions (200 Marks) across Reasoning, GA, Quant, English." },
-      { stageNumber: 2, title: "Tier-2 Computer Based Examination", titleHi: "टियर-2 मुख्य परीक्षा", description: "Comprehensive paper with Maths, Reasoning, English, GA, Computer + DEST Typing." }
-    ],
-    officialWebsiteUrl: "https://ssc.gov.in",
-    applyUrl: "https://ssc.gov.in",
-    applyLink: "https://ssc.gov.in",
-    notificationPdf: "https://ssc.gov.in/api/announcement/notice_cgl_2026.pdf",
-    syllabusUrl: "https://ssc.gov.in/syllabus/cgl_2026.pdf",
-    postedDate: "2026-03-24",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 35,
+    "domicileRequirement": "MP Domicile for fee & reservation benefits",
+    "startOffset": -8,
+    "lastOffset": 22,
+    "status": "active",
+    "feeGeneral": 777,
+    "feeReserved": 577,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://mphc.gov.in",
+    "applyUrl": "https://mphc.gov.in/recruitment-portal"
   },
   {
-    id: "rrb-alp-2026",
-    slug: "rrb-alp-technician-centralized-recruitment-2026",
-    title: "Railway RRB Assistant Loco Pilot (ALP) & Technician 2026",
-    titleHi: "रेलवे भर्ती बोर्ड (RRB) सहायक लोको पायलट (ALP) व तकनीशियन भर्ती 2026",
-    organization: "Railway Recruitment Boards",
-    organizationHi: "रेलवे भर्ती बोर्ड",
-    department: "Ministry of Railways, Government of India",
-    departmentHi: "रेल मंत्रालय, भारत सरकार",
-    recruitingAuthority: "RRB",
-    advertisementNumber: "CEN 01/2026",
-    recruitmentYear: "2026",
-    locationScope: "All India",
-    state: "All India",
-    qualification: "10th + ITI in specified trade OR Diploma in Mechanical / Electrical Engineering",
-    qualificationLevel: "ITI",
-    qualificationTags: ["10th", "ITI", "Diploma", "Railway", "ALP"],
-    lastDate: "2026-04-18",
-    startDate: "2026-02-15",
-    feeLastDate: "2026-04-18",
-    examDate: "2026-07-20",
-    totalPosts: 18799,
-    category: "railway",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹19,900 (Level 2) + Running Allowances (approx ₹38,000)",
-    status: "closing_soon",
-    dynamicStatus: "closing_soon",
-    ageMinimum: 18,
-    ageMaximum: 33,
-    feeDetails: {
-      isUnknown: false,
-      general: 500,
-      obc: 500,
-      ews: 500,
-      sc: 250,
-      st: 250,
-      female: 250,
-      pwd: 250,
-      portalCharges: 0,
-      exemptions: ["₹400 refunded to General/OBC and ₹250 refunded to SC/ST/Female on appearing in CBT-1."],
-      note: "₹500 for General/OBC (₹400 refundable). ₹250 for SC/ST/Female (fully refundable)."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 60,
-      notes: "Bank account refund details accuracy, ITI trade certificate matching, and zone selection."
-    },
-    documentChecklist: [
-      { documentName: "10th Passing Certificate", documentNameHi: "10वीं अंकसूची", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 },
-      { documentName: "ITI Certificate or Engineering Diploma", documentNameHi: "आईटीआई या इंजीनियरिंग डिप्लोमा", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 }
+    "id": "nhm-mp-cho-2026",
+    "slug": "nhm-mp-community-health-officer-cho-staff-nurse-2026",
+    "title": "National Health Mission (NHM MP) Community Health Officer (CHO) & Staff Nurse 2026",
+    "titleHi": "राष्ट्रीय स्वास्थ्य मिशन (NHM MP) कम्युनिटी हेल्थ ऑफिसर (CHO) एवं स्टाफ नर्स 2026",
+    "department": "National Health Mission, Department of Public Health and Family Welfare, MP",
+    "departmentHi": "राष्ट्रीय स्वास्थ्य मिशन, लोक स्वास्थ्य एवं परिवार कल्याण विभाग, म.प्र.",
+    "organization": "NHM MP, Bhopal",
+    "organizationHi": "एनएचएम मध्य प्रदेश, भोपाल",
+    "recruitingAuthority": "NHM MP",
+    "advertisementNumber": "NHM/HR/2026/CHO/980",
+    "recruitmentYear": "2026",
+    "vacancyType": "medical",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "medical",
+    "employmentType": "contractual",
+    "applicationMode": "online",
+    "totalPosts": 980,
+    "salary": "₹28,700 + ₹15,000 Performance Based Incentive (PBI)",
+    "qualification": "B.Sc. Nursing / Post Basic B.Sc. Nursing with Integrated CCH Curriculum or GNM",
+    "qualificationLevel": "Medical",
+    "qualificationTags": [
+      "Nursing",
+      "B.Sc Nursing",
+      "GNM",
+      "Medical"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "CBT-1 Screening Exam", titleHi: "प्रथम चरण सीबीटी (75 प्रश्न)", description: "Maths, Mental Ability, General Science, General Awareness." },
-      { stageNumber: 2, title: "CBT-2 Merit & Trade Test", titleHi: "द्वितीय चरण सीबीटी", description: "Part A (100 Marks Merit) + Part B (Qualifying Trade Test)." },
-      { stageNumber: 3, title: "Computer Based Aptitude Test (CBAT)", titleHi: "मनोवैज्ञानिक साइको टेस्ट", description: "Qualifying battery for ALP posts." }
-    ],
-    officialWebsiteUrl: "https://www.rrbapply.gov.in",
-    applyUrl: "https://www.rrbapply.gov.in",
-    applyLink: "https://www.rrbapply.gov.in",
-    notificationPdf: "https://www.rrbcdg.gov.in/uploads/CEN_01_2026_ALP.pdf",
-    postedDate: "2026-02-15",
-    type: "government"
+    "ageMinimum": 21,
+    "ageMaximum": 40,
+    "domicileRequirement": "Must possess valid registration with MP Nursing Council",
+    "startOffset": -14,
+    "lastOffset": 18,
+    "status": "active",
+    "feeGeneral": 0,
+    "feeReserved": 0,
+    "portalFee": 50,
+    "officialWebsiteUrl": "https://nhmmp.gov.in",
+    "applyUrl": "https://nhmmp.mponline.gov.in"
   },
   {
-    id: "india-post-gds-2026",
-    slug: "india-post-gds-recruitment-2026",
-    title: "India Post Gramin Dak Sevak (GDS, BPM, ABPM) Recruitment 2026",
-    titleHi: "भारतीय डाक ग्रामीण डाक सेवक (GDS) भर्ती 2026",
-    organization: "India Post",
-    organizationHi: "भारतीय डाक विभाग",
-    department: "Department of Posts, Ministry of Communications",
-    departmentHi: "डाक विभाग, भारत सरकार",
-    recruitingAuthority: "India Post",
-    advertisementNumber: "GDS/ONLINE/2026/01",
-    recruitmentYear: "2026",
-    locationScope: "All India",
-    state: "Madhya Pradesh & All India",
-    qualification: "10th Class passed with Mathematics and English from any recognized Board",
-    qualificationLevel: "10th",
-    qualificationTags: ["10th", "No Exam", "Merit Based", "Post Office", "GDS"],
-    lastDate: "2026-05-15",
-    startDate: "2026-03-20",
-    resultDate: "2026-06-15",
-    totalPosts: 44228,
-    category: "government",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹12,000 - ₹29,380 (TRCA Slab)",
-    status: "active",
-    dynamicStatus: "active",
-    ageMinimum: 18,
-    ageMaximum: 40,
-    feeDetails: {
-      isUnknown: false,
-      general: 100,
-      obc: 100,
-      ews: 100,
-      sc: 0,
-      st: 0,
-      female: 0,
-      pwd: 0,
-      portalCharges: 0,
-      exemptions: ["All female candidates, SC/ST, PwD, and Transwomen are officially 100% fee-exempt."],
-      note: "Fee ₹100 for UR/OBC Male. 100% Free for all Female and SC/ST candidates."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 50,
-      notes: "Division and post office preference selection guidance to maximize merit chances."
-    },
-    documentChecklist: [
-      { documentName: "10th Marksheet", documentNameHi: "10वीं अंकसूची", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 100 },
-      { documentName: "Passport Size Photograph", documentNameHi: "फोटो", requirementType: "mandatory", stage: "application", allowedFormats: ["JPG"], maxSizeKB: 50 }
+    "id": "mp-anganwadi-2026",
+    "slug": "mp-anganwadi-worker-assistant-recruitment-2026",
+    "title": "MP Anganwadi Worker & Assistant Recruitment 2026 (District-Wise)",
+    "titleHi": "मध्य प्रदेश आंगनवाड़ी कार्यकर्ता एवं सहायिका भर्ती 2026 (जिलावार)",
+    "department": "Women and Child Development Department, Madhya Pradesh",
+    "departmentHi": "महिला एवं बाल विकास विभाग, मध्य प्रदेश शासन",
+    "organization": "WCD MP (All District Collectorates)",
+    "organizationHi": "महिला एवं बाल विकास विभाग (समस्त जिला कार्यालय)",
+    "recruitingAuthority": "WCD MP",
+    "advertisementNumber": "WCD/MP/2026/ANG/1850",
+    "recruitmentYear": "2026",
+    "vacancyType": "wcd",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "welfare",
+    "employmentType": "honorarium",
+    "applicationMode": "offline",
+    "totalPosts": 1850,
+    "salary": "₹13,000 (Worker) / ₹6,500 (Assistant) Monthly Honorarium",
+    "qualification": "12th Standard Passed for Worker; 10th / 8th Standard Passed for Assistant",
+    "qualificationLevel": "12th Pass",
+    "qualificationTags": [
+      "10th Pass",
+      "12th Pass",
+      "Women Only"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "10th Class Merit List (No Exam)", titleHi: "10वीं मेरिट सूची (परीक्षा मुक्त)", description: "Direct merit list calculated strictly based on 10th standard percentages." },
-      { stageNumber: 2, title: "Document Verification", titleHi: "दस्तावेज़ सत्यापन", description: "Verification at designated Postal Division Superintendent Office." }
-    ],
-    officialWebsiteUrl: "https://indiapostgdsonline.gov.in",
-    applyUrl: "https://indiapostgdsonline.gov.in",
-    applyLink: "https://indiapostgdsonline.gov.in",
-    notificationPdf: "https://indiapostgdsonline.gov.in/notifications/GDS_ONLINE_ENG_2026.pdf",
-    postedDate: "2026-03-20",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 45,
+    "domicileRequirement": "Must be a permanent local resident of the concerned revenue village / ward",
+    "startOffset": -15,
+    "lastOffset": 20,
+    "status": "active",
+    "feeGeneral": 0,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "offlineFormDetails": {
+      "formPdfUrl": "https://mpwcdmis.gov.in/forms/anganwadi_form_2026.pdf",
+      "submissionAddress": "Concerned District Project Office (WCD), Madhya Pradesh",
+      "submissionGuidelines": "Submit hard copy along with attested marksheets and domicile certificate directly to CDPO office."
+    },
+    "officialWebsiteUrl": "https://mpwcdmis.gov.in",
+    "applyUrl": "https://mpwcdmis.gov.in"
   },
   {
-    id: "mp-anganwadi-2026",
-    slug: "mp-anganwadi-worker-assistant-recruitment-2026",
-    title: "MP Anganwadi Worker & Assistant Recruitment 2026 (District Offline)",
-    titleHi: "मध्य प्रदेश आंगनवाड़ी कार्यकर्ता एवं सहायिका भर्ती 2026 (ऑफलाइन)",
-    organization: "Collector & District Programme Officer (WCD)",
-    organizationHi: "जिला कलेक्टर कार्यालय (महिला एवं बाल विकास)",
-    department: "Department of Women and Child Development, Madhya Pradesh",
-    departmentHi: "महिला एवं बाल विकास विभाग, मध्य प्रदेश",
-    recruitingAuthority: "WCD District Offices",
-    advertisementNumber: "WCD/ANG/2026/DIST",
-    recruitmentYear: "2026",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "Worker: 12th Pass. Assistant: 10th Pass. Only female resident of concerned village/ward.",
-    qualificationLevel: "12th",
-    qualificationTags: ["10th", "12th", "Female", "Anganwadi", "Offline Form"],
-    lastDate: "2026-04-30",
-    startDate: "2026-03-01",
-    totalPosts: 3820,
-    category: "government",
-    employmentType: "contract",
-    applicationMode: "offline",
-    salary: "₹13,000 (Worker) / ₹6,500 (Helper) Monthly Honorarium",
-    status: "active",
-    dynamicStatus: "active",
-    isFeeExempt: true,
-    ageMinimum: 18,
-    ageMaximum: 45,
-    feeDetails: {
-      isUnknown: false,
-      general: 0,
-      obc: 0,
-      ews: 0,
-      sc: 0,
-      st: 0,
-      female: 0,
-      pwd: 0,
-      exemptions: ["Official application is 100% free of government fees."],
-      note: "No government fee charged."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 40,
-      notes: "PDS provides official prescribed form printout, document verification checklist, and CDPO office filing support."
-    },
-    offlineFormDetails: {
-      formPdfUrl: "https://mpwcdmis.gov.in/Downloads/Anganwadi_Application_Format.pdf",
-      submissionAddress: "Concerned CDPO Office of your Tehsil/Block.",
-      deadlineType: "receipt"
-    },
-    documentChecklist: [
-      { documentName: "10th / 12th Marksheet Copy", documentNameHi: "10वीं / 12वीं अंकसूची प्रति", requirementType: "mandatory", stage: "application", allowedFormats: ["Physical Copy"] },
-      { documentName: "Resident Proof (Samagra ID / Voter Card)", documentNameHi: "वार्ड / ग्राम निवासी प्रमाण पत्र", requirementType: "mandatory", stage: "application", allowedFormats: ["Physical Copy"] }
+    "id": "ssc-cgl-2026",
+    "slug": "ssc-combined-graduate-level-cgl-exam-2026",
+    "title": "SSC Combined Graduate Level (CGL) Examination 2026 (Tier-II Admit Card)",
+    "titleHi": "कर्मचारी चयन आयोग संयुक्त स्नातक स्तरीय (SSC CGL) परीक्षा 2026",
+    "department": "Staff Selection Commission (SSC), New Delhi",
+    "departmentHi": "कर्मचारी चयन आयोग (SSC), भारत सरकार",
+    "organization": "Staff Selection Commission",
+    "organizationHi": "स्टाफ सिलेक्शन कमीशन",
+    "recruitingAuthority": "SSC",
+    "advertisementNumber": "SSC/CGL/HQ/2026/01",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "central_govt",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 17727,
+    "salary": "₹25,500 - ₹1,51,100 (Pay Level 4 to Level 8)",
+    "qualification": "Bachelor Degree in Any Stream from a Recognized University",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "CGL",
+      "Central Govt",
+      "Group B",
+      "Group C"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Merit Score Calculation", titleHi: "मेरिट अंक निर्धारण", description: "Merit based on educational qualifications + BPL/widow bonus points." },
-      { stageNumber: 2, title: "Claims & Objections Window", titleHi: "दावा आपत्ति", description: "7 days public notice board objection window." }
-    ],
-    officialWebsiteUrl: "https://mpwcdmis.gov.in",
-    notificationPdf: "https://mpwcdmis.gov.in/Downloads/Anganwadi_Guideline_2026.pdf",
-    postedDate: "2026-03-01",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 32,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": -50,
+    "lastOffset": -15,
+    "status": "active",
+    "admitCardDateOffset": -2,
+    "examDateOffset": 14,
+    "admitCardUrl": "https://ssc.gov.in/admit-card",
+    "examDateNote": "Tier-II CBT Exam scheduled across all regional centers",
+    "feeGeneral": 100,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://ssc.gov.in",
+    "applyUrl": "https://ssc.gov.in"
   },
   {
-    id: "mp-high-court-jja-2026",
-    slug: "mp-high-court-junior-judicial-assistant-recruitment-2026",
-    title: "MP High Court Junior Judicial Assistant (JJA) Recruitment 2026",
-    titleHi: "मध्य प्रदेश उच्च न्यायालय कनिष्ठ न्यायिक सहायक भर्ती 2026",
-    organization: "MP High Court Jabalpur",
-    organizationHi: "मध्य प्रदेश उच्च न्यायालय, जबलपुर",
-    department: "High Court of Madhya Pradesh",
-    departmentHi: "मध्य प्रदेश उच्च न्यायालय",
-    recruitingAuthority: "MP High Court",
-    advertisementNumber: "MPHCC/JJA/2026/04",
-    recruitmentYear: "2026",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "Graduate with CPCT Scorecard (Hindi Typing) & 1 Year Computer Diploma",
-    qualificationLevel: "Graduate",
-    qualificationTags: ["Graduate", "CPCT", "Typing", "Computer Diploma"],
-    lastDate: "2026-04-20",
-    startDate: "2026-03-05",
-    examDate: "2026-06-05",
-    totalPosts: 384,
-    category: "judiciary",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹19,500 - ₹62,000 (Pay Level 4)",
-    status: "closing_soon",
-    dynamicStatus: "closing_soon",
-    ageMinimum: 18,
-    ageMaximum: 35,
-    feeDetails: {
-      isUnknown: false,
-      general: 777,
-      obc: 577,
-      ews: 777,
-      sc: 577,
-      st: 577,
-      female: 577,
-      pwd: 577,
-      portalCharges: 0,
-      note: "Fee inclusive of examination and portal charges."
-    },
-    pdsAssistance: {
-      isAvailable: true,
-      fee: 70,
-      notes: "CPCT scorecard verification and application submission."
-    },
-    documentChecklist: [
-      { documentName: "MP CPCT Scorecard", documentNameHi: "सीपीसीटी स्कोरकार्ड", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 },
-      { documentName: "Graduation Degree", documentNameHi: "स्नातक डिग्री", requirementType: "mandatory", stage: "application", allowedFormats: ["PDF"], maxSizeKB: 300 }
+    "id": "rrb-alp-2026",
+    "slug": "rrb-alp-technician-centralized-recruitment-2026",
+    "title": "Railway Recruitment Board (RRB) Assistant Loco Pilot (ALP) & Technician 2026",
+    "titleHi": "रेलवे भर्ती बोर्ड (RRB) सहायक लोको पायलट (ALP) एवं तकनीशियन भर्ती 2026",
+    "department": "Ministry of Railways, Government of India",
+    "departmentHi": "रेल मंत्रालय, भारत सरकार (Railway Board)",
+    "organization": "Railway Recruitment Boards (RRB Centralized)",
+    "organizationHi": "रेलवे भर्ती बोर्ड (RRB भोपाल, जबलपुर आदि)",
+    "recruitingAuthority": "RRB",
+    "advertisementNumber": "CEN 01/2026",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "railway",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 18799,
+    "salary": "₹19,900 - ₹63,200 (Level 2) + Running Allowance",
+    "qualification": "10th Pass + ITI (NCVT/SCVT) or 3-Year Diploma in Mechanical / Electrical / Automobile",
+    "qualificationLevel": "ITI",
+    "qualificationTags": [
+      "10th Pass",
+      "ITI",
+      "Diploma",
+      "Railway",
+      "ALP"
     ],
-    selectionProcess: [
-      { stageNumber: 1, title: "Online Preliminary Screening Test", titleHi: "प्रारंभिक स्क्रीनिंग परीक्षा", description: "English, Computer Knowledge, General Knowledge." },
-      { stageNumber: 2, title: "Hindi Typing Skill Test", titleHi: "हिंदी टाइपिंग दक्षता परीक्षा", description: "30 WPM Remington Gail typing test." }
-    ],
-    officialWebsiteUrl: "https://mphc.gov.in",
-    applyUrl: "https://mphc.gov.in/recruitment-result",
-    applyLink: "https://mphc.gov.in/recruitment-result",
-    notificationPdf: "https://mphc.gov.in/pdf/JJA_Recruitment_2026.pdf",
-    postedDate: "2026-03-05",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 33,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": -60,
+    "lastOffset": -20,
+    "status": "active",
+    "examDateOffset": 16,
+    "examDateNote": "CBT-1 Computer Based Screening Test City Intimation Slip Live",
+    "syllabusUrl": "https://rrbcdg.gov.in/syllabus/CEN01_2026_ALP.pdf",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://indianrailways.gov.in",
+    "applyUrl": "https://www.rrbapply.gov.in"
   },
   {
-    id: "mp-patwari-archive",
-    slug: "mpesb-patwari-group-2-subgroup-4-combined-recruitment-archive",
-    title: "MPESB Patwari & Group-2 Sub-Group-4 Combined Recruitment (Archive)",
-    titleHi: "एमपीईएसबी पटवारी एवं समूह-2 उपसमूह-4 संयुक्त भर्ती परीक्षा (अभिलेख)",
-    organization: "Land Records / MPESB",
-    organizationHi: "भू-अभिलेख ग्वालियर / एमपीईएसबी",
-    department: "Revenue Department, Madhya Pradesh",
-    departmentHi: "राजस्व विभाग, मध्य प्रदेश",
-    recruitingAuthority: "MPESB",
-    advertisementNumber: "MPESB/PATWARI/2024",
-    recruitmentYear: "2024",
-    locationScope: "MP",
-    state: "Madhya Pradesh",
-    qualification: "Graduate in any discipline + CPCT",
-    qualificationLevel: "Graduate",
-    qualificationTags: ["Graduate", "Patwari", "Revenue"],
-    lastDate: "2024-01-23",
-    startDate: "2024-01-05",
-    examDate: "2024-03-15",
-    resultDate: "2024-06-30",
-    totalPosts: 9073,
-    category: "government",
-    employmentType: "regular",
-    applicationMode: "online",
-    salary: "₹25,300 - ₹80,500 (Level 6)",
-    status: "archived",
-    dynamicStatus: "archived",
-    feeDetails: {
-      isUnknown: false,
-      general: 500,
-      obc: 250,
-      sc: 250,
-      st: 250,
-      portalCharges: 60,
-      note: "Recruitment cycle concluded."
-    },
-    pdsAssistance: {
-      isAvailable: false,
-      fee: 0,
-      notes: "This recruitment cycle is closed and archived."
-    },
-    selectionProcess: [
-      { stageNumber: 1, title: "Written Examination", titleHi: "लिखित परीक्षा", description: "200 Marks examination." }
+    "id": "india-post-gds-2026",
+    "slug": "india-post-gds-recruitment-2026",
+    "title": "India Post Gramin Dak Sevak (GDS, BPM, ABPM) Recruitment 2026 (Merit List Released)",
+    "titleHi": "भारतीय डाक ग्रामीण डाक सेवक (GDS, बीपीएम, एबीपीएम) भर्ती 2026 (मेरिट सूची जारी)",
+    "department": "Department of Posts, Ministry of Communications, Government of India",
+    "departmentHi": "डाक विभाग, संचार मंत्रालय, भारत सरकार",
+    "organization": "India Post (MP Circle & All India Circles)",
+    "organizationHi": "भारतीय डाक (मध्य प्रदेश परिमंडल)",
+    "recruitingAuthority": "India Post",
+    "advertisementNumber": "IP/GDS/ONLINE/2026/CYCLE-VII",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "postal",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 44228,
+    "salary": "₹12,000 - ₹29,380 (TRCA Slab)",
+    "qualification": "10th Standard Passed with Mathematics and English (Studied local language)",
+    "qualificationLevel": "10th Pass",
+    "qualificationTags": [
+      "10th Pass",
+      "Post Office",
+      "Direct Merit",
+      "No Exam"
     ],
-    officialWebsiteUrl: "https://esb.mp.gov.in",
-    resultUrl: "https://esb.mp.gov.in/results/RESULT_2024/PATWARI_RES.HTM",
-    scorecardUrl: "https://esb.mp.gov.in/results/RESULT_2024/PATWARI_RES.HTM",
-    meritListUrl: "https://esb.mp.gov.in/results/RESULT_2024/PATWARI_MERIT.PDF",
-    notificationPdf: "https://esb.mp.gov.in/Rulebooks/RB_2023/Patwari_RuleBook.pdf",
-    postedDate: "2024-01-05",
-    type: "government"
+    "ageMinimum": 18,
+    "ageMaximum": 40,
+    "domicileRequirement": "All India candidates eligible; local circle language required",
+    "startOffset": -55,
+    "lastOffset": -12,
+    "status": "active",
+    "resultDateOffset": -4,
+    "resultUrl": "https://indiapostgdsonline.gov.in/gds_merit_list_mp.pdf",
+    "feeGeneral": 100,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://indiapostgdsonline.gov.in",
+    "applyUrl": "https://indiapostgdsonline.gov.in"
+  },
+  {
+    "id": "ssc-constable-gd-2026",
+    "slug": "ssc-constable-gd-capf-recruitment-2026",
+    "title": "SSC Constable GD in BSF, CISF, CRPF, SSB, ITBP, AR & SSF 2026-2027",
+    "titleHi": "एसएससी कांस्टेबल जीडी (BSF, CISF, CRPF, ITBP, SSB, असम राइफल्स) भर्ती 2026-2027",
+    "department": "Staff Selection Commission (Ministry of Home Affairs)",
+    "departmentHi": "कर्मचारी चयन आयोग एवं गृह मंत्रालय, भारत सरकार",
+    "organization": "Central Armed Police Forces (CAPFs)",
+    "organizationHi": "केंद्रीय सशस्त्र पुलिस बल",
+    "recruitingAuthority": "SSC",
+    "advertisementNumber": "SSC/GD/CONST/2026/02",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "defence",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 39481,
+    "salary": "₹21,700 - ₹69,100 (Level 3)",
+    "qualification": "10th Standard (Matriculation) from any Recognized Board in India",
+    "qualificationLevel": "10th Pass",
+    "qualificationTags": [
+      "10th Pass",
+      "Constable GD",
+      "Army/Paramilitary",
+      "Defence"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 23,
+    "ageRelaxation": "3 Yrs OBC, 5 Yrs SC/ST, Ex-Servicemen as per central rules",
+    "domicileRequirement": "Domicile of concerned State/UT mandatory",
+    "startOffset": -18,
+    "lastOffset": 30,
+    "status": "active",
+    "feeGeneral": 100,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://ssc.gov.in",
+    "applyUrl": "https://ssc.gov.in"
+  },
+  {
+    "id": "sbi-clerk-2026",
+    "slug": "sbi-junior-associates-clerk-recruitment-2026",
+    "title": "State Bank of India (SBI) Junior Associates (Customer Support & Sales) 2026",
+    "titleHi": "भारतीय स्टेट बैंक (SBI) जूनियर एसोसिएट (क्लर्क) भर्ती परीक्षा 2026",
+    "department": "State Bank of India, Central Recruitment & Promotion Department",
+    "departmentHi": "भारतीय स्टेट बैंक (SBI) केंद्रीय भर्ती मंडल, मुंबई",
+    "organization": "State Bank of India",
+    "organizationHi": "स्टेट बैंक ऑफ इंडिया",
+    "recruitingAuthority": "SBI",
+    "advertisementNumber": "CRPD/CR/2026-27/08",
+    "recruitmentYear": "2026",
+    "vacancyType": "banking",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "banking",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 8283,
+    "salary": "₹26,000 - ₹34,000 Initial In-Hand CTC",
+    "qualification": "Graduation in Any Discipline from a Recognized University",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "Banking",
+      "SBI",
+      "Clerk"
+    ],
+    "ageMinimum": 20,
+    "ageMaximum": 28,
+    "domicileRequirement": "Must know local language of the opted state (Hindi for MP Circle)",
+    "startOffset": -12,
+    "lastOffset": 24,
+    "status": "active",
+    "feeGeneral": 750,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://sbi.co.in/careers",
+    "applyUrl": "https://ibpsonline.ibps.in/sbijamar26"
+  },
+  {
+    "id": "mpesb-primary-tet-2026",
+    "slug": "mpesb-primary-teacher-tet-recruitment-2026",
+    "title": "MPESB Primary School Teacher Eligibility Test (Varg-3 TET) 2026 (Closing Soon)",
+    "titleHi": "एमपीईएसबी प्राथमिक शिक्षक पात्रता परीक्षा (वर्ग-3) 2026 (अंतिम तिथि नजदीक)",
+    "department": "School Education and Tribal Affairs Department, MP",
+    "departmentHi": "स्कूल शिक्षा एवं जनजातीय कार्य विभाग, मध्य प्रदेश शासन",
+    "organization": "MPESB Bhopal",
+    "organizationHi": "कर्मचारी चयन मंडल, भोपाल",
+    "recruitingAuthority": "MPESB",
+    "advertisementNumber": "MPESB/2026/PSTET/03",
+    "recruitmentYear": "2026",
+    "vacancyType": "teaching",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "teaching",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 12500,
+    "salary": "₹25,300 + Allowances (Teacher Scale)",
+    "qualification": "12th Pass (50%) + 2-Year D.El.Ed / D.Ed or B.El.Ed",
+    "qualificationLevel": "12th Pass",
+    "qualificationTags": [
+      "12th Pass",
+      "D.El.Ed",
+      "Teacher",
+      "TET",
+      "MP Varg 3"
+    ],
+    "ageMinimum": 21,
+    "ageMaximum": 40,
+    "domicileRequirement": "MP Domicile required for state category reservation",
+    "startOffset": -24,
+    "lastOffset": 4,
+    "status": "closing_soon",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 60,
+    "officialWebsiteUrl": "https://esb.mp.gov.in",
+    "applyUrl": "https://esb.mponline.gov.in"
+  },
+  {
+    "id": "mp-forest-guard-2026",
+    "slug": "mp-forest-guard-jail-prahari-recruitment-2026",
+    "title": "MP Forest Guard (Van Rakshak) & Jail Prahari Combined Recruitment 2026 (Closing Soon)",
+    "titleHi": "मध्य प्रदेश वनरक्षक एवं जेल प्रहरी संयुक्त भर्ती परीक्षा 2026 (अंतिम तिथि नजदीक)",
+    "department": "Forest Department & Jail Department, Madhya Pradesh",
+    "departmentHi": "वन विभाग एवं जेल विभाग, मध्य प्रदेश शासन",
+    "organization": "MPESB Bhopal",
+    "organizationHi": "कर्मचारी चयन मंडल, भोपाल",
+    "recruitingAuthority": "MPESB",
+    "advertisementNumber": "MPESB/2026/VAN/04",
+    "recruitmentYear": "2026",
+    "vacancyType": "state",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "police",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 2112,
+    "salary": "₹19,500 - ₹62,000",
+    "qualification": "10th Standard (High School) Passed from Recognized MP Board",
+    "qualificationLevel": "10th Pass",
+    "qualificationTags": [
+      "10th Pass",
+      "Forest Guard",
+      "Jail Prahari",
+      "MPESB"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 33,
+    "domicileRequirement": "MP Domicile with active Rojgar Panjiyan required",
+    "startOffset": -25,
+    "lastOffset": 5,
+    "status": "closing_soon",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 60,
+    "officialWebsiteUrl": "https://esb.mp.gov.in",
+    "applyUrl": "https://esb.mponline.gov.in"
+  },
+  {
+    "id": "rrb-ntpc-2026",
+    "slug": "railway-rrb-ntpc-recruitment-2026",
+    "title": "Railway RRB NTPC (Non-Technical Popular Categories) Graduate & Undergraduate 2026",
+    "titleHi": "रेलवे आरआरबी एनटीपीसी स्नातक एवं 12वीं पास गैर-तकनीकी भर्ती 2026 (11,558 पद)",
+    "department": "Ministry of Railways, Government of India",
+    "departmentHi": "रेल मंत्रालय, भारत सरकार",
+    "organization": "Railway Recruitment Control Board",
+    "organizationHi": "रेलवे भर्ती नियंत्रण बोर्ड (RRB All Zones)",
+    "recruitingAuthority": "RRB",
+    "advertisementNumber": "CEN 05/2026 & 06/2026",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "railway",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 11558,
+    "salary": "₹19,900 - ₹35,400 (Level 2 to Level 5)",
+    "qualification": "12th Pass for Junior Clerk / Typist; Any Bachelor Degree for Goods Train Manager, Station Master",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "12th Pass",
+      "Graduate",
+      "Railway",
+      "NTPC",
+      "Station Master"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 36,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": -6,
+    "lastOffset": 34,
+    "status": "active",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://indianrailways.gov.in",
+    "applyUrl": "https://www.rrbapply.gov.in"
+  },
+  {
+    "id": "ibps-po-2026",
+    "slug": "ibps-po-cwe-recruitment-2026",
+    "title": "IBPS Probationary Officer (CRP PO/MT XIV) 2026 (Mains Admit Card Released)",
+    "titleHi": "आईबीपीएस बैंक पीओ (CRP PO/MT-XIV) भर्ती 2026 (मुख्य परीक्षा प्रवेश पत्र जारी)",
+    "department": "Institute of Banking Personnel Selection (IBPS)",
+    "departmentHi": "बैंकिंग कार्मिक चयन संस्थान (IBPS), मुंबई",
+    "organization": "11 Participating Public Sector Banks",
+    "organizationHi": "11 राष्ट्रीयकृत बैंक (PNB, Canara, BoB, etc.)",
+    "recruitingAuthority": "IBPS",
+    "advertisementNumber": "IBPS/CRP-PO/XIV/2026",
+    "recruitmentYear": "2026",
+    "vacancyType": "banking",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "banking",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 3955,
+    "salary": "₹52,000 - ₹58,000 Starting Monthly Gross Emoluments",
+    "qualification": "Graduation Degree in Any Stream from a Recognized University",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "IBPS",
+      "Bank PO",
+      "Banking"
+    ],
+    "ageMinimum": 20,
+    "ageMaximum": 30,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": -60,
+    "lastOffset": -25,
+    "status": "active",
+    "admitCardDateOffset": -2,
+    "admitCardUrl": "https://ibps.in/crp-po-mt-xiv-call-letter",
+    "examDateOffset": 12,
+    "feeGeneral": 850,
+    "feeReserved": 175,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://ibps.in",
+    "applyUrl": "https://ibps.in"
+  },
+  {
+    "id": "ssc-chsl-key-2026",
+    "slug": "ssc-chsl-answer-key-2026",
+    "title": "SSC Combined Higher Secondary Level (CHSL 10+2) Tier-I Answer Key & Response Sheet 2026",
+    "titleHi": "एसएससी सीएचएसएल (10+2) टियर-1 उत्तर कुंजी एवं आपत्तियां 2026",
+    "department": "Staff Selection Commission (SSC)",
+    "departmentHi": "कर्मचारी चयन आयोग, भारत सरकार",
+    "organization": "Staff Selection Commission",
+    "organizationHi": "एसएससी",
+    "recruitingAuthority": "SSC",
+    "advertisementNumber": "SSC/CHSL/2026/01",
+    "recruitmentYear": "2026",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "central_govt",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 3712,
+    "salary": "₹19,900 - ₹81,100 (LDC, JSA, DEO)",
+    "qualification": "12th Standard Passed from Recognized Board",
+    "qualificationLevel": "12th Pass",
+    "qualificationTags": [
+      "12th Pass",
+      "CHSL",
+      "SSC",
+      "Answer Key"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 27,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": -65,
+    "lastOffset": -30,
+    "status": "active",
+    "answerKeyDateOffset": -2,
+    "answerKeyUrl": "https://ssc.gov.in/answer-keys/chsl-2026-tier1-key",
+    "feeGeneral": 100,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://ssc.gov.in",
+    "applyUrl": "https://ssc.gov.in"
+  },
+  {
+    "id": "upsc-cse-2027",
+    "slug": "upsc-civil-services-exam-2027",
+    "title": "UPSC Civil Services Examination (IAS/IPS/IFS Prelims) 2027 (Upcoming)",
+    "titleHi": "संघ लोक सेवा आयोग सिविल सेवा (आईएएस/आईपीएस) प्रारंभिक परीक्षा 2027 (आगामी)",
+    "department": "Union Public Service Commission (UPSC), Dholpur House, New Delhi",
+    "departmentHi": "संघ लोक सेवा आयोग (UPSC), नई दिल्ली",
+    "organization": "UPSC New Delhi",
+    "organizationHi": "यूपीएससी नई दिल्ली",
+    "recruitingAuthority": "UPSC",
+    "advertisementNumber": "04/2027-CSP",
+    "recruitmentYear": "2027",
+    "vacancyType": "central",
+    "locationScope": "All India",
+    "state": "All India",
+    "category": "administrative",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 1056,
+    "salary": "₹56,100 - ₹2,50,000 (IAS / IPS / IFS)",
+    "qualification": "Graduation in Any Stream from Recognized University",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "UPSC",
+      "IAS",
+      "IPS",
+      "All India"
+    ],
+    "ageMinimum": 21,
+    "ageMaximum": 32,
+    "domicileRequirement": "Citizen of India",
+    "startOffset": 16,
+    "lastOffset": 48,
+    "status": "upcoming",
+    "feeGeneral": 100,
+    "feeReserved": 0,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://upsc.gov.in",
+    "applyUrl": "https://upsconline.nic.in"
+  },
+  {
+    "id": "mp-apex-bank-2026",
+    "slug": "mp-cooperative-apex-bank-recruitment-2026",
+    "title": "MP State Cooperative Bank (Apex Bank) Banking Assistant & Officer Grade 2026 (Upcoming)",
+    "titleHi": "मध्य प्रदेश राज्य सहकारी बैंक (अपेक्स बैंक) बैंकिंग सहायक एवं अधिकारी भर्ती 2026 (आगामी)",
+    "department": "Cooperative Department, Government of Madhya Pradesh",
+    "departmentHi": "सहकारिता विभाग, मध्य प्रदेश शासन",
+    "organization": "MP Rajya Sahakari Bank Maryadit (Apex Bank Bhopal)",
+    "organizationHi": "म.प्र. राज्य सहकारी बैंक मर्यादित (अपेक्स बैंक, भोपाल)",
+    "recruitingAuthority": "MP Apex Bank",
+    "advertisementNumber": "APEX/MP/2026/OFFICER/340",
+    "recruitmentYear": "2026",
+    "vacancyType": "banking",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "banking",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 340,
+    "salary": "₹34,000 - ₹78,000",
+    "qualification": "Graduation with at least 50% Marks and 1-Year Computer Diploma / BCA / B.Tech",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "Banking",
+      "Apex Bank",
+      "Cooperative"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 35,
+    "domicileRequirement": "MP Domicile required",
+    "startOffset": 12,
+    "lastOffset": 42,
+    "status": "upcoming",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 0,
+    "officialWebsiteUrl": "https://apexbank.net",
+    "applyUrl": "https://apexbank.net/recruitment"
+  },
+  {
+    "id": "mpesb-patwari-archive",
+    "slug": "mpesb-patwari-group-2-subgroup-4-combined-recruitment-archive",
+    "title": "MPESB Patwari & Group-2 Sub-Group-4 Combined Recruitment (Archive)",
+    "titleHi": "एमपीईएसबी पटवारी एवं समूह-2 उप-समूह-4 संयुक्त भर्ती परीक्षा (अभिलेख / पूर्ण)",
+    "department": "Revenue and Other Departments, Madhya Pradesh",
+    "departmentHi": "राजस्व एवं अन्य विभाग, मध्य प्रदेश शासन",
+    "organization": "MPESB Bhopal",
+    "organizationHi": "कर्मचारी चयन मंडल, भोपाल",
+    "recruitingAuthority": "MPESB",
+    "advertisementNumber": "MPESB/REV/PAT/ARCHIVE",
+    "recruitmentYear": "2025",
+    "vacancyType": "state",
+    "locationScope": "MP",
+    "state": "Madhya Pradesh",
+    "category": "administrative",
+    "employmentType": "regular",
+    "applicationMode": "online",
+    "totalPosts": 9073,
+    "salary": "₹22,100 - ₹70,000",
+    "qualification": "Graduate Degree with CPCT Qualified",
+    "qualificationLevel": "Graduate",
+    "qualificationTags": [
+      "Graduate",
+      "Patwari",
+      "Revenue",
+      "Archive"
+    ],
+    "ageMinimum": 18,
+    "ageMaximum": 40,
+    "domicileRequirement": "MP Domicile required",
+    "startOffset": -120,
+    "lastOffset": -60,
+    "status": "archived",
+    "feeGeneral": 500,
+    "feeReserved": 250,
+    "portalFee": 60,
+    "officialWebsiteUrl": "https://esb.mp.gov.in",
+    "applyUrl": "https://esb.mponline.gov.in"
   }
-];
+] as any[])
+  .map((v: any): Vacancy => {
+    const startDate = relDateStr(v.startOffset);
+    const lastDate = relDateStr(v.lastOffset);
+    const examDate = v.examDateOffset ? relDateStr(v.examDateOffset) : relDateStr(v.lastOffset + 25);
+    const admitCardDate = v.admitCardDateOffset ? relDateStr(v.admitCardDateOffset) : undefined;
+    const resultDate = v.resultDateOffset ? relDateStr(v.resultDateOffset) : undefined;
+    const answerKeyDate = v.answerKeyDateOffset ? relDateStr(v.answerKeyDateOffset) : undefined;
+
+    return {
+      id: v.id,
+      slug: v.slug,
+      title: v.title,
+      titleHi: v.titleHi,
+      department: v.department,
+      departmentHi: v.departmentHi,
+      organization: v.organization,
+      organizationHi: v.organizationHi,
+      recruitingAuthority: v.recruitingAuthority,
+      advertisementNumber: v.advertisementNumber,
+      recruitmentYear: v.recruitmentYear,
+      locationScope: v.locationScope,
+      state: v.state,
+      qualification: v.qualification,
+      qualificationLevel: v.qualificationLevel,
+      qualificationTags: v.qualificationTags,
+      totalPosts: v.totalPosts,
+      salary: v.salary,
+      category: v.category,
+      employmentType: v.employmentType,
+      applicationMode: v.applicationMode,
+      ageMinimum: v.ageMinimum,
+      ageMaximum: v.ageMaximum,
+      domicileRequirement: v.domicileRequirement,
+      status: v.status,
+      dynamicStatus: v.status,
+      startDate,
+      lastDate,
+      feeLastDate: lastDate,
+      examDate,
+      examDateNote: v.examDateNote,
+      admitCardDate,
+      admitCardUrl: v.admitCardUrl,
+      resultDate,
+      resultUrl: v.resultUrl,
+      scorecardUrl: v.scorecardUrl,
+      answerKeyDate,
+      answerKeyUrl: v.answerKeyUrl,
+      syllabusUrl: v.syllabusUrl,
+      officialWebsiteUrl: v.officialWebsiteUrl,
+      applyUrl: v.applyUrl,
+      applyLink: v.applyUrl,
+      notificationPdf: v.notificationPdf,
+      offlineFormDetails: v.offlineFormDetails,
+      feeDetails: {
+        isUnknown: false,
+        general: v.feeGeneral,
+        obc: v.feeReserved,
+        ews: v.feeReserved,
+        sc: v.feeReserved,
+        st: v.feeReserved,
+        female: v.feeReserved,
+        pwd: v.feeReserved,
+        portalCharges: v.portalFee,
+        note: `General: ₹${v.feeGeneral} + ₹${v.portalFee} | Reserved: ₹${v.feeReserved} + ₹${v.portalFee}`
+      },
+      pdsAssistance: {
+        isAvailable: true,
+        fee: 60,
+        notes: "Online Form Filling, Document Resizing, Fee Submission & Confirmation Receipt."
+      }
+    };
+  });

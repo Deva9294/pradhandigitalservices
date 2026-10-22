@@ -46,6 +46,12 @@ connectDB().then(async () => {
       const { seedCatalogue } = await import('./utils/seedCatalogue.js');
       await seedCatalogue();
     }
+    try {
+      const { seedVacancies } = await import("./utils/seedVacancies.js");
+      await seedVacancies();
+    } catch (vErr) {
+      console.error("Vacancies sync notice:", vErr.message);
+    }
   } catch (err) {
     console.error('Catalogue initialization notice:', err.message);
   }

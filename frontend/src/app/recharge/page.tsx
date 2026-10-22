@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Smartphone, Tv, IndianRupee, Zap, Clock, Shield, Lightbulb, Droplets, Flame, CreditCard, Wifi, Car, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { 
+  Smartphone, Tv, IndianRupee, Zap, Clock, Shield, Lightbulb, 
+  Droplets, Flame, CreditCard, Wifi, Car, AlertCircle, Loader2, 
+  CheckCircle2, Printer, Download, ArrowRight, RefreshCw, X
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { whatsAppUrl } from "@/lib/utils";
 import { rechargeApi } from "@/lib/api";
@@ -10,14 +14,28 @@ import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/validation";
 
 type RechargeType = "mobile" | "dth" | "electricity" | "water" | "gas" | "broadband" | "fastag" | "creditcard";
 
+interface PlanItem {
+  id: string;
+  name: string;
+  amount: number;
+  validity: string;
+  data: string;
+  category: string;
+  description: string;
+}
+
 export default function RechargePage() {
   const { lang } = useLanguage();
   const { showToast } = useToast();
   const [type, setType] = useState<RechargeType>("mobile");
   const [number, setNumber] = useState("");
-  const [provider, setProvider] = useState("");
+  const [provider, setProvider] = useState("jio");
   const [amount, setAmount] = useState("");
+  const [selectedPlanDesc, setSelectedPlanDesc] = useState("");
   const [loading, setLoading] = useState(false);
+  const [plans, setPlans] = useState<PlanItem[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [receipt, setReceipt] = useState<any>(null);
 
   const services = [
     { id: "mobile" as RechargeType, icon: Smartphone, name: "Mobile Recharge", nameHi: "मोबाइल रिचार्ज" },
@@ -27,7 +45,7 @@ export default function RechargePage() {
     { id: "gas" as RechargeType, icon: Flame, name: "Gas Booking", nameHi: "गैस बुकिंग" },
     { id: "broadband" as RechargeType, icon: Wifi, name: "Broadband", nameHi: "ब्रॉडबैंड" },
     { id: "fastag" as RechargeType, icon: Car, name: "FASTag", nameHi: "FASTag" },
-    { id: "creditcard" as RechargeType, icon: CreditCard, name: "Credit Card Bill", nameHi: "क्रेडिट कार्ड बिल" },
+    { id: "creditcard" as RechargeType, icon: CreditCard, name: "Credit Card Bill", nameHi: "क्रेडिट कार्ड" },
   ];
 
   const mobileProviders = [
@@ -38,13 +56,65 @@ export default function RechargePage() {
   ];
 
   const dthProviders = [
-    { id: "tatasky", name: "Tata Sky", logo: "📺" },
+    { id: "tatasky", name: "Tata Play", logo: "📺" },
     { id: "airteldth", name: "Airtel DTH", logo: "📡" },
     { id: "dish", name: "Dish TV", logo: "🛰️" },
     { id: "d2h", name: "D2H", logo: "📺" },
   ];
 
-  const quickAmounts = [199, 299, 499, 599, 799, 999];
+  const billProviders: Record<string, { id: string; name: string }[]> = {
+    electricity: [
+      { id: "mppkvvcl_central", name: "MPPKVVCL - Bhopal / Central MP (मध्य क्षेत्र विद्युत)" },
+      { id: "mppkvvcl_west", name: "MPPKVVCL - Indore / West MP (पश्चिम क्षेत्र विद्युत)" },
+      { id: "mppoorv", name: "MP Poorv Kshetra - Jabalpur (पूर्व क्षेत्र विद्युत)" },
+      { id: "uppcl", name: "UPPCL (Uttar Pradesh Power Corporation)" }
+    ],
+    water: [
+      { id: "mp_urban_water", name: "Bhopal / Sehore Municipal Water Tax" },
+      { id: "indore_water", name: "Indore Municipal Corporation (IMC) Jal Kar" }
+    ],
+    gas: [
+      { id: "indane", name: "Indane Gas (Indian Oil)" },
+      { id: "hp", name: "HP Gas (Hindustan Petroleum)" },
+      { id: "bharat", name: "Bharat Gas (BPCL)" }
+    ],
+    broadband: [
+      { id: "jio_fiber", name: "JioFiber / AirFiber" },
+      { id: "airtel_xstream", name: "Airtel Xstream Fiber" },
+      { id: "bsnl_ftth", name: "BSNL Bharat Fiber" }
+    ],
+    fastag: [
+      { id: "sbi_fastag", name: "State Bank of India (SBI) FASTag" },
+      { id: "icici_fastag", name: "ICICI Bank FASTag" },
+      { id: "airtel_fastag", name: "Airtel Payments Bank FASTag" }
+    ],
+    creditcard: [
+      { id: "sbi_card", name: "SBI Credit Card" },
+      { id: "hdfc_card", name: "HDFC Bank Credit Card" },
+      { id: "icici_card", name: "ICICI Bank Credit Card" }
+    ]
+  };
+
+  // Fetch operator plans when provider changes
+  useEffect(() => {
+    if (type === "mobile") {
+      setLoadingPlans(true);
+      rechargeApi.plans(provider)
+        .then((res) => {
+          if (res.data?.success && Array.isArray(res.data.plans)) {
+            setPlans(res.data.plans);
+          }
+        })
+        .catch(() => setPlans([]))
+        .finally(() => setLoadingPlans(false));
+    }
+  }, [type, provider]);
+
+  const handleSelectPlan = (p: PlanItem) => {
+    setAmount(String(p.amount));
+    setSelectedPlanDesc(`${p.name} - ${p.validity} (${p.data})`);
+    showToast("info", lang === "hi" ? `प्लान ₹${p.amount} चुना गया` : `Selected plan ₹${p.amount}`);
+  };
 
   const handleRecharge = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,43 +127,37 @@ export default function RechargePage() {
         throw new Error(lang === "hi" ? "वैध 10 अंकों का मोबाइल नंबर दर्ज करें" : "Enter a valid 10-digit mobile number");
       }
       if (type !== "mobile" && !number.trim()) {
-        throw new Error(lang === "hi" ? "खाता विवरण दर्ज करें" : "Enter account details");
+        throw new Error(lang === "hi" ? "खाता / उपभोक्ता नंबर दर्ज करें" : "Enter account / consumer number");
       }
       const parsedAmount = parseInt(amount, 10);
       if (!parsedAmount || parsedAmount < 10) {
-        throw new Error(lang === "hi" ? "वैध राशि दर्ज करें" : "Enter a valid amount");
+        throw new Error(lang === "hi" ? "वैध राशि दर्ज करें (कम से कम ₹10)" : "Enter a valid amount (min ₹10)");
       }
 
       setLoading(true);
 
-      const { data } =
+      const res =
         type === "mobile"
           ? await rechargeApi.mobile({
               phoneNumber: normalizeIndianMobile(number),
               provider,
               amount: parsedAmount,
+              plan: selectedPlanDesc || undefined
             })
           : type === "dth"
             ? await rechargeApi.dth({ customerId: number.trim(), provider, amount: parsedAmount })
-            : await rechargeApi.bill({ service: type, accountNumber: number.trim(), amount: parsedAmount });
+            : await rechargeApi.bill({ service: type, accountNumber: number.trim(), amount: parsedAmount, billerId: provider });
 
-      showToast("success", data?.message || (lang === "hi" ? "रिचार्ज सफल!" : "Recharge successful!"));
-      setNumber("");
-      setAmount("");
+      if (res.data?.success && res.data.data) {
+        setReceipt(res.data.data);
+        showToast("success", res.data?.message || (lang === "hi" ? "भुगतान सफल!" : "Payment successful!"));
+      }
     } catch (error: unknown) {
-      const status = (error as { response?: { status?: number } })?.response?.status;
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         (error as Error)?.message ||
         (lang === "hi" ? "रिचार्ज विफल" : "Recharge failed");
-      showToast(
-        "error",
-        status === 401
-          ? lang === "hi"
-            ? "भुगतान के लिए लॉगिन करें"
-            : "Please login to continue payment"
-          : message
-      );
+      showToast("error", message);
     } finally {
       setLoading(false);
     }
@@ -103,43 +167,53 @@ export default function RechargePage() {
     <div className="min-h-screen bg-navy-950 text-white">
       <div className="container mx-auto px-4 py-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-500/10 border border-saffron-500/20 text-saffron-400 text-xs font-semibold mb-2">
+            <Zap className="w-3.5 h-3.5" />
+            {lang === "hi" ? "भारत बिलपे (BBPS) एवं डायरेक्ट रिचार्ज" : "Bharat BillPay (BBPS) & Direct Recharge"}
+          </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">
             {lang === "hi" ? "रिचार्ज और बिल भुगतान" : "Recharge & Bill Payment"}
           </h1>
-          <p className="text-saffron-200/90">
-            {lang === "hi" ? "तेज़, सुरक्षित और विश्वसनीय" : "Fast, Secure & Reliable"}
+          <p className="text-saffron-200/90 text-sm md:text-base">
+            {lang === "hi" ? "मोबाइल, DTH, बिजली बिल, पानी कर, गैस बुकिंग एवं FASTag — तत्काल एवं डिजिटल रसीद सहित।" : "Fast, Secure & Reliable Digital Payments with Official Tax Invoices."}
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto">
           {/* Service Type Selection */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {services.map((service) => (
               <button
                 key={service.id}
-                onClick={() => setType(service.id)}
+                onClick={() => {
+                  setType(service.id);
+                  setReceipt(null);
+                  if (service.id === "mobile") setProvider("jio");
+                  else if (service.id === "dth") setProvider("tatasky");
+                  else if (billProviders[service.id]?.[0]) setProvider(billProviders[service.id][0].id);
+                }}
                 className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-2 ${
                   type === service.id
-                    ? "border-saffron-500 bg-saffron-500/15 text-white"
-                    : "border-white/10 bg-navy-900 text-white hover:border-saffron-300"
+                    ? "border-saffron-500 bg-saffron-500/15 text-white shadow-lg"
+                    : "border-white/10 bg-navy-900 text-white hover:border-saffron-400/50"
                 }`}
               >
-                <service.icon className={`w-6 h-6 ${type === service.id ? "text-saffron-400" : "text-saffron-600"}`} />
-                <span className="text-xs font-medium text-center">
+                <service.icon className={`w-6 h-6 ${type === service.id ? "text-saffron-400" : "text-saffron-500"}`} />
+                <span className="text-xs font-semibold text-center">
                   {lang === "hi" ? service.nameHi : service.name}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Recharge Form */}
-          <div className="glass-panel rounded-[32px] p-8 border border-white/10 shadow-2xl">
+          {/* Recharge & Bill Form */}
+          <div className="glass-panel rounded-[32px] p-6 sm:p-8 border border-white/10 shadow-2xl bg-navy-900/90 backdrop-blur-md">
             <form onSubmit={handleRecharge} className="space-y-6">
               {/* Provider Selection (for mobile/dth) */}
               {(type === "mobile" || type === "dth") && (
                 <div>
-                  <label className="block text-sm font-medium text-saffron-200/90 mb-3">
-                    {lang === "hi" ? "प्रोवाइडर चुनें" : "Select Provider"}
+                  <label className="block text-sm font-semibold text-saffron-200 mb-3">
+                    {lang === "hi" ? "ऑपरेटर / प्रोवाइडर चुनें" : "Select Operator / Provider"}
                   </label>
                   <div className="grid grid-cols-4 gap-3">
                     {(type === "mobile" ? mobileProviders : dthProviders).map((p) => (
@@ -147,14 +221,14 @@ export default function RechargePage() {
                         key={p.id}
                         type="button"
                         onClick={() => setProvider(p.id)}
-                        className={`p-3 rounded-2xl border-2 transition ${
+                        className={`p-3 rounded-2xl border-2 transition flex flex-col items-center justify-center ${
                           provider === p.id
-                            ? "border-saffron-500 bg-saffron-500/15 text-white"
-                            : "border-white/10 bg-navy-900 text-white hover:border-saffron-300"
+                            ? "border-saffron-500 bg-saffron-500/20 text-white font-bold"
+                            : "border-white/10 bg-navy-950/60 text-white hover:border-saffron-400"
                         }`}
                       >
                         <div className="text-2xl mb-1">{p.logo}</div>
-                        <div className="text-xs font-medium text-white">{p.name}</div>
+                        <div className="text-xs font-medium">{p.name}</div>
                       </button>
                     ))}
                   </div>
@@ -162,131 +236,240 @@ export default function RechargePage() {
               )}
 
               {/* Bill Provider Selection (for bills) */}
-              {["electricity", "water", "gas", "broadband"].includes(type) && (
+              {billProviders[type] && (
                 <div>
-                  <label className="block text-sm font-medium text-saffron-200/90 mb-3">
-                    {lang === "hi" ? "बोर्ड चुनें" : "Select Board"}
+                  <label className="block text-sm font-semibold text-saffron-200 mb-2">
+                    {lang === "hi" ? "संबंधित बोर्ड / कंपनी चुनें" : "Select Board / Biller"}
                   </label>
                   <select
                     value={provider}
                     onChange={(e) => setProvider(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-navy-900 text-white focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    className="w-full px-4 py-3 rounded-2xl border border-white/15 bg-navy-950 text-white focus:outline-none focus:ring-2 focus:ring-saffron-500 text-sm font-medium"
                   >
-                    <option value="">{lang === "hi" ? "बोर्ड चुनें..." : "Select board..."}</option>
-                    <option value="mp">MP Electricity Board</option>
-                    <option value="delhi">Delhi Jal Board</option>
-                    <option value="bharat">Bharat Gas</option>
-                    <option value="airtel">Airtel Broadband</option>
+                    {billProviders[type].map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
 
               {/* Number/Account Input */}
               <div>
-                <label className="block text-sm font-medium text-saffron-200/90 mb-2">
+                <label className="block text-sm font-semibold text-saffron-200 mb-2">
                   {type === "mobile" 
-                    ? lang === "hi" ? "मोबाइल नंबर" : "Mobile Number"
+                    ? (lang === "hi" ? "10 अंकों का मोबाइल नंबर" : "10-Digit Mobile Number")
                     : type === "dth"
-                    ? lang === "hi" ? "कस्टमर ID" : "Customer ID"
-                    : lang === "hi" ? "खाता नंबर" : "Account Number"}
+                    ? (lang === "hi" ? "कस्टमर ID / स्मार्ट कार्ड नंबर" : "Customer ID / VC Number")
+                    : type === "electricity"
+                    ? (lang === "hi" ? "उपभोक्ता क्रमांक (IVRS / Account No.)" : "Consumer / IVRS Number")
+                    : type === "gas"
+                    ? (lang === "hi" ? "LPG कंज्यूमर नंबर / मोबाइल" : "LPG Consumer / Registered Mobile")
+                    : type === "fastag"
+                    ? (lang === "hi" ? "वाहन रजिस्ट्रेशन नंबर (Vehicle No.)" : "Vehicle Registration Number")
+                    : (lang === "hi" ? "खाता संख्या / कार्ड नंबर" : "Account Number / Card Details")}
                 </label>
-                <input
-                  type={type === "mobile" ? "tel" : "text"}
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                  placeholder={type === "mobile" ? "10-digit number" : type === "dth" ? "Enter customer ID" : "Enter account number"}
-                  required
-                  maxLength={type === "mobile" ? 10 : 15}
-                  className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-navy-900 text-white focus:outline-none focus:ring-2 focus:ring-saffron-500"
-                />
+                <div className="relative">
+                  <input
+                    type={type === "mobile" ? "tel" : "text"}
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    placeholder={
+                      type === "mobile" 
+                        ? "9294899787" 
+                        : type === "electricity"
+                        ? "N123456789 (मध्य क्षेत्र / पश्चिम क्षेत्र)"
+                        : type === "fastag"
+                        ? "MP04AB1234"
+                        : "Enter account / consumer ID"
+                    }
+                    required
+                    maxLength={type === "mobile" ? 10 : 20}
+                    className="w-full px-4 py-3.5 rounded-2xl border border-white/15 bg-navy-950 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-saffron-500 font-mono text-base"
+                  />
+                  {type === "mobile" && number.length === 10 && (
+                    <span className="absolute right-4 top-3.5 text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {lang === "hi" ? "वैध नंबर" : "Valid"}
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* Mobile Operator Plans Browser */}
+              {type === "mobile" && plans.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-saffron-300">
+                      {lang === "hi" ? `लोकप्रिय ${provider.toUpperCase()} रिचार्ज प्लान्स (क्लिक करके चुनें):` : `Popular ${provider.toUpperCase()} Plans (Click to Select):`}
+                    </span>
+                    {loadingPlans && <Loader2 className="w-4 h-4 animate-spin text-saffron-400" />}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
+                    {plans.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => handleSelectPlan(p)}
+                        className={`p-3 rounded-xl border text-left cursor-pointer transition ${
+                          amount === String(p.amount)
+                            ? "border-saffron-500 bg-saffron-500/20 shadow-md"
+                            : "border-white/10 bg-navy-950/70 hover:border-saffron-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-base font-extrabold text-saffron-400">₹{p.amount}</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/90">{p.validity}</span>
+                        </div>
+                        <div className="text-xs font-semibold text-white mt-1">{p.name} • {p.data}</div>
+                        <div className="text-[11px] text-white/60 line-clamp-1 mt-0.5">{p.description}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Amount Selection */}
               <div>
-                <label className="block text-sm font-medium text-saffron-200/90 mb-3">
-                  {lang === "hi" ? "राशि चुनें" : "Select Amount"}
+                <label className="block text-sm font-semibold text-saffron-200 mb-2">
+                  {lang === "hi" ? "भुगतान राशि (₹)" : "Payment Amount (₹)"}
                 </label>
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  {quickAmounts.map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setAmount(amt.toString())}
-                      className={`p-3 rounded-2xl border-2 transition ${
-                        amount === amt.toString()
-                          ? "border-saffron-500 bg-saffron-500/15 text-white"
-                          : "border-white/10 bg-navy-900 text-white hover:border-saffron-300"
-                      }`}
-                    >
-                      <IndianRupee className="w-4 h-4 inline mr-1" /> {amt}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <span className="absolute left-4 top-3.5 text-lg font-bold text-saffron-400">₹</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      setSelectedPlanDesc("");
+                    }}
+                    placeholder="299"
+                    min="10"
+                    max="50000"
+                    required
+                    className="w-full pl-9 pr-4 py-3.5 rounded-2xl border border-white/15 bg-navy-950 text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                  />
                 </div>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={lang === "hi" ? "या कस्टम राशि दर्ज करें" : "Or enter custom amount"}
-                  min="10"
-                  max="10000"
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-navy-900 text-white focus:outline-none focus:ring-2 focus:ring-saffron-500"
-                />
+                {selectedPlanDesc && (
+                  <p className="text-xs text-saffron-300 mt-1.5 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {selectedPlanDesc}
+                  </p>
+                )}
               </div>
 
-              {/* Features */}
-              <div className="flex flex-wrap gap-4 text-sm text-saffron-200/80">
-                <span className="flex items-center gap-1">
-                  <Zap className="w-4 h-4 text-saffron-600" /> {lang === "hi" ? "तत्काल" : "Instant"}
+              {/* Trust Strip */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-navy-950/50 rounded-xl border border-white/5 text-xs text-saffron-200/80">
+                <span className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-saffron-400" /> {lang === "hi" ? "तत्काल ऑपरेटर कन्फर्मेशन" : "Instant Confirmation"}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Shield className="w-4 h-4 text-saffron-600" /> {lang === "hi" ? "सुरक्षित" : "Secure"}
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" /> {lang === "hi" ? "100% सुरक्षित भुगतान" : "100% Encrypted"}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-saffron-600" /> {lang === "hi" ? "24/7" : "24/7"}
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-saffron-400" /> 24x7 Digital Seva
                 </span>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-gradient-to-r from-saffron-600 to-saffron-500 hover:from-saffron-500 hover:to-saffron-400 text-white font-bold text-base rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {lang === "hi" ? "प्रक्रिया में..." : "Processing..."}
-                  </span>
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{lang === "hi" ? "भुगतान प्रक्रिया में है..." : "Processing Payment..."}</span>
+                  </>
                 ) : (
-                  `${lang === "hi" ? "भुगतान करें" : "Pay"} ₹${amount || "0"}`
+                  <>
+                    <span>{lang === "hi" ? `₹${amount || "0"} भुगतान करें` : `Pay ₹${amount || "0"} Now`}</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
                 )}
               </button>
             </form>
+          </div>
 
-            {/* Info Notice */}
-            <div className="mt-6 p-4 bg-navy-900/40 border border-white/10 rounded-2xl">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-saffron-300 shrink-0 mt-0.5" />
-                <p className="text-xs text-saffron-200/90">
-                  {lang === "hi"
-                    ? "भुगतान सुरक्षित है। किसी भी समस्या के लिए सहायता से संपर्क करें।"
-                    : "Payment is secure. Contact support for any issues."}
-                </p>
+          {/* Real Digital Tax Receipt Modal */}
+          {receipt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+              <div className="bg-white text-navy-950 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative border-4 border-emerald-500">
+                <button
+                  onClick={() => setReceipt(null)}
+                  className="absolute top-4 right-4 p-2 text-navy-400 hover:text-navy-900 rounded-full hover:bg-navy-100 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="text-center pb-4 border-b border-navy-100">
+                  <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 text-emerald-600">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-black text-navy-950">
+                    {lang === "hi" ? "भुगतान सफल!" : "Payment Successful!"}
+                  </h3>
+                  <p className="text-xs text-navy-600 font-medium mt-0.5">
+                    {receipt.kioskName}
+                  </p>
+                </div>
+
+                {/* Receipt Details Table */}
+                <div className="my-5 space-y-2.5 text-xs sm:text-sm">
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "रसीद क्रमांक" : "Receipt No."}</span>
+                    <span className="font-mono font-bold text-navy-950">{receipt.receiptNumber}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "सेवा प्रकार" : "Service"}</span>
+                    <span className="font-bold text-navy-950">{receipt.type}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "मोबाइल / खाता संख्या" : "Account/Mobile"}</span>
+                    <span className="font-mono font-bold text-navy-950">{receipt.targetNumber}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "ऑपरेटर / बोर्ड" : "Operator/Biller"}</span>
+                    <span className="font-semibold text-navy-950">{receipt.provider}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "ऑपरेटर संदर्भ ID" : "Operator Ref ID"}</span>
+                    <span className="font-mono font-semibold text-navy-800">{receipt.operatorTxnId}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "BBPS संदर्भ संख्या" : "BBPS Reference"}</span>
+                    <span className="font-mono font-semibold text-navy-800">{receipt.bbpsRef}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-navy-50">
+                    <span className="text-navy-500">{lang === "hi" ? "दिनांक एवं समय" : "Date & Time"}</span>
+                    <span className="font-medium text-navy-950">{new Date(receipt.timestamp).toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between py-2 bg-emerald-50 px-3 rounded-xl">
+                    <span className="font-bold text-emerald-900">{lang === "hi" ? "कुल भुगतान राशि" : "Total Amount Paid"}</span>
+                    <span className="text-lg font-black text-emerald-700">₹{receipt.amount}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 py-3 px-4 bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{lang === "hi" ? "रसीद प्रिंट करें" : "Print Receipt"}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setReceipt(null);
+                      setAmount("");
+                      setNumber("");
+                    }}
+                    className="flex-1 py-3 px-4 bg-saffron-600 hover:bg-saffron-500 text-white font-bold text-xs sm:text-sm rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>{lang === "hi" ? "नया रिचार्ज" : "New Recharge"}</span>
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Contact Support */}
-            <div className="mt-4 text-center">
-              <a 
-                href={whatsAppUrl(`Hi, I need help with a ${type} recharge on Pradhan Digital Services.`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-saffron-400 hover:text-saffron-300"
-              >
-                {lang === "hi" ? "सहायता के लिए WhatsApp पर संपर्क करें" : "Contact support on WhatsApp"}
-              </a>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -65,6 +65,7 @@ export const vacancyApi = {
   applyAssistance: (vacancyId: string, payload: Record<string, any>) =>
     api.post(`/vacancies/${vacancyId}/apply-assistance`, payload),
   manualSync: () => api.post("/vacancies/sync/manual"),
+  sync: () => api.get("/vacancies/sync"),
 };
 
 export const adminApi = {
@@ -86,12 +87,14 @@ export const contactApi = {
 };
 
 export const rechargeApi = {
-  mobile: (payload: { phoneNumber: string; provider: string; amount: number }) =>
+  mobile: (payload: { phoneNumber: string; provider: string; amount: number; plan?: string }) =>
     api.post("/recharge/mobile", payload),
   dth: (payload: { customerId: string; provider: string; amount: number }) =>
     api.post("/recharge/dth", payload),
-  bill: (payload: { service: string; accountNumber: string; amount: number }) =>
+  bill: (payload: { service: string; accountNumber: string; amount: number; billerId?: string }) =>
     api.post("/recharge/bill", payload),
+  plans: (provider: string) =>
+    api.get("/recharge/plans", { params: { provider } }),
 };
 
 export const applicationApi = {

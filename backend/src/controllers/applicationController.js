@@ -296,8 +296,12 @@ export const trackApplication = catchAsync(async (req, res) => {
   if (!application) throw new AppError('Application not found', 404);
 
   // Verify phone number for security
-  if (phone && application.applicantDetails.phone !== phone) {
-    throw new AppError('Phone number does not match', 403);
+  if (phone) {
+    const cleanAppPhone = String(application.applicantDetails?.phone || '').replace(/\D/g, '').slice(-10);
+    const cleanReqPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+    if (cleanAppPhone && cleanReqPhone && cleanAppPhone !== cleanReqPhone) {
+      throw new AppError('Phone number does not match application record', 403);
+    }
   }
 
   // Don't expose sensitive data in public tracking
@@ -305,9 +309,9 @@ export const trackApplication = catchAsync(async (req, res) => {
     applicationId: application.applicationId,
     status: application.status,
     service: application.service,
-    submittedAt: application.processingDetails.submittedAt,
-    estimatedCompletionDate: application.processingDetails.estimatedCompletionDate,
-    statusHistory: application.statusHistory,
+    submittedAt: application.processingDetails?.submittedAt || application.createdAt,
+    estimatedCompletionDate: application.processingDetails?.estimatedCompletionDate,
+    statusHistory: application.statusHistory || [],
     adminRemarks: application.adminRemarks,
     createdAt: application.createdAt
   };

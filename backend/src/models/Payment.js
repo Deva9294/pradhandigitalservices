@@ -114,7 +114,6 @@ paymentSchema.pre('save', function generatePaymentId(next) {
 });
 
 // Indexes
-paymentSchema.index({ paymentId: 1 });
 paymentSchema.index({ user: 1, status: 1 });
 paymentSchema.index({ application: 1 });
 paymentSchema.index({ gatewayTransactionId: 1 });

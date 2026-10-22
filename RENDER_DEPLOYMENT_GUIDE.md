@@ -37,7 +37,7 @@
 
 ```env
 NODE_ENV=production
-PORT=8000
+# Note: Do NOT set PORT manually; Render injects PORT dynamically!
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/pradhandigital?retryWrites=true&w=majority
 JWT_SECRET=<your-32-char-secret>
 FRONTEND_URL=https://your-frontend-url.onrender.com

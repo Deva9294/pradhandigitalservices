@@ -147,7 +147,6 @@ supportTicketSchema.pre('save', function generateTicketNumber(next) {
 });
 
 // Indexes
-supportTicketSchema.index({ ticketNumber: 1 });
 supportTicketSchema.index({ user: 1, status: 1 });
 supportTicketSchema.index({ assignedTo: 1 });
 supportTicketSchema.index({ status: 1, priority: 1, createdAt: -1 });

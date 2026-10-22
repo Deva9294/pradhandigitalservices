@@ -33,7 +33,7 @@ if (jwtSecret.length < 32) {
 }
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 8000;
 
 app.set('trust proxy', 1);
 

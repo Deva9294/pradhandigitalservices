@@ -2,16 +2,20 @@
   "name": "pradhan-digital-services",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Pradhan Digital Services - India's Complete Digital Seva Portal",
   "scripts": {
+    "postinstall": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend run build",
+    "start": "node server.js",
+    "start:backend": "npm --prefix backend start",
+    "start:frontend": "npm --prefix frontend start",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
-    "build": "npm run build --prefix frontend",
-    "start": "concurrently \"npm run start --prefix frontend\" \"npm run start --prefix backend\"",
     "install:all": "npm install --prefix frontend && npm install --prefix backend"
   },
-  "devDependencies": {
+  "dependencies": {
     "concurrently": "^9.1.2"
   }
 }

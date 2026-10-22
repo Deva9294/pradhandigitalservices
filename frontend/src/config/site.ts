@@ -15,7 +15,7 @@ export const siteConfig = {
   
   // URLs
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.in",
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" ? "https://pradhan-backend.onrender.com/api" : "http://localhost:8000/api"),
   
   // Social Media
   social: {

@@ -10,6 +10,7 @@
  */
 
 import http from 'http';
+import fs from 'fs';
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,12 +18,27 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const mode = (process.env.SERVICE_TYPE || process.env.APP_TYPE || 'all').toLowerCase();
+const rawMode = (process.env.SERVICE_TYPE || process.env.APP_TYPE || '').toLowerCase();
+const serviceName = (process.env.RENDER_SERVICE_NAME || process.env.SERVICE_NAME || '').toLowerCase();
+const hasFrontendBuild = fs.existsSync(path.join(__dirname, 'frontend', '.next'));
+
+let mode = rawMode;
+if (!mode) {
+  if (serviceName.includes('backend') || !hasFrontendBuild) {
+    mode = 'backend';
+  } else if (serviceName.includes('frontend')) {
+    mode = 'frontend';
+  } else {
+    mode = 'all';
+  }
+}
+
 const publicPort = parseInt(process.env.PORT || '10000', 10);
 
 console.log('----------------------------------------------------');
 console.log('🚀 Pradhan Digital Services Server Bootloader');
-console.log(`🌐 Mode: ${mode.toUpperCase()} | Target Public Port: ${publicPort}`);
+console.log(`🌐 Mode: ${mode.toUpperCase()} (detected) | Target Public Port: ${publicPort}`);
+console.log(`📦 Frontend Build Exists: ${hasFrontendBuild}`);
 console.log('----------------------------------------------------');
 
 if (mode === 'backend') {

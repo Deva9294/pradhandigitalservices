@@ -73,3 +73,30 @@ export const authorize = (...roles) => {
     next();
   };
 };
+
+export const optionalAuth = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const secret =
+      process.env.JWT_SECRET ||
+      (process.env.NODE_ENV !== 'production'
+        ? 'dev-only-jwt-secret-change-before-production'
+        : 'pds_production_super_secure_jwt_secret_token_key_2026');
+    const decoded = jwt.verify(token, secret);
+    req.user = await User.findById(decoded.id);
+  } catch (err) {
+    req.user = null;
+  }
+
+  next();
+};

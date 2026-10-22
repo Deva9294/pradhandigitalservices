@@ -9,6 +9,7 @@ import DeliverySection from "@/components/home/DeliverySection";
 import PremiumAndAppSection from "@/components/home/PremiumAndAppSection";
 import FormsSection from "@/components/home/FormsSection";
 import RechargeSection from "@/components/home/RechargeSection";
+import PradhanESevaAppSection from "@/components/home/PradhanESevaAppSection";
 import FAQSection from "@/components/home/FAQSection";
 import ContactSection from "@/components/home/ContactSection";
 
@@ -48,6 +49,9 @@ export default function HomePage() {
       {/* Offline Forms & Utility Bill Payments */}
       <FormsSection />
       <RechargeSection />
+
+      {/* Android App Section: Pradhan eSeva */}
+      <PradhanESevaAppSection />
 
       {/* L. FAQ and Support Desk */}
       <FAQSection />

@@ -12,7 +12,17 @@ import type { Metadata } from "next";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
+  const masterSlugs = MASTER_SERVICES.slice(0, 30).map((s) => ({ slug: s.slug }));
+  const legacySlugs = allServices.slice(0, 15).map((s) => ({ slug: s.slug }));
+  const slugMap = new Map();
+  [...masterSlugs, ...legacySlugs].forEach((item) => slugMap.set(item.slug, item));
+  return Array.from(slugMap.values());
+}
+
+async function _legacyGenerateStaticParams() {
   const masterSlugs = MASTER_SERVICES.map((s) => ({ slug: s.slug }));
   const legacySlugs = allServices.map((s) => ({ slug: s.slug }));
   

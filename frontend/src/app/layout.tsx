@@ -23,6 +23,9 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+    verification: {
+    google: "googlefd20bd84d934a8aa",
+  },
   title: {
     default: `${SITE_NAME} - India's Complete Digital Seva Portal`,
     template: `%s | ${SITE_NAME}`,

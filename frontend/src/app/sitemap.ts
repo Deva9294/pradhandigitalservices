@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: currentDate, changeFrequency: "daily", priority: 1 },
     { url: `${BASE_URL}/services`, lastModified: currentDate, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/vacancies`, lastModified: currentDate, changeFrequency: "daily", priority: 0.9 },
+    { url: `${BASE_URL}/vacancy-update`, lastModified: currentDate, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/admit-cards`, lastModified: currentDate, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE_URL}/results`, lastModified: currentDate, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE_URL}/government-schemes`, lastModified: currentDate, changeFrequency: "weekly", priority: 0.8 },

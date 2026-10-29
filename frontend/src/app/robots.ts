@@ -1,20 +1,14 @@
-
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/utils";
+
+const BASE_URL = "https://pradhan-frontend-4g39.onrender.com";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = SITE_URL.replace(/\/$/, "");
-
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: [
-        "/admin/",
-        "/dashboard/",
-        "/agent/",
-      ],
-    },
-    sitemap: `${baseUrl}/sitemap.xml`,
-  };
+return {
+rules: {
+userAgent: "*",
+allow: "/",
+disallow: ["/admin/", "/dashboard/", "/agent/"],
+},
+sitemap: "${BASE_URL}/sitemap.xml",
+};
 }

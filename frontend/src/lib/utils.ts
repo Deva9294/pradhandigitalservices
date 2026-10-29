@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const SITE_NAME = "Pradhan Digital Services";
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pradhandigitalservices.in";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pradhan-frontend-4g39.onrender.com";
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
@@ -40,4 +40,4 @@ export const DISCLAIMER =
   "Pradhan Digital Services is a private digital assistance platform. Government services are processed through official portals and applicable government rules. We are not a government department.";
 
 export const DISCLAIMER_HI =
-  "प्रधान डिजिटल सेवाएं एक निजी डिजिटल सहायता मंच है। सरकारी सेवाएं आधिकारिक पोर्टलों और लागू सरकारी नियमों के माध्यम से संसाधित की जाती हैं। हम कोई सरकारी विभाग नहीं हैं।";
+  "प्रधान डिजिटल सेवाएं एक निजी डिजिटल सहायता मंच है। सरकारी सेवाएं आधिकारिक पोर्टलों और लागू सरकारी नियमों के माध्यम से संसाधित की जाती हैं। हम कोई सरकारी विभाग नहीं हैं.";

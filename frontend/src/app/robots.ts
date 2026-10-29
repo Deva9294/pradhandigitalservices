@@ -1,3 +1,4 @@
+
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/utils";
 
@@ -9,10 +10,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/dashboard/", "/agent/"],
+        disallow: [
+          "/admin/",
+          "/dashboard/",
+          "/agent/",
+        ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap`,
+    sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
   };
 }

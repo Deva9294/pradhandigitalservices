@@ -115,9 +115,9 @@ export default function QuickActions() {
                 href={action.href}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noopener noreferrer" : undefined}
-                className="group flex flex-col items-center p-6 bg-navy-50 dark:bg-navy-800 rounded-xl border border-navy-200 dark:border-navy-700 hover:border-saffron-500 dark:hover:border-saffron-400 hover:shadow-lg transition-all duration-200"
+                className="group flex flex-col items-center p-5 sm:p-6 bg-white dark:bg-navy-800 rounded-3xl border border-slate-100 dark:border-navy-700 shadow-sm hover:border-orange-300 hover:shadow-xl transition-all duration-200"
               >
-                <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform`}>
+                <div className={`w-14 h-14 ${action.color} rounded-2xl shadow-sm flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform`}>
                   <Icon className="w-6 h-6" />
                 </div>
                 <span className="text-sm font-medium text-navy-900 dark:text-white text-center group-hover:text-saffron-600 dark:group-hover:text-saffron-400 transition-colors">

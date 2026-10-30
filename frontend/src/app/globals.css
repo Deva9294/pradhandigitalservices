@@ -366,3 +366,39 @@ body > footer .text-saffron-400 { color: #d85d0b !important; }
 @media (max-width: 640px) {
   body > footer { padding-top: 2rem; padding-bottom: 1.5rem; }
 }
+
+
+/* Premium PDS visual layer — presentation only; routes, data and interactions remain unchanged */
+:root {
+  --pds-ink: #10234f;
+  --pds-orange: #f47721;
+  --pds-muted: #64748b;
+  --pds-line: #e8edf5;
+  --pds-card-shadow: 0 12px 34px rgba(16,35,79,.07);
+}
+body { background: #f5f7fb !important; color: #172033 !important; }
+body > header { box-shadow: 0 8px 30px rgba(16,35,79,.08) !important; border-bottom: 1px solid #e8edf5 !important; }
+body > header > div:first-child { background: #f7f9fc !important; }
+body > header > div:nth-child(2) { padding-top: .8rem !important; padding-bottom: .8rem !important; }
+body > header nav a { border-radius: 999px !important; font-weight: 650 !important; }
+body > header input[type="search"] { border-radius: 999px !important; min-height: 42px; }
+body > main#main-content { background: #f5f7fb; }
+body > main#main-content > main { background: transparent !important; }
+body > main#main-content section { scroll-margin-top: 100px; }
+body > main#main-content section:not(:first-child) h2 { letter-spacing: -.025em; }
+body > main#main-content section:not(:first-child) .container { max-width: 1280px; }
+body > main#main-content section.bg-white { background: #fff !important; }
+body > main#main-content section.bg-navy-50 { background: linear-gradient(180deg,#f7f9fc 0%,#eef3f9 100%) !important; }
+body > main#main-content section.py-16 { padding-top: 4.25rem !important; padding-bottom: 4.25rem !important; }
+body > main#main-content a, body > main#main-content button { -webkit-tap-highlight-color: transparent; }
+body > main#main-content .group { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+body > main#main-content .group:hover { transform: translateY(-3px); }
+body > main#main-content .rounded-\\[28px\\], body > main#main-content .rounded-\\[32px\\] { box-shadow: var(--pds-card-shadow); }
+body > main#main-content .glass-panel { background: rgba(255,255,255,.07); backdrop-filter: blur(14px); }
+body > footer { margin-top: auto; }
+@media (max-width: 640px) {
+  body > header > div:nth-child(2) { padding-top: .65rem !important; padding-bottom: .65rem !important; }
+  body > main#main-content section.py-16 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+  body > main#main-content section .container { padding-left: 1rem; padding-right: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) { body > main#main-content .group { transition: none; } }

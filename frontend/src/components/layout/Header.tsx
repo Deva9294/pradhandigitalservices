@@ -49,9 +49,9 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0A1B4D] text-white border-b border-white/10 shadow-md">
+    <header className="sticky top-0 z-50 bg-white text-[#10234f] border-b border-slate-200 shadow-sm">
       {/* Utility Strip */}
-      <div className="bg-[#071333] border-b border-white/5 py-1.5 text-[11px] text-white/80">
+      <div className="bg-slate-50 border-b border-slate-200 py-1.5 text-[11px] text-slate-600">
         <div className="container mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
           {/* Support / Contact Left */}
           <div className="flex items-center gap-4">
@@ -97,7 +97,7 @@ export default function Header() {
 
             <button
               onClick={() => setLang(lang === "en" ? "hi" : "en")}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-saffron-500 hover:text-navy-950 transition font-semibold"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 text-orange-700 transition font-semibold"
               aria-label="Switch Language"
             >
               <Globe className="w-3 h-3 text-saffron-300" />
@@ -108,7 +108,7 @@ export default function Header() {
       </div>
 
       {/* Main Header Row */}
-      <div className="container mx-auto px-4 py-2.5">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="inline-block shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron-400 rounded-xl">
@@ -126,7 +126,7 @@ export default function Header() {
                 type="search"
                 name="q"
                 placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं? (आधार, पैन, खसरा...)" : "Search any service (Aadhaar, PAN, Jobs...)"}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-navy-900/90 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs transition"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs transition"
               />
             </div>
           </form>
@@ -137,7 +137,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition whitespace-nowrap focus-visible:ring-2 focus-visible:ring-saffron-400"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-orange-700 hover:bg-orange-50 transition whitespace-nowrap focus-visible:ring-2 focus-visible:ring-saffron-400"
               >
                 {lang === "hi" ? item.labelHi : item.labelEn}
               </Link>
@@ -186,7 +186,7 @@ export default function Header() {
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setOpen(!open)}
-              className="lg:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition focus-visible:ring-2 focus-visible:ring-saffron-400"
+              className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition focus-visible:ring-2 focus-visible:ring-saffron-400"
               aria-label="Toggle navigation menu"
               aria-expanded={open}
             >
@@ -207,7 +207,7 @@ export default function Header() {
               type="search"
               name="q"
               placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं?" : "What service are you looking for?"}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-navy-900 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs"
             />
           </div>
         </form>
@@ -215,14 +215,14 @@ export default function Header() {
 
       {/* Mobile Menu Drawer */}
       {open && (
-        <div className="lg:hidden bg-[#071333] border-t border-white/10 px-4 py-4 space-y-3 animate-in fade-in duration-200">
+        <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-3 animate-in fade-in duration-200">
           <nav className="space-y-1">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10 transition"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-orange-50 transition"
               >
                 <span>{lang === "hi" ? item.labelHi : item.labelEn}</span>
                 <span className="text-saffron-400 text-xs">→</span>

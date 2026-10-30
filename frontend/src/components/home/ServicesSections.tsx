@@ -39,9 +39,9 @@ export function PopularServicesSection() {
             Array.from({ length: 12 }).map((_, i) => <ServiceCardSkeleton key={i} />)
           }>
             {popularServices.slice(0, 12).map((service) => (
-              <div key={service.id} className="group p-4 bg-white/95 dark:bg-navy-800/90 rounded-[28px] border border-navy-100 dark:border-navy-700/80 hover:border-saffron-400 hover:shadow-2xl transition-all hover:-translate-y-1 text-center flex flex-col justify-between">
+              <div key={service.id} className="group p-5 bg-white dark:bg-navy-800 rounded-3xl border border-slate-100 dark:border-navy-700 hover:border-orange-300 hover:shadow-xl transition-all hover:-translate-y-1 text-center flex flex-col justify-between">
                 <Link href={`/services/${service.slug}`} className="block">
-                  <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white dark:bg-navy-900/90 border border-navy-100 dark:border-navy-700/60 shadow-sm flex items-center justify-center p-1.5 group-hover:scale-110 group-hover:border-saffron-400 group-hover:shadow-md transition">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-navy-100 dark:border-navy-700/60 shadow-sm flex items-center justify-center p-1.5 group-hover:scale-110 group-hover:border-saffron-400 group-hover:shadow-md transition">
                     <ServiceIcon
                       type={service.icon}
                       src={service.iconSrc}
@@ -90,7 +90,7 @@ export function AllServicesSection() {
             const Icon = categoryIconMap[cat.id] || Landmark;
             return (
               <Link key={cat.id} href={`/services?category=${cat.slug}`}
-                className="group p-6 bg-white/90 dark:bg-navy-800/90 rounded-[32px] border border-navy-100 dark:border-navy-700 hover:border-saffron-400 hover:shadow-2xl transition-all">
+                className="group p-7 bg-white dark:bg-navy-800 rounded-3xl border border-slate-100 dark:border-navy-700 hover:border-orange-300 hover:shadow-xl transition-all">
                 <div className="w-14 h-14 rounded-2xl bg-saffron-500 flex items-center justify-center mb-4 group-hover:scale-110 transition">
                   <Icon className="w-7 h-7 text-white" />
                 </div>

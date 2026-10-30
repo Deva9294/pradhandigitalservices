@@ -28,6 +28,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('requests');
   const [applications, setApplications] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -63,9 +64,13 @@ export default function CustomerDashboard() {
           };
         });
         setApplications(realApplications);
+        setLoadError('');
       } catch (error) {
         console.error("Unable to load customer applications:", error);
-        if (!cancelled) setApplications([]);
+        if (!cancelled) {
+          setApplications([]);
+          setLoadError('Your service history could not be reached. Please retry when the server is available.');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -284,6 +289,11 @@ export default function CustomerDashboard() {
               <div className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-navy-100 dark:border-white/10">
                 <RefreshCw className="w-7 h-7 animate-spin mx-auto mb-3 text-saffron-500" />
                 <p className="text-sm text-navy-600 dark:text-white/70">{lang === "hi" ? "आपके वास्तविक आवेदन लोड हो रहे हैं..." : "Loading your applications..."}</p>
+              </div>
+            ) : loadError ? (
+              <div role="status" className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-amber-300 text-amber-800 dark:text-amber-300">
+                <AlertCircle className="w-10 h-10 mx-auto mb-3" />
+                <p className="font-semibold">{loadError}</p>
               </div>
             ) : applications.length === 0 ? (
               <div className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-dashed border-navy-200 dark:border-white/15">

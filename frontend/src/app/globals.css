@@ -350,3 +350,18 @@ body > footer .text-white\/80 { color: rgba(255,255,255,.88); }
 @media (prefers-reduced-motion: reduce) {
   #main-content .group { transition: none; }
 }
+
+/* Contrast corrections for light header controls and orange actions */
+body > header .text-saffron-300,
+body > header .text-saffron-400 { color: #A94300; }
+body > header .text-emerald-400,
+body > header .text-emerald-300 { color: #047857; }
+body > header .bg-white\/5,
+body > header .bg-white\/10 { background-color: #F1F5F9; }
+body > header .bg-white\/5.text-white,
+body > header .bg-white\/10.text-white { color: #26385E; }
+body > header .bg-emerald-600\/20 { background-color: #ECFDF5; }
+#main-content .bg-saffron-500.text-white,
+#main-content .bg-saffron-400.text-white { color: #17233B; }
+#main-content .bg-saffron-600.text-white,
+#main-content .bg-saffron-700.text-white { color: #FFFFFF; }

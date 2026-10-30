@@ -431,6 +431,11 @@ body {
   color: var(--pds-navy);
   letter-spacing: -.018em;
 }
+#main-content .text-white,
+#main-content h1.text-white, #main-content h2.text-white,
+#main-content h3.text-white, #main-content h4.text-white {
+  color: #fff !important;
+}
 #main-content p, #main-content li, #main-content label {
   text-wrap: pretty;
 }
@@ -466,8 +471,8 @@ body {
 #main-content .bg-saffron-50 { background: var(--pds-soft-orange) !important; }
 #main-content .bg-saffron-500,
 #main-content .bg-saffron-600 { background-color: var(--pds-orange) !important; }
-#main-content .hover\\:bg-saffron-600:hover,
-#main-content .hover\\:bg-saffron-700:hover { background-color: #E96D00 !important; }
+#main-content [class~="hover:bg-saffron-600"]:hover,
+#main-content [class~="hover:bg-saffron-700"]:hover { background-color: #E96D00 !important; }
 #main-content .border-saffron-500,
 #main-content .border-saffron-600 { border-color: var(--pds-orange) !important; }
 #main-content .ring-saffron-500 { --tw-ring-color: var(--pds-orange); }

@@ -401,3 +401,104 @@ body > footer { margin-top: auto; }
   body > main#main-content section .container { padding-left: 1rem; padding-right: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) { body > main#main-content .group { transition: none; } }
+
+
+/* Pradhan brand system v2 — unified contrast, surfaces and component colours */
+:root {
+  color-scheme: light;
+  --pds-navy: #0A1B4D;
+  --pds-navy-deep: #061235;
+  --pds-orange: #FF7A00;
+  --pds-orange-ink: #B84B00;
+  --pds-text: #17233B;
+  --pds-muted: #5B6880;
+  --pds-border: #DCE4EF;
+  --pds-canvas: #F3F6FB;
+  --pds-surface: #FFFFFF;
+  --pds-soft-orange: #FFF1E5;
+  --pds-shadow: 0 10px 28px rgba(10, 27, 77, .08);
+}
+html, body { background: var(--pds-canvas); }
+body {
+  color: var(--pds-text) !important;
+  background: var(--pds-canvas) !important;
+  font-family: var(--font-inter), var(--font-noto-sans-devanagari), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#main-content { color: var(--pds-text); }
+#main-content h1, #main-content h2, #main-content h3,
+#main-content h4, #main-content h5, #main-content h6 {
+  color: var(--pds-navy);
+  letter-spacing: -.018em;
+}
+#main-content .text-white,
+#main-content h1.text-white, #main-content h2.text-white,
+#main-content h3.text-white, #main-content h4.text-white {
+  color: #fff !important;
+}
+#main-content p, #main-content li, #main-content label {
+  text-wrap: pretty;
+}
+#main-content .text-navy-900,
+#main-content .text-navy-950 { color: var(--pds-navy) !important; }
+#main-content .text-navy-700,
+#main-content .text-navy-800 { color: #263B68 !important; }
+#main-content .text-navy-500,
+#main-content .text-navy-600 { color: var(--pds-muted) !important; }
+#main-content .text-saffron-600,
+#main-content .text-saffron-700 { color: var(--pds-orange-ink) !important; }
+#main-content a:not([class*="text-white"]):not([class*="text-emerald"]) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+#main-content input, #main-content select, #main-content textarea {
+  color: var(--pds-text);
+}
+#main-content input::placeholder,
+#main-content textarea::placeholder { color: #77839A; opacity: 1; }
+#main-content .card,
+#main-content [class*="rounded-"][class*="border"] {
+  border-color: var(--pds-border);
+}
+#main-content .card {
+  background: var(--pds-surface);
+  box-shadow: var(--pds-shadow);
+}
+#main-content section.bg-white { background: var(--pds-surface) !important; }
+#main-content section.bg-navy-50 {
+  background: linear-gradient(180deg, #F7F9FD 0%, #EDF2F9 100%) !important;
+}
+#main-content .bg-saffron-50 { background: var(--pds-soft-orange) !important; }
+#main-content .bg-saffron-500,
+#main-content .bg-saffron-600 { background-color: var(--pds-orange) !important; }
+#main-content [class~="hover:bg-saffron-600"]:hover,
+#main-content [class~="hover:bg-saffron-700"]:hover { background-color: #E96D00 !important; }
+#main-content .border-saffron-500,
+#main-content .border-saffron-600 { border-color: var(--pds-orange) !important; }
+#main-content .ring-saffron-500 { --tw-ring-color: var(--pds-orange); }
+#main-content .group:hover { border-color: #F6B477; }
+body > header {
+  background: #fff !important;
+  color: var(--pds-navy) !important;
+  border-bottom: 1px solid var(--pds-border) !important;
+  box-shadow: 0 5px 22px rgba(10, 27, 77, .07) !important;
+}
+body > header nav a { color: #26385E !important; }
+body > header nav a:hover { color: var(--pds-orange-ink) !important; background: var(--pds-soft-orange) !important; }
+body > header button[aria-label="Toggle navigation menu"] { color: var(--pds-navy) !important; }
+body > footer {
+  background: #fff !important;
+  color: #34415A !important;
+  border-top: 3px solid var(--pds-orange) !important;
+}
+body > footer h1, body > footer h2, body > footer h3,
+body > footer h4 { color: var(--pds-navy) !important; }
+body > footer p, body > footer li, body > footer span,
+body > footer a { color: #5B6880 !important; }
+body > footer a:hover { color: var(--pds-orange-ink) !important; }
+@media (prefers-color-scheme: dark) {
+  html:not(.light) { color-scheme: light; }
+}
+@media (max-width: 640px) {
+  #main-content section { scroll-margin-top: 84px; }
+}

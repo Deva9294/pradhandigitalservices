@@ -72,7 +72,11 @@ export default function CustomerDashboard() {
     }
 
     loadData();
-    return () => { cancelled = true; };
+    const interval = window.setInterval(loadData, 20000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, [user?.id]);
 
   // Map any backend status into the EXACT 3 specified stages:

@@ -100,6 +100,8 @@ const userSchema = new mongoose.Schema({
   // Authentication
   otp: String,
   otpExpires: Date,
+  passwordResetTokenHash: { type: String, select: false },
+  passwordResetExpires: Date,
   refreshToken: String,
   lastLogin: Date,
   loginAttempts: {

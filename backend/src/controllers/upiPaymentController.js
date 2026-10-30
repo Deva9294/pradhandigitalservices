@@ -131,6 +131,7 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
   payment.metadata.adminNote = String(note).slice(0, 500);
   payment.metadata.reviewedBy = String(req.user._id);
   payment.metadata.reviewedAt = new Date();
+  payment.markModified('metadata');
   await payment.save();
 
   if (action === 'approve' && payment.application) {

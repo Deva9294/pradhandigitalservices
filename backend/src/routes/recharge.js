@@ -158,6 +158,7 @@ async function recordTransaction(req, { type, amount, targetNumber, provider, de
 
 // @route   POST /api/recharge/mobile
 router.post('/mobile', optionalAuth, asyncHandler(async (req, res) => {
+  return res.status(503).json({ success: false, message: 'Live recharge / BBPS provider integration is not configured. No recharge or bill payment has been processed. Razorpay payment collection is available separately; contact support before paying for this service.' });
   const { phoneNumber, provider, amount, plan } = req.body;
   const cleanPhone = String(phoneNumber || '').replace(/\D/g, '').slice(-10);
 
@@ -187,6 +188,7 @@ router.post('/mobile', optionalAuth, asyncHandler(async (req, res) => {
 
 // @route   POST /api/recharge/dth
 router.post('/dth', optionalAuth, asyncHandler(async (req, res) => {
+  return res.status(503).json({ success: false, message: 'Live recharge / BBPS provider integration is not configured. No recharge or bill payment has been processed. Razorpay payment collection is available separately; contact support before paying for this service.' });
   const { customerId, provider, amount } = req.body;
   const cleanId = String(customerId || '').trim();
 
@@ -217,6 +219,7 @@ router.post('/dth', optionalAuth, asyncHandler(async (req, res) => {
 // @route   POST /api/recharge/bill
 // @desc    Process Electricity, Water, Gas, FASTag, Broadband, Credit Card bills
 router.post('/bill', optionalAuth, asyncHandler(async (req, res) => {
+  return res.status(503).json({ success: false, message: 'Live recharge / BBPS provider integration is not configured. No recharge or bill payment has been processed. Razorpay payment collection is available separately; contact support before paying for this service.' });
   const { service, accountNumber, amount, billerId } = req.body;
   const cleanAccount = String(accountNumber || '').trim();
 

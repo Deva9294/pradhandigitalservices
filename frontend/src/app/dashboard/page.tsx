@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   FileText, Clock, CheckCircle2, Wallet, 
   Settings, User, MessageSquare, ExternalLink, 
@@ -23,7 +24,8 @@ import {
 type TabType = 'requests' | 'documents' | 'deliveries' | 'payments' | 'membership';
 
 export default function CustomerDashboard() {
-  const { user } = useAuth();
+  const { user, isReady, isAuthenticated, isAdmin, isAgent, getRoleRedirect } = useAuth();
+  const router = useRouter();
   const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('requests');
@@ -31,6 +33,13 @@ export default function CustomerDashboard() {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (isAdmin || isAgent) router.replace(getRoleRedirect(user?.role));
+  }, [isReady, isAuthenticated, isAdmin, isAgent, user?.role, getRoleRedirect, router]);
+
+  useEffect(() => {
+    if (!isReady || !isAuthenticated || isAdmin || isAgent) return;
     let cancelled = false;
 
     async function loadData() {
@@ -82,7 +91,7 @@ export default function CustomerDashboard() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [user?.id]);
+  }, [user?.id, isReady, isAuthenticated, isAdmin, isAgent]);
 
   // Map any backend status into the EXACT 3 specified stages:
   // Submitted -> Review / Pending -> Done
@@ -120,6 +129,10 @@ export default function CustomerDashboard() {
     deliveries: applications.filter(a => a.deliveryStatus === 'dispatched' || a.deliveryStatus === 'delivered').length,
     wallet: user?.walletBalance || 0
   };
+
+  if (!isReady || !isAuthenticated || isAdmin || isAgent) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-navy-700">Checking account…</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white flex flex-col justify-between">

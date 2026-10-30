@@ -98,7 +98,7 @@ export const createOrder = catchAsync(async (req, res) => {
     throw new AppError('Enter a valid INR amount between ₹1 and ₹5,00,000.', 400);
   }
 
-  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup'];
+  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
   const paymentType = application ? 'service_application' : (allowedTypes.includes(type) ? type : 'service_application');
   let payment = null;
   if (application) {

@@ -12,10 +12,12 @@ import RechargeSection from "@/components/home/RechargeSection";
 import PradhanESevaAppSection from "@/components/home/PradhanESevaAppSection";
 import FAQSection from "@/components/home/FAQSection";
 import ContactSection from "@/components/home/ContactSection";
+import HomeUpdatePopup from "@/components/home/HomeUpdatePopup";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white">
+      <HomeUpdatePopup />
       {/* C. Latest Updates Ticker */}
       <MarqueeSection />
 

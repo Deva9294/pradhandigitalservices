@@ -94,7 +94,7 @@ export default function MarqueeSection() {
             <div
               className="flex w-max gap-6"
               style={{
-                animation: isPaused ? "none" : "pds-marquee 12s linear infinite",
+                animation: isPaused ? "none" : "pds-marquee 24s linear infinite",
                 willChange: "transform",
               }}
             >

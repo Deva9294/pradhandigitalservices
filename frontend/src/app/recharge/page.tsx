@@ -9,6 +9,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { whatsAppUrl } from "@/lib/utils";
 import { rechargeApi } from "@/lib/api";
+import RazorpayPayButton from "@/components/payment/RazorpayPayButton";
 import { useToast } from "@/components/common/Toast";
 import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/validation";
 
@@ -36,6 +37,7 @@ export default function RechargePage() {
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [receipt, setReceipt] = useState<any>(null);
+  const [pendingPayment, setPendingPayment] = useState<any>(null);
 
   const services = [
     { id: "mobile" as RechargeType, icon: Smartphone, name: "Mobile Recharge", nameHi: "मोबाइल रिचार्ज" },
@@ -118,48 +120,24 @@ export default function RechargePage() {
 
   const handleRecharge = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      if ((type === "mobile" || type === "dth") && !provider) {
-        throw new Error(lang === "hi" ? "प्रोवाइडर चुनें" : "Select a provider");
-      }
-      if (type === "mobile" && !isValidIndianMobile(number)) {
-        throw new Error(lang === "hi" ? "वैध 10 अंकों का मोबाइल नंबर दर्ज करें" : "Enter a valid 10-digit mobile number");
-      }
-      if (type !== "mobile" && !number.trim()) {
-        throw new Error(lang === "hi" ? "खाता / उपभोक्ता नंबर दर्ज करें" : "Enter account / consumer number");
-      }
-      const parsedAmount = parseInt(amount, 10);
-      if (!parsedAmount || parsedAmount < 10) {
-        throw new Error(lang === "hi" ? "वैध राशि दर्ज करें (कम से कम ₹10)" : "Enter a valid amount (min ₹10)");
-      }
-
-      setLoading(true);
-
-      const res =
-        type === "mobile"
-          ? await rechargeApi.mobile({
-              phoneNumber: normalizeIndianMobile(number),
-              provider,
-              amount: parsedAmount,
-              plan: selectedPlanDesc || undefined
-            })
-          : type === "dth"
-            ? await rechargeApi.dth({ customerId: number.trim(), provider, amount: parsedAmount })
-            : await rechargeApi.bill({ service: type, accountNumber: number.trim(), amount: parsedAmount, billerId: provider });
-
-      if (res.data?.success && res.data.data) {
-        setReceipt(res.data.data);
-        showToast("success", res.data?.message || (lang === "hi" ? "भुगतान सफल!" : "Payment successful!"));
-      }
-    } catch (error: unknown) {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        (error as Error)?.message ||
-        (lang === "hi" ? "रिचार्ज विफल" : "Recharge failed");
-      showToast("error", message);
-    } finally {
-      setLoading(false);
+      if ((type === "mobile" || type === "dth") && !provider) throw new Error("कृपया प्रोवाइडर चुनें।");
+      if (type === "mobile" && !isValidIndianMobile(number)) throw new Error("वैध 10 अंकों का मोबाइल नंबर दर्ज करें।");
+      if (type !== "mobile" && !number.trim()) throw new Error("खाता / उपभोक्ता नंबर दर्ज करें।");
+      const parsedAmount = Number(amount);
+      if (!Number.isFinite(parsedAmount) || parsedAmount < 10 || parsedAmount > 50000) throw new Error("वैध राशि दर्ज करें (₹10 - ₹50,000)।");
+      setPendingPayment({
+        amount: parsedAmount,
+        serviceType: type,
+        purpose: type.toUpperCase() + " payment for " + number.trim(),
+        paymentType: type === "mobile" || type === "dth" ? "recharge" : "bill_payment",
+        targetNumber: type === "mobile" ? normalizeIndianMobile(number) : number.trim(),
+        provider,
+        description: selectedPlanDesc || services.find((item) => item.id === type)?.name || type
+      });
+      setReceipt(null);
+    } catch (error: any) {
+      showToast("error", error?.message || (lang === "hi" ? "विवरण जांचें" : "Please check the details"));
     }
   };
 
@@ -169,13 +147,13 @@ export default function RechargePage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-500/10 border border-saffron-500/20 text-saffron-400 text-xs font-semibold mb-2">
             <Zap className="w-3.5 h-3.5" />
-            {lang === "hi" ? "भारत बिलपे (BBPS) एवं डायरेक्ट रिचार्ज" : "Bharat BillPay (BBPS) & Direct Recharge"}
+            {lang === "hi" ? "Razorpay से रिचार्ज / बिल भुगतान" : "Recharge & Bill Payment via Razorpay"}
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">
             {lang === "hi" ? "रिचार्ज और बिल भुगतान" : "Recharge & Bill Payment"}
           </h1>
           <p className="text-saffron-200/90 text-sm md:text-base">
-            {lang === "hi" ? "मोबाइल, DTH, बिजली बिल, पानी कर, गैस बुकिंग एवं FASTag — तत्काल एवं डिजिटल रसीद सहित।" : "Fast, Secure & Reliable Digital Payments with Official Tax Invoices."}
+            {lang === "hi" ? "मोबाइल, DTH और बिल भुगतान का सुरक्षित Razorpay checkout। वास्तविक रिचार्ज सेवा ऑपरेटर API जुड़ने के बाद ही पूरी होगी।" : "Secure Razorpay checkout. Actual recharge and BBPS fulfilment requires a live operator integration."}
           </p>
         </div>
 
@@ -188,6 +166,7 @@ export default function RechargePage() {
                 onClick={() => {
                   setType(service.id);
                   setReceipt(null);
+                  setPendingPayment(null);
                   if (service.id === "mobile") setProvider("jio");
                   else if (service.id === "dth") setProvider("tatasky");
                   else if (billProviders[service.id]?.[0]) setProvider(billProviders[service.id][0].id);
@@ -359,7 +338,7 @@ export default function RechargePage() {
               {/* Trust Strip */}
               <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-navy-950/50 rounded-xl border border-white/5 text-xs text-saffron-200/80">
                 <span className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-saffron-400" /> {lang === "hi" ? "तत्काल ऑपरेटर कन्फर्मेशन" : "Instant Confirmation"}
+                  <Zap className="w-3.5 h-3.5 text-saffron-400" /> {lang === "hi" ? "Razorpay payment confirmation" : "Razorpay Payment Confirmation"}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" /> {lang === "hi" ? "100% सुरक्षित भुगतान" : "100% Encrypted"}
@@ -369,23 +348,46 @@ export default function RechargePage() {
                 </span>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-saffron-600 to-saffron-500 hover:from-saffron-500 hover:to-saffron-400 text-white font-bold text-base rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>{lang === "hi" ? "भुगतान प्रक्रिया में है..." : "Processing Payment..."}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{lang === "hi" ? `₹${amount || "0"} भुगतान करें` : `Pay ₹${amount || "0"} Now`}</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+              {pendingPayment ? (
+                <div className="space-y-3">
+                  <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+                    Razorpay payment verified hone ke baad payment record banega. Actual operator recharge / BBPS fulfilment API abhi configured nahi hai; service execution pending manual confirmation rahega.
+                  </p>
+                  <RazorpayPayButton
+                    amount={pendingPayment.amount}
+                    purpose={pendingPayment.purpose}
+                    type={pendingPayment.paymentType}
+                    metadata={{
+                      serviceType: pendingPayment.serviceType,
+                      targetNumber: pendingPayment.targetNumber,
+                      provider: pendingPayment.provider,
+                      plan: pendingPayment.description,
+                      fulfilmentStatus: "pending_manual_processing"
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-saffron-600 to-saffron-500 hover:from-saffron-500 hover:to-saffron-400 text-white font-bold text-base rounded-2xl shadow-xl transition flex items-center justify-center gap-2"
+                    label={"Razorpay से ₹" + pendingPayment.amount + " भुगतान करें"}
+                    onSuccess={(payment) => {
+                      setReceipt({
+                        receiptNumber: payment?.paymentId || "Verified",
+                        type: pendingPayment.description,
+                        targetNumber: pendingPayment.targetNumber,
+                        provider: pendingPayment.provider,
+                        amount: pendingPayment.amount,
+                        timestamp: new Date().toISOString(),
+                        status: "PAYMENT_VERIFIED_PENDING_FULFILMENT"
+                      });
+                      setPendingPayment(null);
+                      showToast("success", "Razorpay payment verified. Service fulfilment is pending.");
+                    }}
+                  />
+                  <button type="button" onClick={() => setPendingPayment(null)} className="w-full rounded-xl border border-white/20 py-2 text-xs text-white">विवरण बदलें</button>
+                </div>
+              ) : (
+                <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-saffron-600 to-saffron-500 hover:from-saffron-500 hover:to-saffron-400 text-white font-bold text-base rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>{lang === "hi" ? "आगे बढ़ें — ₹" + (amount || "0") : "Continue — ₹" + (amount || "0")}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              )}
             </form>
           </div>
 
@@ -404,11 +406,11 @@ export default function RechargePage() {
                   <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 text-emerald-600">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-navy-950">
-                    {lang === "hi" ? "भुगतान सफल!" : "Payment Successful!"}
+                  <h3 className="text-xl font-black text-navy-950">
+                    {lang === "hi" ? "भुगतान सत्यापित — सेवा प्रक्रिया बाकी" : "Payment Verified — Service Processing Pending"}
                   </h3>
-                  <p className="text-xs text-navy-600 font-medium mt-0.5">
-                    {receipt.kioskName}
+                  <p className="text-xs text-amber-700 font-medium mt-1">
+                    Razorpay payment received. Actual recharge / bill posting is not connected to a live operator API yet.
                   </p>
                 </div>
 
@@ -431,12 +433,8 @@ export default function RechargePage() {
                     <span className="font-semibold text-navy-950">{receipt.provider}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-navy-50">
-                    <span className="text-navy-500">{lang === "hi" ? "ऑपरेटर संदर्भ ID" : "Operator Ref ID"}</span>
-                    <span className="font-mono font-semibold text-navy-800">{receipt.operatorTxnId}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-navy-50">
-                    <span className="text-navy-500">{lang === "hi" ? "BBPS संदर्भ संख्या" : "BBPS Reference"}</span>
-                    <span className="font-mono font-semibold text-navy-800">{receipt.bbpsRef}</span>
+                    <span className="text-navy-500">Payment status</span>
+                    <span className="font-bold text-amber-700">Verified — Fulfilment pending</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-navy-50">
                     <span className="text-navy-500">{lang === "hi" ? "दिनांक एवं समय" : "Date & Time"}</span>
@@ -459,6 +457,7 @@ export default function RechargePage() {
                   <button
                     onClick={() => {
                       setReceipt(null);
+                      setPendingPayment(null);
                       setAmount("");
                       setNumber("");
                     }}

@@ -206,7 +206,7 @@ export default async function ServiceDetailPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-3 pt-6 mt-6 border-t border-navy-100 dark:border-navy-800">
             {/* Primary Apply Button */}
             <Link
-              href={`/login?redirect=/services/${service.slug}`}
+              href={`/services/${service.slug}/apply`}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-saffron-600 hover:bg-saffron-500 text-white font-bold rounded-xl shadow-md transition text-sm"
             >
               <UploadCloud className="w-4 h-4" />

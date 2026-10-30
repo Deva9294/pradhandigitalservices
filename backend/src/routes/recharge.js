@@ -1,8 +1,5 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { protect, optionalAuth } from '../middleware/auth.js';
-import Payment from '../models/Payment.js';
-import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -100,157 +97,15 @@ router.get('/plans', asyncHandler(async (req, res) => {
   res.json({ success: true, provider: p, plans });
 }));
 
-// Helper to record payment & create transaction receipt
-async function recordTransaction(req, { type, amount, targetNumber, provider, description }) {
-  const receiptNumber = `REC-PDS-${Date.now().toString().slice(-6)}`;
-  const operatorTxnId = `OPR${Date.now()}${Math.floor(100 + Math.random() * 900)}`;
-  const bbpsRef = `BBPS${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+// Live recharge / BBPS execution is intentionally disabled until a certified provider API is configured.
+// The frontend can collect Razorpay payments, but this API must never fabricate a successful recharge.
+const providerUnavailable = (req, res) => res.status(503).json({
+  success: false,
+  message: 'Live recharge / BBPS provider integration is not configured. No recharge or bill payment has been processed.'
+});
 
-  let user = null;
-  if (req.user) {
-    user = await User.findById(req.user._id || req.user.id);
-  }
-
-  // Create payment entry
-  let payment = null;
-  try {
-    payment = await Payment.create({
-      paymentId: `PAY_${Date.now()}_${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-      user: user ? user._id : undefined,
-      type: 'recharge',
-      amount,
-      currency: 'INR',
-      feeBreakdown: {
-        governmentFee: 0,
-        portalFee: 0,
-        gatewayFee: 0,
-        tax: 0,
-        discount: 0,
-        total: amount
-      },
-      gateway: 'manual',
-      gatewayTransactionId: operatorTxnId,
-      status: 'completed',
-      initiatedAt: new Date(),
-      completedAt: new Date()
-    });
-  } catch (err) {
-    console.warn('[Recharge] Payment record notice:', err.message);
-  }
-
-  return {
-    receiptNumber,
-    operatorTxnId,
-    bbpsRef,
-    type,
-    amount,
-    targetNumber,
-    provider,
-    description,
-    status: 'SUCCESS',
-    timestamp: new Date().toISOString(),
-    paymentId: payment?.paymentId || `PAY_${Date.now()}`,
-    serviceCharge: '₹0 (Free Digital Seva)',
-    supportPhone: '+91 9294899787',
-    kioskName: 'Pradhan Digital Services (Rehti, Sehore, MP)'
-  };
-}
-
-// @route   POST /api/recharge/mobile
-router.post('/mobile', optionalAuth, asyncHandler(async (req, res) => {
-  const { phoneNumber, provider, amount, plan } = req.body;
-  const cleanPhone = String(phoneNumber || '').replace(/\D/g, '').slice(-10);
-
-  if (cleanPhone.length !== 10) {
-    return res.status(400).json({ success: false, message: 'वैध 10 अंकों का मोबाइल नंबर दर्ज करें (Valid 10-digit mobile required)' });
-  }
-
-  const parsedAmount = Number(amount);
-  if (!parsedAmount || parsedAmount < 10 || parsedAmount > 15000) {
-    return res.status(400).json({ success: false, message: 'वैध रिचार्ज राशि दर्ज करें (₹10 - ₹15,000)' });
-  }
-
-  const receipt = await recordTransaction(req, {
-    type: 'Mobile Recharge',
-    amount: parsedAmount,
-    targetNumber: cleanPhone,
-    provider: provider || 'Prepaid',
-    description: plan ? `Recharge Plan: ${plan}` : `Mobile Recharge of ₹${parsedAmount}`
-  });
-
-  res.json({
-    success: true,
-    message: `+91 ${cleanPhone} पर ₹${parsedAmount} का रिचार्ज सफलतापूर्वक संपन्न हुआ!`,
-    data: receipt
-  });
-}));
-
-// @route   POST /api/recharge/dth
-router.post('/dth', optionalAuth, asyncHandler(async (req, res) => {
-  const { customerId, provider, amount } = req.body;
-  const cleanId = String(customerId || '').trim();
-
-  if (!cleanId || cleanId.length < 5) {
-    return res.status(400).json({ success: false, message: 'वैध DTH ग्राहक आईडी/स्मार्ट कार्ड नंबर दर्ज करें' });
-  }
-
-  const parsedAmount = Number(amount);
-  if (!parsedAmount || parsedAmount < 50 || parsedAmount > 10000) {
-    return res.status(400).json({ success: false, message: 'राशि ₹50 से ₹10,000 के बीच होनी चाहिए' });
-  }
-
-  const receipt = await recordTransaction(req, {
-    type: 'DTH Recharge',
-    amount: parsedAmount,
-    targetNumber: cleanId,
-    provider: provider || 'DTH Service',
-    description: `DTH Recharge for VC/Customer ID: ${cleanId}`
-  });
-
-  res.json({
-    success: true,
-    message: `DTH खाता (${cleanId}) पर ₹${parsedAmount} का रिचार्ज सफलतापूर्वक हुआ!`,
-    data: receipt
-  });
-}));
-
-// @route   POST /api/recharge/bill
-// @desc    Process Electricity, Water, Gas, FASTag, Broadband, Credit Card bills
-router.post('/bill', optionalAuth, asyncHandler(async (req, res) => {
-  const { service, accountNumber, amount, billerId } = req.body;
-  const cleanAccount = String(accountNumber || '').trim();
-
-  if (!cleanAccount || cleanAccount.length < 3) {
-    return res.status(400).json({ success: false, message: 'कृपया वैध उपभोक्ता क्रमांक / खाता संख्या दर्ज करें' });
-  }
-
-  const parsedAmount = Number(amount);
-  if (!parsedAmount || parsedAmount < 1) {
-    return res.status(400).json({ success: false, message: 'कृपया वैध भुगतान राशि दर्ज करें' });
-  }
-
-  const serviceNames = {
-    electricity: 'बिजली बिल भुगतान (Electricity Bill)',
-    water: 'जल कर भुगतान (Water Tax)',
-    gas: 'LPG सिलेंडर / गैस बिल (Gas Booking)',
-    fastag: 'FASTag टोल रिचार्ज (FASTag Recharge)',
-    broadband: 'ब्रॉडबैंड / फाइबर बिल (Broadband)',
-    creditcard: 'क्रेडिट कार्ड बिल (Credit Card Bill)'
-  };
-
-  const receipt = await recordTransaction(req, {
-    type: serviceNames[service] || 'Utility Bill Payment',
-    amount: parsedAmount,
-    targetNumber: cleanAccount,
-    provider: billerId || service,
-    description: `${serviceNames[service] || 'Bill Payment'} - A/C: ${cleanAccount}`
-  });
-
-  res.json({
-    success: true,
-    message: `${serviceNames[service] || 'बिल'} भुगतान ₹${parsedAmount} सफलतापूर्वक संपन्न हुआ! रसीद तैयार है।`,
-    data: receipt
-  });
-}));
+router.post('/mobile', asyncHandler(async (req, res) => providerUnavailable(req, res)));
+router.post('/dth', asyncHandler(async (req, res) => providerUnavailable(req, res)));
+router.post('/bill', asyncHandler(async (req, res) => providerUnavailable(req, res)));
 
 export default router;

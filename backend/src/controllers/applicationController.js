@@ -6,52 +6,81 @@ import { catchAsync } from '../utils/catchAsync.js';
 import { AppError } from '../utils/AppError.js';
 
 export const createApplication = catchAsync(async (req, res) => {
-  const {
-    serviceId,
-    applicantDetails,
-    serviceData,
-    paymentMethod = 'online'
-  } = req.body;
+  const { serviceId, serviceSlug, applicantDetails, serviceData, paymentMethod = 'razorpay' } = req.body || {};
 
-  // Validate service
-  const service = await Service.findById(serviceId);
-  if (!service) throw new AppError('Service not found', 404);
-  if (!service.isActive) throw new AppError('Service is not active', 400);
+  const serviceQuery = serviceId
+    ? { _id: serviceId, isActive: true }
+    : { slug: String(serviceSlug || '').trim().toLowerCase(), isActive: true };
+  if (!serviceId && !serviceSlug) throw new AppError('Service selection is required.', 400);
 
-  // Calculate fees
-  const governmentFee = service.price || 0;
-  const portalFee = Math.round(governmentFee * 0.10); // 10% portal fee
-  const total = governmentFee + portalFee;
+  const service = await Service.findOne(serviceQuery);
+  if (!service) throw new AppError('This service is not currently available for online applications. Please contact support.', 404);
 
-  const application = await ServiceApplication.create({
+  const name = String(applicantDetails?.name || req.user.name || '').trim();
+  const phone = String(applicantDetails?.phone || req.user.phone || '').replace(/\D/g, '').slice(-10);
+  if (name.length < 2) throw new AppError('Applicant name is required.', 400);
+  if (!/^\d{10}$/.test(phone)) throw new AppError('A valid 10-digit mobile number is required.', 400);
+
+  const governmentFee = Math.max(0, Number(service.governmentFee || 0));
+  const serviceCharge = Math.max(0, Number(service.serviceCharge ?? 50));
+  const total = Math.round((governmentFee + serviceCharge) * 100) / 100;
+  if (!Number.isFinite(total) || total <= 0) throw new AppError('The service fee is not configured correctly. Please contact support.', 400);
+
+  let application = await ServiceApplication.findOne({
     user: req.user._id,
-    service: serviceId,
-    applicantDetails,
-    serviceData,
+    service: service._id,
+    status: 'draft'
+  });
+
+  if (application) {
+    application.applicantDetails = { ...applicantDetails, name, phone };
+    application.serviceData = serviceData || {};
+    application.payment = {
+      ...application.payment?.toObject?.(),
+      amount: total,
+      governmentFee,
+      portalFee: serviceCharge,
+      totalAmount: total,
+      paymentMethod,
+      status: 'pending'
+    };
+    application.feeBreakdown = {
+      governmentFee,
+      assistanceCharge: serviceCharge,
+      convenienceFee: 0,
+      tax: 0,
+      total
+    };
+    await application.save();
+  } else {
+    application = await ServiceApplication.create({
+    user: req.user._id,
+    service: service._id,
+    applicantDetails: { ...applicantDetails, name, phone },
+    serviceData: serviceData || {},
     payment: {
       amount: total,
       governmentFee,
-      portalFee,
+      portalFee: serviceCharge,
       totalAmount: total,
       paymentMethod,
       status: 'pending'
     },
     feeBreakdown: {
       governmentFee,
-      assistanceCharge: portalFee,
+      assistanceCharge: serviceCharge,
       convenienceFee: 0,
       tax: 0,
       total
     },
     status: 'draft',
-    processingDetails: {
-      submittedAt: new Date()
-    },
     createdBy: req.user._id
-  });
+    });
+  }
 
   res.status(201).json({
     success: true,
+    message: 'Application draft created. Complete Razorpay payment to submit it.',
     data: application
   });
 });
@@ -59,6 +88,7 @@ export const createApplication = catchAsync(async (req, res) => {
 export const getMyApplications = catchAsync(async (req, res) => {
   const filter = { user: req.user._id };
   if (req.query.status) filter.status = req.query.status;
+  else if (req.query.includeDrafts !== 'true') filter.status = { $ne: 'draft' };
 
   const applications = await ServiceApplication.find(filter)
     .populate('service', 'name slug icon')
@@ -73,7 +103,7 @@ export const getWorkQueue = catchAsync(async (req, res) => {
   if (!isAdmin && !isOperator) throw new AppError('Not authorized', 403);
 
   const filter = isAdmin
-    ? {}
+    ? { status: { $ne: 'draft' } }
     : {
         status: { $ne: 'draft' },
         $or: [{ agent: req.user._id }, { agent: null }]
@@ -184,6 +214,38 @@ export const uploadDocument = catchAsync(async (req, res) => {
   await application.save();
 
   res.status(201).json({ success: true, data: document });
+});
+
+export const attachDocuments = catchAsync(async (req, res) => {
+  const application = await ServiceApplication.findById(req.params.id);
+  if (!application) throw new AppError('Application not found', 404);
+  if (String(application.user) !== String(req.user._id) && !['admin', 'superadmin'].includes(req.user.role)) {
+    throw new AppError('Not authorized to add documents to this application.', 403);
+  }
+  if (application.status !== 'draft') throw new AppError('Documents can only be attached before payment submission.', 400);
+
+  const files = Array.isArray(req.body.documents) ? req.body.documents : [];
+  if (!files.length || files.length > 5) throw new AppError('Upload between 1 and 5 documents.', 400);
+
+  const allowedHost = req.get('host');
+  const docs = files.map((file) => {
+    const fileUrl = String(file.fileUrl || '');
+    let parsed;
+    try { parsed = new URL(fileUrl); } catch { throw new AppError('Invalid uploaded document URL.', 400); }
+    if (parsed.host !== allowedHost || !parsed.pathname.startsWith('/uploads/')) {
+      throw new AppError('Document must be uploaded to the Pradhan secure upload endpoint.', 400);
+    }
+    return {
+      type: String(file.documentType || 'Supporting Document').slice(0, 80),
+      url: fileUrl,
+      fileName: String(file.fileName || 'Document').slice(0, 180),
+      uploadedAt: new Date()
+    };
+  });
+
+  application.documents.push(...docs);
+  await application.save();
+  res.json({ success: true, data: application.documents });
 });
 
 export const deleteDocument = catchAsync(async (req, res) => {

@@ -26,7 +26,10 @@ router.get('/:id', ctrl.getApplication);
 // Update application
 router.put('/:id', ctrl.updateApplication);
 
-// Upload document
+// Attach documents uploaded through the authenticated upload endpoint
+router.post('/:id/attach-documents', ctrl.attachDocuments);
+
+// Upload document (legacy route)
 router.post('/:id/documents', ctrl.uploadDocument);
 
 // Delete document

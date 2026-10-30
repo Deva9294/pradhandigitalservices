@@ -40,10 +40,21 @@ export const authApi = {
 };
 
 export const paymentApi = {
-  createOrder: (amount: number, purpose: string, metadata?: Record<string, string>) =>
-    api.post("/payments/create-order", { amount, purpose, metadata }),
+  createOrder: (payload: { amount?: number; purpose: string; type?: string; applicationId?: string; metadata?: Record<string, string> }) =>
+    api.post("/payments/create-order", payload),
   verifyPayment: (data: Record<string, string>) => api.post("/payments/verify", data),
+  getMyPayments: () => api.get("/payments/my"),
 };
+
+export const uploadApi = {
+  multiple: (files: File[]) => {
+    const form = new FormData();
+    files.forEach((file) => form.append("files", file));
+    return api.post("/upload/multiple", form, { headers: { "Content-Type": "multipart/form-data" } });
+  },
+};
+
+
 
 export const formsApi = {
   getAll: () => api.get("/forms"),
@@ -99,6 +110,10 @@ export const rechargeApi = {
 };
 
 export const applicationApi = {
+  create: (payload: { serviceSlug: string; applicantDetails: Record<string, any>; serviceData?: Record<string, any> }) =>
+    api.post("/applications", payload),
+  attachDocuments: (id: string, documents: Array<{ fileUrl: string; fileName: string; documentType: string }>) =>
+    api.post(`/applications/${id}/attach-documents`, { documents }),
   mine: () => api.get("/applications/my"),
   workQueue: () => api.get("/applications/work-queue"),
   updateStatus: (id: string, status: string, remarks?: string, metadata?: { referenceNumber?: string }) =>

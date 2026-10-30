@@ -19,6 +19,14 @@ import { whatsAppUrl } from "@/lib/utils";
 type PortalRole = "customer" | "agent" | "admin";
 type AuthMode = "password" | "otp";
 
+function getPostLoginPath(role?: string, requested?: string | null) {
+  if (role !== "admin" && role !== "superadmin" && role !== "agent" && role !== "staff" &&
+      requested && requested.startsWith("/") && !requested.startsWith("//")) {
+    return requested;
+  }
+  return getRoleRedirect(role);
+}
+
 function LoginContent() {
   const { lang } = useLanguage();
   const { login, isReady: authReady, isAuthenticated, user } = useAuth();
@@ -53,9 +61,11 @@ function LoginContent() {
 
   useEffect(() => {
     if (authReady && isAuthenticated && user) {
-      router.replace(getRoleRedirect(user.role));
+      router.replace(getPostLoginPath(user.role, searchParams.get("redirect")));
     }
-  }, [authReady, isAuthenticated, user, router]);
+  }, [authReady, isAuthenticated, user, router, searchParams]);
+
+
 
   // Read URL query params on mount (e.g. ?role=agent or ?action=register)
   useEffect(() => {
@@ -133,7 +143,7 @@ function LoginContent() {
       const res = await authApi.verifyOtp(cleanPhone, formData.otp.trim(), formData.name.trim() || undefined);
       if (res.data?.token && res.data?.user) {
         login(res.data.token, res.data.user);
-        const redirect = getRoleRedirect(res.data.user.role);
+        const redirect = getPostLoginPath(res.data.user.role, searchParams.get("redirect"));
         router.push(redirect);
       }
     } catch (err: any) {
@@ -171,7 +181,7 @@ function LoginContent() {
       login(data.token, data.user);
       
       // Systematic Redirection based on user's actual confirmed role
-      const targetPath = getRoleRedirect(data.user.role);
+      const targetPath = getPostLoginPath(data.user.role, searchParams.get("redirect"));
       router.push(targetPath);
     } catch (err: any) {
       const message =

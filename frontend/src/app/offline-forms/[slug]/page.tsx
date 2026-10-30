@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { FileDown, Shield, CreditCard, Wallet, CheckCircle } from "lucide-react";
+import { FileDown, Shield, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { offlineForms } from "@/data/offlineForms";
 import { DISCLAIMER } from "@/lib/utils";
+import RazorpayPayButton from "@/components/payment/RazorpayPayButton";
 
 export default function FormDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { lang, t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<"upi" | "razorpay" | "wallet">("razorpay");
-  const [processing, setProcessing] = useState(false);
   const [purchased, setPurchased] = useState(false);
+  const [paymentId, setPaymentId] = useState("");
 
   const form = offlineForms.find((f) => f.slug === slug);
 
@@ -29,28 +29,16 @@ export default function FormDetailPage() {
     );
   }
 
-  const handlePayment = async () => {
-    if (!isAuthenticated) {
-      window.location.href = `/login?redirect=/offline-forms/${form.slug}`;
-      return;
-    }
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      setPurchased(true);
-    }, 2000);
-  };
+
 
   if (purchased) {
     return (
       <div className="container mx-auto px-4 py-20 text-center max-w-lg">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">Payment Successful!</h1>
-        <p className="text-navy-600 mb-6">Your secure download link is ready.</p>
-        <a href="#" className="inline-flex items-center gap-2 px-6 py-3 bg-saffron-600 text-white font-semibold rounded-xl hover:bg-saffron-500 transition">
-          <FileDown className="w-5 h-5" /> Download PDF
-        </a>
-        <p className="text-xs text-navy-500 mt-4">Also available in Dashboard → Download History</p>
+        <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">Payment Verified</h1>
+        <p className="text-navy-600 dark:text-navy-300 mb-3">आपका Razorpay भुगतान सत्यापित हो गया है।</p>
+        <p className="text-xs text-navy-500 mb-6">Payment ID: {paymentId}. इस फॉर्म का वास्तविक PDF download file अभी catalogue में configured नहीं है। कृपया सहायता टीम से संपर्क करें; दोबारा भुगतान न करें।</p>
+        <Link href="/dashboard" className="inline-flex items-center gap-2 px-6 py-3 bg-saffron-600 text-white font-semibold rounded-xl">Dashboard खोलें</Link>
       </div>
     );
   }
@@ -83,23 +71,19 @@ export default function FormDetailPage() {
         </div>
 
         <div className="space-y-3 mb-6">
-          <p className="font-semibold text-sm">Payment Method</p>
-          {[
-            { id: "razorpay" as const, icon: CreditCard, label: "UPI / Card / Net Banking (Razorpay)" },
-            { id: "wallet" as const, icon: Wallet, label: "Wallet Balance" },
-          ].map(({ id, icon: Icon, label }) => (
-            <label key={id} className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${paymentMethod === id ? "border-saffron-500 bg-saffron-50 dark:bg-saffron-900/20" : "border-navy-200 dark:border-navy-700"}`}>
-              <input type="radio" name="payment" value={id} checked={paymentMethod === id} onChange={() => setPaymentMethod(id)} className="accent-saffron-500" />
-              <Icon className="w-5 h-5 text-navy-600" />
-              <span className="text-sm font-medium">{label}</span>
-            </label>
-          ))}
+          <p className="font-semibold text-sm">Secure payment</p>
+          <p className="text-xs text-navy-500">UPI, Debit/Credit Card and Netbanking through Razorpay.</p>
         </div>
 
-        <button onClick={handlePayment} disabled={processing}
-          className="w-full py-4 bg-saffron-600 text-white font-bold rounded-xl hover:bg-saffron-500 hover:shadow-lg transition disabled:opacity-50">
-          {processing ? t.common.loading : `${t.common.payAndDownload} — ₹${form.price}`}
-        </button>
+        <RazorpayPayButton
+          amount={form.price}
+          purpose={`Offline form download: ${form.name}`}
+          type="form_download"
+          metadata={{ formId: form.id, formSlug: form.slug }}
+          className="w-full py-4 bg-saffron-600 text-white font-bold rounded-xl hover:bg-saffron-500 hover:shadow-lg transition inline-flex items-center justify-center gap-2"
+          label={`${t.common.payAndDownload} — ₹${form.price}`}
+          onSuccess={(payment) => { setPaymentId(payment?.paymentId || "Verified"); setPurchased(true); }}
+        />
 
         {!isAuthenticated && (
           <p className="text-center text-sm text-navy-500 mt-4">

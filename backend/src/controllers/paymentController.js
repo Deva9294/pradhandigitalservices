@@ -8,23 +8,39 @@ import { AppError } from '../utils/AppError.js';
 const isAdmin = (user) => ['admin', 'superadmin'].includes(user?.role);
 
 async function markPaymentCompleted(payment, gatewayPaymentId) {
-  if (payment.status === 'completed') return payment;
-  payment.status = 'completed';
-  payment.gatewayTransactionId = gatewayPaymentId;
-  payment.gatewayPaymentId = gatewayPaymentId;
-  payment.verified = true;
-  payment.completedAt = new Date();
-  await payment.save();
+  const wasCompleted = payment.status === 'completed';
+  if (!wasCompleted) {
+    payment.status = 'completed';
+    payment.gatewayTransactionId = gatewayPaymentId;
+    payment.gatewayPaymentId = gatewayPaymentId;
+    payment.verified = true;
+    payment.completedAt = new Date();
+  }
 
+  // Always reconcile the linked application, even if a previous attempt saved the
+  // payment first but failed before the application update completed.
   if (payment.application) {
     const application = await ServiceApplication.findById(payment.application);
     if (application?.payment) {
       application.payment.status = 'paid';
-      application.payment.paidAt = new Date();
+      application.payment.paidAt = application.payment.paidAt || new Date();
       application.payment.paymentId = gatewayPaymentId;
+      if (application.status === 'draft') {
+        application.status = 'submitted';
+        application.processingDetails = application.processingDetails || {};
+        application.processingDetails.submittedAt = new Date();
+        application.statusHistory.push({
+          status: 'submitted',
+          remarks: 'Payment verified successfully through Razorpay.',
+          changedBy: application.user,
+          changedAt: new Date()
+        });
+      }
       await application.save();
     }
   }
+
+  if (!wasCompleted) await payment.save();
   return payment;
 }
 
@@ -54,41 +70,94 @@ async function validateApplicationPayment(applicationId, user, amount) {
 }
 
 export const createOrder = catchAsync(async (req, res) => {
-  const amount = Number(req.body.amount);
   const currency = String(req.body.currency || 'INR').toUpperCase();
-  const { type, applicationId } = req.body;
+  const { type, applicationId, purpose, metadata } = req.body;
 
-  if (!Number.isFinite(amount) || amount < 1 || amount > 500000 || currency !== 'INR') {
-    throw new AppError('Enter a valid INR amount between ₹1 and ₹5,00,000.', 400);
-  }
+  if (currency !== 'INR') throw new AppError('Only INR payments are supported.', 400);
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     throw new AppError('Online payment is temporarily unavailable. Razorpay credentials are not configured.', 503);
   }
 
-  const application = await validateApplicationPayment(applicationId, req.user, amount);
+  let application = null;
+  let amount = Number(req.body.amount);
+  if (applicationId) {
+    application = await ServiceApplication.findById(applicationId);
+    if (!application) throw new AppError('Application not found.', 404);
+    if (String(application.user) !== String(req.user._id) && !isAdmin(req.user)) {
+      throw new AppError('Not authorized for this application.', 403);
+    }
+    if (application.status !== 'draft' || ['paid', 'completed'].includes(application.payment?.status)) {
+      throw new AppError('This application is not awaiting payment.', 409);
+    }
+    const serverAmount = Number(application.payment?.totalAmount || application.payment?.amount || 0);
+    if (!Number.isFinite(serverAmount) || serverAmount < 1) {
+      throw new AppError('Application fee is not configured. Please contact support.', 400);
+    }
+    if (Number.isFinite(amount) && amount > 0 && Math.round(amount * 100) !== Math.round(serverAmount * 100)) {
+      throw new AppError('Payment amount does not match the server-calculated application fee.', 400);
+    }
+    amount = serverAmount;
+  }
+
+  if (!Number.isFinite(amount) || amount < 1 || amount > 500000) {
+    throw new AppError('Enter a valid INR amount between ₹1 and ₹5,00,000.', 400);
+  }
+
+  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
+  const paymentType = application ? 'service_application' : (allowedTypes.includes(type) ? type : 'service_application');
+
+  // Enforce catalogue prices on fixed-price products; never trust a browser-supplied amount.
+  if (!application && paymentType === 'membership') {
+    const plan = String(metadata?.plan || '');
+    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
+    if (!expected || Math.round(amount * 100) !== expected * 100) {
+      throw new AppError('Membership amount does not match the selected plan.', 400);
+    }
+  }
+
+  if (!application && paymentType === 'form_download') {
+    const allowedFormSlugs = new Set([
+      'income-certificate-form', 'caste-certificate-form', 'domicile-form',
+      'birth-certificate-form', 'death-certificate-form', 'marriage-registration-form',
+      'pension-forms', 'samagra-forms', 'labour-forms', 'pm-kisan-forms',
+      'madhya-pradesh-forms', 'uttar-pradesh-forms', 'rajasthan-forms',
+      'bihar-forms', 'all-state-government-forms'
+    ]);
+    if (!allowedFormSlugs.has(String(metadata?.formSlug || '')) || Math.round(amount * 100) !== 500) {
+      throw new AppError('Form download amount or catalogue item is invalid.', 400);
+    }
+  }
   let payment = null;
   if (application) {
     payment = await Payment.findOne({ application: application._id }).sort('-createdAt');
     if (payment && String(payment.user) !== String(application.user)) {
       throw new AppError('Payment ownership does not match this application.', 403);
     }
-    if (payment?.status === 'completed') throw new AppError('Payment already completed', 400);
+    if (payment?.status === 'completed') throw new AppError('Payment already completed.', 409);
     if (payment && Math.round(Number(payment.amount) * 100) !== Math.round(amount * 100)) {
       throw new AppError('Existing payment amount does not match the application fee.', 409);
     }
   }
 
   const receipt = `PDS_${Date.now()}_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-  if (!payment || payment.status === 'failed' || payment.status === 'refunded') {
+  if (!payment || ['failed', 'refunded'].includes(payment.status)) {
     payment = await Payment.create({
       user: application ? application.user : req.user._id,
       application: application?._id,
-      type: type || 'service_application',
+      type: paymentType,
       amount,
       currency,
-      feeBreakdown: { governmentFee: amount, portalFee: 0, gatewayFee: 0, tax: 0, discount: 0, total: amount },
+      feeBreakdown: {
+        governmentFee: application?.payment?.governmentFee || amount,
+        portalFee: application?.payment?.portalFee || 0,
+        gatewayFee: 0,
+        tax: 0,
+        discount: 0,
+        total: amount
+      },
       gateway: 'razorpay',
       status: 'pending',
+      metadata: { purpose: String(purpose || 'Pradhan Digital Services payment').slice(0, 120), ...(metadata || {}) },
       initiatedAt: new Date()
     });
   }
@@ -101,7 +170,8 @@ export const createOrder = catchAsync(async (req, res) => {
     notes: {
       paymentId: payment.paymentId,
       userId: String(payment.user),
-      applicationId: application ? String(application._id) : ''
+      applicationId: application ? String(application._id) : '',
+      purpose: String(purpose || paymentType).slice(0, 120)
     }
   });
 
@@ -130,6 +200,7 @@ export const verifyPayment = catchAsync(async (req, res) => {
     throw new AppError('Not authorized to verify this payment', 403);
   }
   if (payment.status === 'completed') {
+    await markPaymentCompleted(payment, payment.gatewayPaymentId || payment.gatewayTransactionId);
     return res.json({ success: true, message: 'Payment already verified', data: payment });
   }
   if (gateway !== 'razorpay' || payment.gateway !== 'razorpay') {

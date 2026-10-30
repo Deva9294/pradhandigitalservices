@@ -158,6 +158,13 @@ export default function CustomerDashboard() {
 
           <div className="flex items-center gap-2.5">
             <Link
+              href="/payment/razorpay"
+              className="px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs transition shadow flex items-center gap-1.5"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>{lang === "hi" ? "ऑनलाइन भुगतान" : "Pay Online"}</span>
+            </Link>
+            <Link
               href="/payment/upi"
               className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-xs transition shadow flex items-center gap-1.5"
             >

@@ -24,6 +24,7 @@ import supportRoutes from './routes/support.js';
 import adminRoutes from './routes/admin.js';
 import paymentRoutes from './routes/payments.js';
 import contactRoutes from './routes/contact.js';
+import visitorRoutes from './routes/visitors.js';
 
 dotenv.config();
 
@@ -120,6 +121,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/visitors', visitorRoutes);
 
 // Render Health & Status Endpoints
 app.get(['/', '/health'], (req, res) => {

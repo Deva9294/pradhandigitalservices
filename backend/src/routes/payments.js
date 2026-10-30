@@ -24,11 +24,11 @@ router.post('/create-order', ctrl.createOrder);
 // Verify payment
 router.post('/verify', ctrl.verifyPayment);
 
+// Get my payments (must precede the dynamic :id route)
+router.get('/my', ctrl.getMyPayments);
+
 // Get payment status
 router.get('/:id', ctrl.getPayment);
-
-// Get my payments
-router.get('/my', ctrl.getMyPayments);
 
 // Process refund (admin only)
 router.post('/:id/refund', ctrl.processRefund);

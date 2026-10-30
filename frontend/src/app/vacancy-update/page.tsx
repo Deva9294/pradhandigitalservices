@@ -64,7 +64,7 @@ export default function VacancyUpdatePage() {
     }
   };
 
-  // Fetch real data from backend API with fallback
+  // Fetch live vacancy data from the backend; never substitute demo vacancies.
   useEffect(() => {
     let isMounted = true;
 

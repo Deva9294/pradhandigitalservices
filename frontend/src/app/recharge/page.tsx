@@ -128,6 +128,7 @@ export default function RechargePage() {
       if (!Number.isFinite(parsedAmount) || parsedAmount < 10 || parsedAmount > 50000) throw new Error("वैध राशि दर्ज करें (₹10 - ₹50,000)।");
       setPendingPayment({
         amount: parsedAmount,
+        serviceType: type,
         purpose: type.toUpperCase() + " payment for " + number.trim(),
         paymentType: type === "mobile" || type === "dth" ? "recharge" : "bill_payment",
         targetNumber: type === "mobile" ? normalizeIndianMobile(number) : number.trim(),
@@ -152,7 +153,7 @@ export default function RechargePage() {
             {lang === "hi" ? "रिचार्ज और बिल भुगतान" : "Recharge & Bill Payment"}
           </h1>
           <p className="text-saffron-200/90 text-sm md:text-base">
-            {lang === "hi" ? "मोबाइल, DTH, बिजली बिल, पानी कर, गैस बुकिंग एवं FASTag — तत्काल एवं डिजिटल रसीद सहित।" : "Secure Razorpay checkout. Actual recharge and BBPS fulfilment requires a live operator integration."}
+            {lang === "hi" ? "मोबाइल, DTH और बिल भुगतान का सुरक्षित Razorpay checkout। वास्तविक रिचार्ज सेवा ऑपरेटर API जुड़ने के बाद ही पूरी होगी।" : "Secure Razorpay checkout. Actual recharge and BBPS fulfilment requires a live operator integration."}
           </p>
         </div>
 
@@ -165,6 +166,7 @@ export default function RechargePage() {
                 onClick={() => {
                   setType(service.id);
                   setReceipt(null);
+                  setPendingPayment(null);
                   if (service.id === "mobile") setProvider("jio");
                   else if (service.id === "dth") setProvider("tatasky");
                   else if (billProviders[service.id]?.[0]) setProvider(billProviders[service.id][0].id);
@@ -356,7 +358,7 @@ export default function RechargePage() {
                     purpose={pendingPayment.purpose}
                     type={pendingPayment.paymentType}
                     metadata={{
-                      serviceType: type,
+                      serviceType: pendingPayment.serviceType,
                       targetNumber: pendingPayment.targetNumber,
                       provider: pendingPayment.provider,
                       plan: pendingPayment.description,
@@ -455,6 +457,7 @@ export default function RechargePage() {
                   <button
                     onClick={() => {
                       setReceipt(null);
+                      setPendingPayment(null);
                       setAmount("");
                       setNumber("");
                     }}

@@ -55,7 +55,7 @@ function LoginContent() {
     if (authReady && isAuthenticated && user) {
       router.replace(getPostLoginPath(user.role));
     }
-  }, [authReady, isAuthenticated, user, router]);
+  }, [authReady, isAuthenticated, user, router, searchParams]);
 
   const getPostLoginPath = (role?: string) => {
     const requested = searchParams.get("redirect");

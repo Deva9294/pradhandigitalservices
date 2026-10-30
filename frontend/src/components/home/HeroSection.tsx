@@ -24,16 +24,16 @@ export default function HeroSection() {
     : ["Aadhaar", "PAN Card", "Samagra KYC", "PM Kisan", "Jobs", "Income Certificate"];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#0A1B4D] via-[#0D1F57] to-[#0A1B4D] text-white pt-6 pb-12 border-b border-white/10">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#0A1B4D] via-[#0D1F57] to-[#0A1B4D] text-white pt-10 md:pt-14 pb-14 md:pb-16 border-b border-white/10">
       {/* Subtle background ambient lights */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-saffron-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           
           {/* Left Text & Search Column (7 Cols on desktop) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="lg:col-span-7 space-y-5">
             
             {/* Trust Pill */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-saffron-500/15 border border-saffron-500/30 text-saffron-300 text-xs font-semibold">
@@ -42,7 +42,7 @@ export default function HeroSection() {
             </div>
 
             {/* Clear Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.65rem] font-extrabold text-white tracking-tight leading-tight">
               {lang === "hi" ? "अब ऑनलाइन काम, घर बैठे" : "Digital & Govt Services, From Home"}
             </h1>
 
@@ -54,7 +54,7 @@ export default function HeroSection() {
             </p>
 
             {/* Prominent Search Bar */}
-            <form onSubmit={handleSearch} className="max-w-xl pt-1">
+            <form onSubmit={handleSearch} className="max-w-2xl pt-2">
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-saffron-400" />
                 <input
@@ -62,7 +62,7 @@ export default function HeroSection() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं? (उदा. आधार, पैन, खसरा...)" : "What service are you looking for? (e.g. Aadhaar, PAN...)"}
-                  className="w-full pl-10 pr-24 py-3 rounded-2xl bg-white text-navy-950 placeholder-navy-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-saffron-500 shadow-xl"
+                  className="w-full pl-11 pr-28 py-4 rounded-2xl bg-white text-navy-950 placeholder-navy-500 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-saffron-500 shadow-xl"
                 />
                 <button
                   type="submit"
@@ -130,7 +130,7 @@ export default function HeroSection() {
           {/* Right Vector Illustration Column (5 Cols on desktop) */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div className="relative p-2 rounded-3xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-sm">
-              <DigitalServicesHeroIllustration className="w-full max-w-sm sm:max-w-md h-auto" />
+              <DigitalServicesHeroIllustration className="w-full max-w-sm sm:max-w-md h-auto drop-shadow-2xl" />
             </div>
           </div>
         </div>

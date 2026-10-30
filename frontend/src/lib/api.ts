@@ -43,6 +43,7 @@ export const paymentApi = {
   createOrder: (payload: { amount?: number; purpose: string; type?: string; applicationId?: string; metadata?: Record<string, string> }) =>
     api.post("/payments/create-order", payload),
   verifyPayment: (data: Record<string, string>) => api.post("/payments/verify", data),
+  getMyPayments: () => api.get("/payments/my"),
 };
 
 export const uploadApi = {

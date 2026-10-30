@@ -34,6 +34,7 @@ type DepartmentRule = { match: RegExp; domain: string };
  * Services without a confidently identified owner use a neutral icon.
  */
 const departmentRules: DepartmentRule[] = [
+  { match: /aadhaar.?pan|pan.?aadhaar|pan.?linking/i, domain: "incometax.gov.in" },
   { match: /aadhaar|uidai|आधार/i, domain: "uidai.gov.in" },
   { match: /pan.?card|e.?pan|incometax|income.?tax|आयकर|पैन/i, domain: "incometax.gov.in" },
   { match: /voter|epic|election|मतदाता|निर्वाचन/i, domain: "voters.eci.gov.in" },
@@ -101,7 +102,6 @@ const departmentRules: DepartmentRule[] = [
   { match: /airtel/i, domain: "airtel.in" },
   { match: /vodafone|idea|\bvi\b/i, domain: "myvi.in" },
   { match: /bsnl/i, domain: "bsnl.co.in" },
-  { match: /dth|broadband|mobile.?recharge|postpaid.?bill/i, domain: "bbps.org" },
   { match: /mp.?tourism/i, domain: "tourism.mp.gov.in" },
   { match: /speed.?post|courier.?tracking/i, domain: "indiapost.gov.in" },
 ];

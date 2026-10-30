@@ -50,7 +50,7 @@ export const uploadApi = {
   multiple: (files: File[]) => {
     const form = new FormData();
     files.forEach((file) => form.append("files", file));
-    return api.post("/upload/multiple", form);
+    return api.post("/upload/multiple", form, { headers: { "Content-Type": "multipart/form-data" } });
   },
 };
 

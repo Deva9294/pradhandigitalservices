@@ -12,7 +12,7 @@ import {
   CreditCard, Sparkles, Filter, ChevronRight, 
   UploadCloud, RefreshCw, Eye
 } from 'lucide-react';
-import { applicationApi } from '@/lib/api';
+import { applicationApi, paymentApi } from '@/lib/api';
 import Footer from '@/components/layout/Footer';
 import { whatsAppUrl, telSupportUrl } from '@/lib/utils';
 import { 
@@ -30,6 +30,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('requests');
   const [applications, setApplications] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
@@ -45,8 +46,13 @@ export default function CustomerDashboard() {
     async function loadData() {
       try {
         setLoading(true);
-        const res = await applicationApi.mine();
+        const [res, paymentRes] = await Promise.all([
+          applicationApi.mine(),
+          paymentApi.getMyPayments()
+        ]);
         if (cancelled) return;
+        const paymentRecords = Array.isArray(paymentRes.data?.data) ? paymentRes.data.data : [];
+        setPayments(paymentRecords);
         const records = Array.isArray(res.data?.data) ? res.data.data : [];
         const realApplications = records.map((record: any) => {
           const status = String(record.status || "submitted").toLowerCase();
@@ -78,7 +84,8 @@ export default function CustomerDashboard() {
         console.error("Unable to load customer applications:", error);
         if (!cancelled) {
           setApplications([]);
-          setLoadError('Your service history could not be reached. Please retry when the server is available.');
+          setPayments([]);
+          setLoadError('Your live account history could not be reached. Please retry when the server is available.');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -534,15 +541,19 @@ export default function CustomerDashboard() {
             </h3>
 
             <div className="space-y-3">
-              {applications.map((app) => (
-                <div key={app._id} className="p-3.5 rounded-xl bg-navy-50 dark:bg-navy-950 border border-navy-100 dark:border-white/5 flex items-center justify-between text-xs">
-                  <div>
-                    <div className="font-bold text-navy-900 dark:text-white">{app.serviceTitle}</div>
-                    <div className="text-[11px] text-navy-500 dark:text-white/60">Ref: {app.applicationNumber} • {app.createdAt}</div>
+              {payments.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-navy-200 p-8 text-center text-sm text-navy-500 dark:border-white/10 dark:text-white/60">
+                  {lang === "hi" ? "अभी कोई भुगतान रिकॉर्ड नहीं है।" : "No payment records yet."}
+                </div>
+              ) : payments.map((payment) => (
+                <div key={payment._id} className="p-3.5 rounded-xl bg-navy-50 dark:bg-navy-950 border border-navy-100 dark:border-white/5 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0">
+                    <div className="font-bold text-navy-900 dark:text-white">{payment.metadata?.purpose || payment.application?.applicationId || payment.type || "Online payment"}</div>
+                    <div className="text-[11px] text-navy-500 dark:text-white/60">{payment.paymentId} • {payment.createdAt ? new Date(payment.createdAt).toLocaleString() : "—"}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-extrabold text-sm text-navy-900 dark:text-white">₹{app.fee || 50}</div>
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Paid • Online</span>
+                  <div className="shrink-0 text-right">
+                    <div className="font-extrabold text-sm text-navy-900 dark:text-white">₹{Number(payment.amount || 0).toFixed(2)}</div>
+                    <span className={`text-[10px] font-bold uppercase ${payment.status === "completed" ? "text-emerald-600 dark:text-emerald-400" : payment.status === "failed" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}>{payment.status} • {payment.gateway || "—"}</span>
                   </div>
                 </div>
               ))}

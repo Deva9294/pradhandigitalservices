@@ -59,6 +59,7 @@ class RazorpayAdapter extends PaymentAdapter {
 
       throw new AppError('Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the backend environment.', 503);
     } catch (error) {
+      if (error instanceof AppError) throw error;
       console.error('Razorpay order creation error:', error);
       throw new AppError('Failed to create payment order', 500);
     }
@@ -95,6 +96,7 @@ class RazorpayAdapter extends PaymentAdapter {
         method: payment.method
       };
     } catch (error) {
+      if (error instanceof AppError) throw error;
       console.error('Razorpay verification error:', error);
       throw new AppError('Payment verification failed', 400);
     }

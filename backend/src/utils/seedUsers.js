@@ -40,8 +40,8 @@ export async function seedUsers() {
   await connectDB();
   for (const userData of usersToCreate) {
     const email = userData.email.trim().toLowerCase();
-    const phone = userData.phone.replace(/\\D/g, '');
-    if (!/^\\d{10}$/.test(phone) || userData.password.length < 12) {
+    const phone = userData.phone.replace(/\D/g, '');
+    if (!/^\d{10}$/.test(phone) || userData.password.length < 12) {
       throw new Error(`Invalid bootstrap configuration for role ${userData.role}; use a 10-digit phone and a password of at least 12 characters.`);
     }
 

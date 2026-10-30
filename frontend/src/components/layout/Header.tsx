@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
-  Menu, X, Phone, Globe, Sun, Moon, Search, Plus, Minus, 
+  Menu, X, Phone, Globe, Sun, Moon, Search, Plus, Minus,
   MapPin, Calendar, Shield, User, LogOut, MessageSquare,
   Sparkles, ExternalLink, Award, FileText, CheckCircle
 } from "lucide-react";
@@ -23,11 +23,11 @@ export default function Header() {
 
   useEffect(() => {
     const now = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     };
     setCurrentDate(now.toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", options));
   }, [lang]);
@@ -50,10 +50,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white text-[#10234f] border-b border-slate-200 shadow-sm">
-      {/* Utility Strip */}
       <div className="bg-slate-50 border-b border-slate-200 py-1.5 text-[11px] text-slate-600">
         <div className="container mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
-          {/* Support / Contact Left */}
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline-flex items-center gap-1.5 text-saffron-300">
               <Shield className="w-3.5 h-3.5" />
@@ -68,38 +66,18 @@ export default function Header() {
               <span>{currentDate}</span>
             </span>
           </div>
-
-          {/* Contact Actions & Language Switcher Right */}
           <div className="flex items-center gap-3">
-            <a
-              href={telSupportUrl()}
-              className="inline-flex items-center gap-1 hover:text-saffron-300 transition"
-              aria-label="Call Helpline"
-            >
+            <a href={telSupportUrl()} className="inline-flex items-center gap-1 hover:text-saffron-300 transition" aria-label="Call Helpline">
               <Phone className="w-3 h-3 text-saffron-400" />
               <span className="hidden sm:inline">{siteConfig.phone}</span>
             </a>
-
             <span className="text-white/20">|</span>
-
-            <a
-              href={whatsAppUrl("नमस्ते, मुझे डिजिटल सेवा के बारे में जानकारी चाहिए।")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition"
-              aria-label="WhatsApp Desk"
-            >
+            <a href={whatsAppUrl("नमस्ते, मुझे डिजिटल सेवा के बारे में जानकारी चाहिए।")} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition" aria-label="WhatsApp Desk">
               <MessageSquare className="w-3 h-3" />
               <span className="hidden sm:inline">WhatsApp</span>
             </a>
-
             <span className="text-white/20">|</span>
-
-            <button
-              onClick={() => setLang(lang === "en" ? "hi" : "en")}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 text-orange-700 transition font-semibold"
-              aria-label="Switch Language"
-            >
+            <button onClick={() => setLang(lang === "en" ? "hi" : "en")} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 text-orange-700 transition font-semibold" aria-label="Switch Language">
               <Globe className="w-3 h-3 text-saffron-300" />
               <span>{lang === "en" ? "हिंदी" : "English"}</span>
             </button>
@@ -107,143 +85,80 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main Header Row */}
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
-          {/* Brand Logo */}
           <Link href="/" className="inline-block shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron-400 rounded-xl">
-            <BrandLogo size="md" tagline="TRUST | DIGITAL | INNOVATION" />
+            <BrandLogo size="md" tagline="TRUST | DIGITAL | INNOVATION" isDarkSurface={false} />
           </Link>
 
-          {/* Desktop Search Bar */}
-          <form
-            action="/services"
-            className="hidden md:flex flex-1 max-w-sm lg:max-w-md mx-2"
-          >
+          <form action="/services" className="hidden md:flex flex-1 max-w-sm lg:max-w-md mx-2">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saffron-300/70" />
-              <input
-                type="search"
-                name="q"
-                placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं? (आधार, पैन, खसरा...)" : "Search any service (Aadhaar, PAN, Jobs...)"}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs transition"
-              />
+              <input type="search" name="q" placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं? (आधार, पैन, खसरा...)" : "Search any service (Aadhaar, PAN, Jobs...)"} className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs transition" />
             </div>
           </form>
 
-          {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-orange-700 hover:bg-orange-50 transition whitespace-nowrap focus-visible:ring-2 focus-visible:ring-saffron-400"
-              >
+              <Link key={item.href} href={item.href} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-orange-700 hover:bg-orange-50 transition whitespace-nowrap focus-visible:ring-2 focus-visible:ring-saffron-400">
                 {lang === "hi" ? item.labelHi : item.labelEn}
               </Link>
             ))}
           </nav>
 
-          {/* Auth & Mobile Menu Button */}
           <div className="flex items-center gap-2 shrink-0">
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
-                <Link
-                  href="/dashboard"
-                  className="px-3 py-1.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 text-xs font-bold transition flex items-center gap-1.5 shadow"
-                >
+                <Link href="/dashboard" className="px-3 py-1.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 text-xs font-bold transition flex items-center gap-1.5 shadow">
                   <User className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{user?.name?.split(' ')[0] || "Dashboard"}</span>
                 </Link>
                 {isAdmin && (
-                  <Link
-                    href="/admin"
-                    className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-saffron-300 transition"
-                    title="Admin Panel"
-                  >
+                  <Link href="/admin" className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-saffron-300 transition" title="Admin Panel">
                     <Shield className="w-4 h-4" />
                   </Link>
                 )}
-                <button
-                  onClick={logout}
-                  className="p-1.5 rounded-xl hover:bg-red-500/20 text-red-300 transition"
-                  title="Logout"
-                >
+                <button onClick={logout} className="p-1.5 rounded-xl hover:bg-red-500/20 text-red-300 transition" title="Logout">
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="px-3.5 py-1.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 text-xs font-bold transition shadow"
-                >
+                <Link href="/login" className="px-3.5 py-1.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 text-xs font-bold transition shadow">
                   {lang === "hi" ? "लॉगिन / रजिस्टर" : "Login / Register"}
                 </Link>
               </div>
             )}
-
-            {/* Mobile Hamburger Toggle */}
-            <button
-              onClick={() => setOpen(!open)}
-              className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition focus-visible:ring-2 focus-visible:ring-saffron-400"
-              aria-label="Toggle navigation menu"
-              aria-expanded={open}
-            >
+            <button onClick={() => setOpen(!open)} className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition focus-visible:ring-2 focus-visible:ring-saffron-400" aria-label="Toggle navigation menu" aria-expanded={open}>
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Search Bar below header */}
-        <form
-          action="/services"
-          className="md:hidden mt-2.5"
-          onSubmit={() => setOpen(false)}
-        >
+        <form action="/services" className="md:hidden mt-2.5" onSubmit={() => setOpen(false)}>
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saffron-300/70" />
-            <input
-              type="search"
-              name="q"
-              placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं?" : "What service are you looking for?"}
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs"
-            />
+            <input type="search" name="q" placeholder={lang === "hi" ? "आप कौन-सी सेवा चाहते हैं?" : "What service are you looking for?"} className="w-full pl-9 pr-3 py-2 rounded-xl border border-white/15 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs" />
           </div>
         </form>
       </div>
 
-      {/* Mobile Menu Drawer */}
       {open && (
         <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-3 animate-in fade-in duration-200">
           <nav className="space-y-1">
             {navLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-orange-50 transition"
-              >
+              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
                 <span>{lang === "hi" ? item.labelHi : item.labelEn}</span>
                 <span className="text-saffron-400 text-xs">→</span>
               </Link>
             ))}
           </nav>
-
-          <div className="pt-2 border-t border-white/10 flex flex-col gap-2 text-xs">
-            <a
-              href={telSupportUrl()}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-white/5 text-white"
-            >
+          <div className="pt-2 border-t border-slate-200 flex flex-col gap-2 text-xs">
+            <a href={telSupportUrl()} className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100 text-slate-800">
               <Phone className="w-4 h-4 text-saffron-400" />
               <span>Helpline: {siteConfig.phone}</span>
             </a>
-            <a
-              href={whatsAppUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-600/20 text-emerald-300"
-            >
+            <a href={whatsAppUrl()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50 text-emerald-700">
               <MessageSquare className="w-4 h-4" />
               <span>WhatsApp Support</span>
             </a>

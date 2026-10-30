@@ -74,7 +74,10 @@ export const getWorkQueue = catchAsync(async (req, res) => {
 
   const filter = isAdmin
     ? {}
-    : { $or: [{ agent: req.user._id }, { agent: null }] };
+    : {
+        status: { $ne: 'draft' },
+        $or: [{ agent: req.user._id }, { agent: null }]
+      };
 
   const applications = await ServiceApplication.find(filter)
     .populate('user', 'name phone email')

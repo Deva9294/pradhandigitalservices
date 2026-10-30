@@ -11,75 +11,64 @@ import {
   ExternalLink, Eye, ArrowRight, Check, X, RefreshCw
 } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
+import { applicationApi } from '@/lib/api';
 import { whatsAppUrl, telSupportUrl } from '@/lib/utils';
 
 export default function AgentDashboard() {
   const { user } = useAuth();
   const { lang } = useLanguage();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'review' | 'done'>('all');
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [ackInput, setAckInput] = useState('');
-  const [trackingInput, setTrackingInput] = useState('');
+  const [workQueue, setWorkQueue] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
 
-  // Sample work queue for staff operations
-  const [workQueue, setWorkQueue] = useState<any[]>([
-    {
-      id: "WQ-101",
-      applicationNumber: "PDS-2026-8941",
-      serviceTitle: "PAN Card New Application (49A Form)",
-      applicantName: "Rahul Sharma",
-      phone: "9826012345",
-      submittedAt: "2026-04-20 10:30 AM",
-      deadline: "2026-04-21 06:00 PM",
-      priority: "high",
-      stage: "review", // submitted | review | done
-      paymentStatus: "paid",
-      documents: [
-        { name: "Aadhaar Card Front & Back", status: "verified" },
-        { name: "Applicant Color Passport Photo", status: "verified" },
-        { name: "Applicant Signature on White Sheet", status: "verified" }
-      ],
-      officialAcknowledgementNo: "",
-      trackingNumber: ""
-    },
-    {
-      id: "WQ-102",
-      applicationNumber: "PDS-2026-8942",
-      serviceTitle: "MP Police Constable Online Form Filing",
-      applicantName: "Sunil Verma",
-      phone: "9131098765",
-      submittedAt: "2026-04-20 11:15 AM",
-      deadline: "2026-04-22 11:59 PM",
-      priority: "urgent",
-      stage: "submitted",
-      paymentStatus: "paid",
-      documents: [
-        { name: "10th Marksheet", status: "verified" },
-        { name: "MP Rojgar Panjiyan Slip", status: "pending" }
-      ],
-      officialAcknowledgementNo: "",
-      trackingNumber: ""
-    },
-    {
-      id: "WQ-103",
-      applicationNumber: "PDS-2026-8940",
-      serviceTitle: "Aadhaar Address Update Assistance",
-      applicantName: "Anita Bai",
-      phone: "9407123987",
-      submittedAt: "2026-04-19 03:00 PM",
-      deadline: "2026-04-20 05:00 PM",
-      priority: "normal",
-      stage: "done",
-      paymentStatus: "paid",
-      documents: [
-        { name: "Voter ID Card", status: "verified" }
-      ],
-      officialAcknowledgementNo: "SRN-8924109418",
-      trackingNumber: ""
+  const loadWorkQueue = async () => {
+    try {
+      setLoading(true);
+      const response = await applicationApi.workQueue();
+      const records = Array.isArray(response.data?.data) ? response.data.data : [];
+      setWorkQueue(records.map((record: any) => {
+        const status = String(record.status || 'submitted').toLowerCase();
+        const stage = status === 'completed' ? 'done' :
+          ['documents_under_review', 'processing'].includes(status) ? 'review' : 'submitted';
+        return {
+          id: record._id,
+          applicationNumber: record.applicationId,
+          serviceTitle: record.service?.name || 'Service application',
+          applicantName: record.applicantDetails?.name || record.user?.name || 'Applicant',
+          phone: record.applicantDetails?.phone || record.user?.phone || '',
+          submittedAt: record.processingDetails?.submittedAt || record.createdAt,
+          deadline: record.processingDetails?.estimatedCompletionDate || null,
+          priority: record.priority || 'normal',
+          stage,
+          status,
+          paymentStatus: record.payment?.status || 'pending',
+          documents: (record.documents || []).map((doc: any) => ({
+            name: doc.fileName || doc.type || 'Uploaded document',
+            status: doc.verified ? 'verified' : 'pending',
+            url: doc.url
+          })),
+          officialAcknowledgementNo: record.processingDetails?.referenceNumber || record.processingDetails?.applicationNumber || ''
+        };
+      }));
+      setLoadError('');
+    } catch (error: any) {
+      console.error('Unable to load operator work queue:', error);
+      setLoadError(error?.response?.data?.message || 'Live work queue is unavailable. Please try again.');
+      setWorkQueue([]);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    loadWorkQueue();
+    const interval = window.setInterval(loadWorkQueue, 20000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const filteredQueue = useMemo(() => {
     return workQueue.filter(item => {
@@ -95,21 +84,35 @@ export default function AgentDashboard() {
     });
   }, [workQueue, search, statusFilter]);
 
-  const handleMarkReview = (id: string) => {
-    setWorkQueue(prev => prev.map(item => item.id === id ? { ...item, stage: 'review' } : item));
-    if (selectedApp?.id === id) setSelectedApp((prev: any) => ({ ...prev, stage: 'review' }));
+  const handleMarkReview = async (id: string) => {
+    try {
+      await applicationApi.updateStatus(id, 'documents_under_review');
+      setSelectedApp(null);
+      await loadWorkQueue();
+    } catch (error: any) {
+      setLoadError(error?.response?.data?.message || 'Could not move this application to review.');
+    }
   };
 
-  const handleMarkDone = (id: string) => {
-    setWorkQueue(prev => prev.map(item => item.id === id ? { 
-      ...item, 
-      stage: 'done',
-      officialAcknowledgementNo: ackInput || item.officialAcknowledgementNo || "PDS-ACK-OK",
-      trackingNumber: trackingInput || item.trackingNumber
-    } : item));
-    setSelectedApp(null);
-    setAckInput('');
-    setTrackingInput('');
+  const handleStartProcessing = async (id: string) => {
+    try {
+      await applicationApi.updateStatus(id, 'processing');
+      setSelectedApp(null);
+      await loadWorkQueue();
+    } catch (error: any) {
+      setLoadError(error?.response?.data?.message || 'Could not start processing this application.');
+    }
+  };
+
+  const handleMarkDone = async (id: string) => {
+    try {
+      await applicationApi.updateStatus(id, 'completed', undefined, { referenceNumber: ackInput.trim() || undefined });
+      setSelectedApp(null);
+      setAckInput('');
+      await loadWorkQueue();
+    } catch (error: any) {
+      setLoadError(error?.response?.data?.message || 'Could not complete this application.');
+    }
   };
 
   const stats = {
@@ -140,7 +143,7 @@ export default function AgentDashboard() {
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-navy-100 dark:bg-navy-800 text-navy-800 dark:text-white">
-              Operator: {user?.name || "Ravi Pradhan"}
+              Operator: {user?.name || "—"}
             </span>
           </div>
         </div>
@@ -236,7 +239,13 @@ export default function AgentDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy-100 dark:divide-white/5">
-                {filteredQueue.map((item) => (
+                {loading ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-navy-500">Loading real applications…</td></tr>
+                ) : filteredQueue.length === 0 ? (
+                  <tr><td colSpan={5} className="p-10 text-center text-navy-500">
+                    {loadError || 'No applications are currently assigned to you or waiting for an operator.'}
+                  </td></tr>
+                ) : filteredQueue.map((item) => (
                   <tr key={item.id} className="hover:bg-navy-50/50 dark:hover:bg-white/5 transition-colors">
                     <td className="p-3.5 max-w-xs">
                       <div className="font-mono font-bold text-saffron-600 dark:text-saffron-400">
@@ -264,9 +273,9 @@ export default function AgentDashboard() {
                     </td>
 
                     <td className="p-3.5 whitespace-nowrap">
-                      <div className="text-navy-700 dark:text-white/80">{item.submittedAt}</div>
+                      <div className="text-navy-700 dark:text-white/80">{item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '—'}</div>
                       <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
-                        Due: {item.deadline}
+                        Due: {item.deadline ? new Date(item.deadline).toLocaleString() : 'Not set'}
                       </div>
                     </td>
 
@@ -281,8 +290,8 @@ export default function AgentDashboard() {
                         }`}>
                           Stage: {item.stage}
                         </span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                          Paid
+                        <span className={`text-[10px] font-bold ${item.paymentStatus === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                          {item.paymentStatus}
                         </span>
                       </div>
                       {item.officialAcknowledgementNo && (
@@ -340,7 +349,9 @@ export default function AgentDashboard() {
               <div className="space-y-2 text-xs">
                 <span className="font-bold text-navy-900 dark:text-white">Uploaded Customer Documents:</span>
                 <div className="space-y-1.5">
-                  {selectedApp.documents.map((d: any, idx: number) => (
+                  {(selectedApp.documents || []).length === 0 ? (
+                    <p className="text-navy-500 dark:text-white/60">No documents uploaded for this application.</p>
+                  ) : selectedApp.documents.map((d: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-navy-800 border border-navy-200 dark:border-white/5">
                       <span>{d.name}</span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
@@ -351,53 +362,41 @@ export default function AgentDashboard() {
                 </div>
               </div>
 
-              {/* Completion Controls */}
-              <div className="space-y-3 pt-2 border-t border-navy-100 dark:border-white/10 text-xs">
-                <div>
-                  <label className="block font-medium text-navy-700 dark:text-white/90 mb-1">
-                    Official Portal Acknowledgement / Token No.
-                  </label>
-                  <input
-                    type="text"
-                    value={ackInput}
-                    onChange={(e) => setAckInput(e.target.value)}
-                    placeholder="e.g. NSDL-892401824 or MPESB-771249"
-                    className="w-full px-3 py-2 rounded-xl border border-navy-200 dark:border-white/10 bg-white dark:bg-navy-950 text-navy-900 dark:text-white text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-medium text-navy-700 dark:text-white/90 mb-1">
-                    Physical Delivery Consignment No. (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={trackingInput}
-                    onChange={(e) => setTrackingInput(e.target.value)}
-                    placeholder="e.g. EM894120392IN"
-                    className="w-full px-3 py-2 rounded-xl border border-navy-200 dark:border-white/10 bg-white dark:bg-navy-950 text-navy-900 dark:text-white text-xs"
-                  />
-                </div>
+              {/* Real application reference saved to the backend */}
+              <div className="space-y-2 pt-2 border-t border-navy-100 dark:border-white/10 text-xs">
+                <label className="block font-medium text-navy-700 dark:text-white/90">
+                  Official portal reference / acknowledgement number (optional)
+                </label>
+                <input
+                  type="text"
+                  value={ackInput}
+                  onChange={(e) => setAckInput(e.target.value)}
+                  placeholder="Enter the actual reference number"
+                  className="w-full px-3 py-2 rounded-xl border border-navy-200 dark:border-white/10 bg-white dark:bg-navy-950 text-navy-900 dark:text-white text-xs"
+                />
               </div>
 
-              {/* Action Buttons */}
+              {/* Only valid backend status transitions are offered */}
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-navy-100 dark:border-white/10">
-                {selectedApp.stage === 'submitted' && (
-                  <button
-                    onClick={() => handleMarkReview(selectedApp.id)}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold text-xs"
-                  >
-                    Move to Review Queue
+                {selectedApp.status === 'submitted' && (
+                  <button onClick={() => handleMarkReview(selectedApp.id)} className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold text-xs">
+                    Move to Review
                   </button>
                 )}
-
-                <button
-                  onClick={() => handleMarkDone(selectedApp.id)}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Approve &amp; Mark Done</span>
-                </button>
+                {selectedApp.status === 'documents_under_review' && (
+                  <button onClick={() => handleStartProcessing(selectedApp.id)} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                    Start Processing
+                  </button>
+                )}
+                {selectedApp.status === 'processing' && (
+                  <button onClick={() => handleMarkDone(selectedApp.id)} className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow">
+                    <Check className="w-4 h-4" />
+                    <span>Complete Application</span>
+                  </button>
+                )}
+                {['completed', 'rejected', 'cancelled'].includes(selectedApp.status) && (
+                  <span className="text-xs text-navy-500">This application is closed.</span>
+                )}
               </div>
             </div>
           </div>

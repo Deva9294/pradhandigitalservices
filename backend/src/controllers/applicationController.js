@@ -188,6 +188,38 @@ export const uploadDocument = catchAsync(async (req, res) => {
   res.status(201).json({ success: true, data: document });
 });
 
+export const attachDocuments = catchAsync(async (req, res) => {
+  const application = await ServiceApplication.findById(req.params.id);
+  if (!application) throw new AppError('Application not found', 404);
+  if (String(application.user) !== String(req.user._id) && !['admin', 'superadmin'].includes(req.user.role)) {
+    throw new AppError('Not authorized to add documents to this application.', 403);
+  }
+  if (application.status !== 'draft') throw new AppError('Documents can only be attached before payment submission.', 400);
+
+  const files = Array.isArray(req.body.documents) ? req.body.documents : [];
+  if (!files.length || files.length > 5) throw new AppError('Upload between 1 and 5 documents.', 400);
+
+  const allowedHost = req.get('host');
+  const docs = files.map((file) => {
+    const fileUrl = String(file.fileUrl || '');
+    let parsed;
+    try { parsed = new URL(fileUrl); } catch { throw new AppError('Invalid uploaded document URL.', 400); }
+    if (parsed.host !== allowedHost || !parsed.pathname.startsWith('/uploads/')) {
+      throw new AppError('Document must be uploaded to the Pradhan secure upload endpoint.', 400);
+    }
+    return {
+      type: String(file.documentType || 'Supporting Document').slice(0, 80),
+      url: fileUrl,
+      fileName: String(file.fileName || 'Document').slice(0, 180),
+      uploadedAt: new Date()
+    };
+  });
+
+  application.documents.push(...docs);
+  await application.save();
+  res.json({ success: true, data: application.documents });
+});
+
 export const deleteDocument = catchAsync(async (req, res) => {
   const application = await ServiceApplication.findById(req.params.id);
   if (!application) throw new AppError('Application not found', 404);

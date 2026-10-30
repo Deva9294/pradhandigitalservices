@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Activity, Users } from "lucide-react";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+import { API_ORIGIN } from "@/lib/utils";
 
 export default function LiveVisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
@@ -21,7 +21,7 @@ export default function LiveVisitorCounter() {
       sessionId = `pds_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     }
 
-    const base = API_BASE || "";
+    const base = API_ORIGIN.replace(/\/$/, "");
     const update = async () => {
       try {
         await fetch(`${base}/api/visitors/heartbeat`, {

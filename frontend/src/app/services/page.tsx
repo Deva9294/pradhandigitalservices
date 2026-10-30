@@ -219,7 +219,7 @@ function ServicesContent() {
 
                     {/* 2. दस्तावेज़ अपलोड करें */}
                     <Link
-                      href={`/login?redirect=/services/${service.slug}`}
+                      href={`/services/${service.slug}/apply`}
                       className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-saffron-600 hover:bg-saffron-500 text-white font-semibold text-xs transition shadow-sm"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />

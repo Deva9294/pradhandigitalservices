@@ -18,8 +18,8 @@ async function markPaymentCompleted(payment, gatewayPaymentId) {
 
   if (payment.application) {
     const application = await ServiceApplication.findById(payment.application);
-    if (application) {
-      application.payment.status = 'completed';
+    if (application?.payment) {
+      application.payment.status = 'paid';
       application.payment.paidAt = new Date();
       application.payment.paymentId = gatewayPaymentId;
       await application.save();
@@ -35,6 +35,24 @@ function safeSignatureEqual(expected, received) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+async function validateApplicationPayment(applicationId, user, amount) {
+  if (!applicationId) return null;
+  const application = await ServiceApplication.findById(applicationId);
+  if (!application) throw new AppError('Application not found', 404);
+  if (String(application.user) !== String(user._id) && !isAdmin(user)) {
+    throw new AppError('Not authorized for this application', 403);
+  }
+  const expectedAmount = Number(application.payment?.totalAmount || application.payment?.amount || 0);
+  if (!Number.isFinite(expectedAmount) || expectedAmount <= 0 ||
+      Math.round(expectedAmount * 100) !== Math.round(amount * 100)) {
+    throw new AppError('Payment amount does not match the application fee.', 400);
+  }
+  if (['paid', 'completed'].includes(application.payment?.status)) {
+    throw new AppError('This application is already marked as paid.', 409);
+  }
+  return application;
+}
+
 export const createOrder = catchAsync(async (req, res) => {
   const amount = Number(req.body.amount);
   const currency = String(req.body.currency || 'INR').toUpperCase();
@@ -47,28 +65,28 @@ export const createOrder = catchAsync(async (req, res) => {
     throw new AppError('Online payment is temporarily unavailable. Razorpay credentials are not configured.', 503);
   }
 
-  let payment;
-  if (applicationId) {
-    const application = await ServiceApplication.findById(applicationId);
-    if (!application) throw new AppError('Application not found', 404);
-    if (application.user && String(application.user) !== String(req.user._id) && !isAdmin(req.user)) {
-      throw new AppError('Not authorized for this application', 403);
+  const application = await validateApplicationPayment(applicationId, req.user, amount);
+  let payment = null;
+  if (application) {
+    payment = await Payment.findOne({ application: application._id }).sort('-createdAt');
+    if (payment && String(payment.user) !== String(application.user)) {
+      throw new AppError('Payment ownership does not match this application.', 403);
     }
-    payment = await Payment.findOne({ application: applicationId, user: req.user._id });
-    if (payment && payment.status === 'completed') {
-      throw new AppError('Payment already completed', 400);
+    if (payment?.status === 'completed') throw new AppError('Payment already completed', 400);
+    if (payment && Math.round(Number(payment.amount) * 100) !== Math.round(amount * 100)) {
+      throw new AppError('Existing payment amount does not match the application fee.', 409);
     }
   }
 
   const receipt = `PDS_${Date.now()}_${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-  if (!payment) {
+  if (!payment || payment.status === 'failed' || payment.status === 'refunded') {
     payment = await Payment.create({
-      user: req.user._id,
-      application: applicationId,
+      user: application ? application.user : req.user._id,
+      application: application?._id,
       type: type || 'service_application',
       amount,
       currency,
-      feeBreakdown: { governmentFee: amount, portalFee: 0, convenienceFee: 0, tax: 0, total: amount },
+      feeBreakdown: { governmentFee: amount, portalFee: 0, gatewayFee: 0, tax: 0, discount: 0, total: amount },
       gateway: 'razorpay',
       status: 'pending',
       initiatedAt: new Date()
@@ -80,7 +98,11 @@ export const createOrder = catchAsync(async (req, res) => {
     amount,
     currency,
     receipt,
-    notes: { paymentId: payment.paymentId, userId: String(req.user._id), applicationId: applicationId ? String(applicationId) : '' }
+    notes: {
+      paymentId: payment.paymentId,
+      userId: String(payment.user),
+      applicationId: application ? String(application._id) : ''
+    }
   });
 
   payment.gateway = 'razorpay';
@@ -137,7 +159,7 @@ export const getPayment = catchAsync(async (req, res) => {
     .populate('user', 'name email')
     .populate('application');
   if (!payment) throw new AppError('Payment not found', 404);
-  const isOwner = String(payment.user._id) === String(req.user._id);
+  const isOwner = String(payment.user?._id) === String(req.user._id);
   if (!isOwner && !isAdmin(req.user)) throw new AppError('Not authorized', 403);
   res.json({ success: true, data: payment });
 });
@@ -155,18 +177,23 @@ export const processRefund = catchAsync(async (req, res) => {
   const { refundAmount, refundReason } = req.body;
   const payment = await Payment.findById(req.params.id);
   if (!payment) throw new AppError('Payment not found', 404);
-  if (payment.status !== 'completed') throw new AppError('Can only refund completed payments', 400);
+  if (payment.status !== 'completed' && payment.status !== 'partially_refunded') {
+    throw new AppError('Can only refund completed payments', 400);
+  }
   if (!isAdmin(req.user)) throw new AppError('Not authorized', 403);
-  if (!Number.isFinite(Number(refundAmount)) || refundAmount <= 0 || refundAmount > payment.amount) {
+
+  const amount = Number(refundAmount);
+  const remaining = Number(payment.amount) - Number(payment.refundAmount || 0);
+  if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) {
     throw new AppError('Invalid refund amount', 400);
   }
   const adapter = PaymentAdapterFactory.getAdapter(payment.gateway);
-  const refund = await adapter.processRefund(payment.gatewayTransactionId, refundAmount, refundReason);
-  payment.status = 'refunded';
-  payment.refundAmount = refundAmount;
-  payment.refundReason = refundReason;
+  const refund = await adapter.processRefund(payment.gatewayTransactionId, amount, refundReason);
+  payment.refundAmount = Number(payment.refundAmount || 0) + amount;
+  payment.refundReason = String(refundReason || '').slice(0, 500);
   payment.refundId = refund.refundId;
   payment.refundedAt = new Date();
+  payment.status = payment.refundAmount >= Number(payment.amount) ? 'refunded' : 'partially_refunded';
   await payment.save();
   res.json({ success: true, data: payment });
 });
@@ -191,7 +218,11 @@ export const razorpayWebhook = catchAsync(async (req, res) => {
       await markPaymentCompleted(payment, entity.id);
     }
   } else if (event === 'payment.failed' && entity?.order_id) {
-    const payment = await Payment.findOne({ gateway: 'razorpay', gatewayOrderId: entity.order_id, status: { $ne: 'completed' } });
+    const payment = await Payment.findOne({
+      gateway: 'razorpay',
+      gatewayOrderId: entity.order_id,
+      status: { $nin: ['completed', 'refunded', 'partially_refunded'] }
+    });
     if (payment) {
       payment.status = 'failed';
       payment.failedAt = new Date();

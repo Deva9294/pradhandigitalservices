@@ -37,6 +37,8 @@ export const authApi = {
   verifyOtp: (phone: string, otp: string, name?: string) =>
     api.post("/auth/verify-otp", { phone, otp, name }),
   getProfile: () => api.get("/auth/me"),
+  requestPasswordReset: (email: string) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (token: string, password: string) => api.post("/auth/reset-password", { token, password }),
 };
 
 export const paymentApi = {

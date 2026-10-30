@@ -100,6 +100,28 @@ export const createOrder = catchAsync(async (req, res) => {
 
   const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
   const paymentType = application ? 'service_application' : (allowedTypes.includes(type) ? type : 'service_application');
+
+  // Enforce catalogue prices on fixed-price products; never trust a browser-supplied amount.
+  if (!application && paymentType === 'membership') {
+    const plan = String(metadata?.plan || '');
+    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
+    if (!expected || Math.round(amount * 100) !== expected * 100) {
+      throw new AppError('Membership amount does not match the selected plan.', 400);
+    }
+  }
+
+  if (!application && paymentType === 'form_download') {
+    const allowedFormSlugs = new Set([
+      'income-certificate-form', 'caste-certificate-form', 'domicile-form',
+      'birth-certificate-form', 'death-certificate-form', 'marriage-registration-form',
+      'pension-forms', 'samagra-forms', 'labour-forms', 'pm-kisan-forms',
+      'madhya-pradesh-forms', 'uttar-pradesh-forms', 'rajasthan-forms',
+      'bihar-forms', 'all-state-government-forms'
+    ]);
+    if (!allowedFormSlugs.has(String(metadata?.formSlug || '')) || Math.round(amount * 100) !== 500) {
+      throw new AppError('Form download amount or catalogue item is invalid.', 400);
+    }
+  }
   let payment = null;
   if (application) {
     payment = await Payment.findOne({ application: application._id }).sort('-createdAt');

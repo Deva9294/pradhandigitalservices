@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, X, ArrowRight, BriefcaseBusiness, Layers3, Sparkles } from "lucide-react";
+import { X, ArrowRight, BriefcaseBusiness, Layers3, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { vacancyApi, default as api } from "@/lib/api";
 

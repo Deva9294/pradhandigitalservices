@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
@@ -400,6 +402,71 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
       shopName: agentProfile?.shopName
     }
   });
+}));
+
+// @route POST /api/auth/forgot-password
+// Send a time-limited password reset link to the account email.
+router.post('/forgot-password', authRateLimiter, asyncHandler(async (req, res) => {
+  const email = typeof req.body.email === 'string' ? req.body.email.toLowerCase().trim() : '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, message: 'कृपया वैध ईमेल आईडी दर्ज करें।' });
+  }
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const smtpFrom = process.env.SMTP_FROM || smtpUser;
+  if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom) {
+    return res.status(503).json({ success: false, message: 'Password reset email is not configured yet. Please contact support or configure SMTP settings.' });
+  }
+  const user = await User.findOne({ email, isActive: { $ne: false } });
+  if (user) {
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    user.passwordResetTokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
+    await user.save();
+    const frontendUrl = (process.env.FRONTEND_URL || 'https://pradhandigitalservices.in').split(',')[0].trim().replace(/\/$/, '');
+    const resetUrl = frontendUrl + '/forgot-password?token=' + encodeURIComponent(rawToken);
+    const port = Number(process.env.SMTP_PORT || 587);
+    const transporter = nodemailer.createTransport({ host: smtpHost, port, secure: port === 465, auth: { user: smtpUser, pass: smtpPass } });
+    try {
+      await transporter.sendMail({
+        from: smtpFrom,
+        to: user.email,
+        subject: 'Reset your Pradhan Digital Services password',
+        text: 'We received a request to reset your password. This link expires in 30 minutes: ' + resetUrl + '\n\nIf you did not request this, ignore this email.',
+        html: '<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#17233b"><div style="background:#0A1B4D;padding:22px;border-radius:16px;color:#fff"><h2 style="margin:0">Pradhan Digital Services</h2><p style="color:#ffd0a8">TRUST | DIGITAL | INNOVATION</p></div><h2>Password reset request</h2><p>This link expires in 30 minutes.</p><p><a href="' + resetUrl + '" style="display:inline-block;background:#FF7A00;color:#081638;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:bold">Reset Password</a></p><p style="font-size:12px;color:#64748b">If you did not request this, ignore this email. Never share this link.</p></div>'
+      });
+    } catch (mailError) {
+      user.passwordResetTokenHash = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+      throw mailError;
+    }
+  }
+  // Keep the same response for existing and unknown email addresses.
+  return res.json({ success: true, message: 'यदि इस ईमेल से खाता मौजूद है, तो रीसेट लिंक भेज दिया गया है। Inbox और Spam फ़ोल्डर देखें।' });
+}));
+
+// @route POST /api/auth/reset-password
+// Verify a one-time token and save the new password.
+router.post('/reset-password', authRateLimiter, asyncHandler(async (req, res) => {
+  const token = typeof req.body.token === 'string' ? req.body.token.trim() : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  if (!token || password.length < 8) {
+    return res.status(400).json({ success: false, message: 'Reset link और कम से कम 8 अक्षरों का पासवर्ड आवश्यक है।' });
+  }
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({ passwordResetTokenHash: tokenHash, passwordResetExpires: { $gt: new Date() }, isActive: { $ne: false } }).select('+passwordResetTokenHash');
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'यह रीसेट लिंक अमान्य या समाप्त हो चुका है। नया लिंक प्राप्त करें।' });
+  }
+  user.password = password;
+  user.passwordResetTokenHash = undefined;
+  user.passwordResetExpires = undefined;
+  user.loginAttempts = 0;
+  user.lockedUntil = undefined;
+  await user.save();
+  return res.json({ success: true, message: 'पासवर्ड सफलतापूर्वक बदल दिया गया। अब नए पासवर्ड से लॉगिन करें।' });
 }));
 
 export default router;

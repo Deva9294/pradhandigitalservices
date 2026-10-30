@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 
 import { API_ORIGIN } from "@/lib/utils";
@@ -38,6 +38,7 @@ export default function LiveVisitorCounter() {
     };
 
     const refreshCount = async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const response = await fetch(`${base}/api/visitors/live`, { cache: "no-store" });
         if (!response.ok) return;

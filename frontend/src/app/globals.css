@@ -393,7 +393,6 @@ body > main#main-content section.py-16 { padding-top: 4.25rem !important; paddin
 body > main#main-content a, body > main#main-content button { -webkit-tap-highlight-color: transparent; }
 body > main#main-content .group { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
 body > main#main-content .group:hover { transform: translateY(-3px); }
-body > main#main-content .rounded-\\[28px\\], body > main#main-content .rounded-\\[32px\\] { box-shadow: var(--pds-card-shadow); }
 body > main#main-content .glass-panel { background: rgba(255,255,255,.07); backdrop-filter: blur(14px); }
 body > footer { margin-top: auto; }
 @media (max-width: 640px) {

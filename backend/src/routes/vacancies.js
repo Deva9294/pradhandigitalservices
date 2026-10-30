@@ -180,6 +180,9 @@ router.get('/', asyncHandler(async (req, res) => {
   const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const query = { isActive: true };
+  const addOr = (conditions) => {
+    query.$and = [...(query.$and || []), { $or: conditions }];
+  };
 
   // Tab Filtering
   if (tab === 'closing_soon') {
@@ -187,52 +190,56 @@ router.get('/', asyncHandler(async (req, res) => {
     query.lastDate = { $gte: now, $lte: sevenDaysLater };
   } else if (tab === 'upcoming') {
     query.status = { $ne: 'cancelled' };
-    query.$or = [
+    addOr([
       { startDate: { $gt: now } },
       { status: 'upcoming' }
-    ];
+  ]);
   } else if (tab === 'admit_cards') {
-    query.$or = [
+    addOr([
       { admitCardUrl: { $exists: true, $ne: '' } },
       { admitCardDate: { $exists: true, $ne: null } }
-    ];
+  ]);
   } else if (tab === 'results') {
-    query.$or = [
+    addOr([
       { resultUrl: { $exists: true, $ne: '' } },
       { scorecardUrl: { $exists: true, $ne: '' } },
       { meritListUrl: { $exists: true, $ne: '' } }
-    ];
+  ]);
   } else if (tab === 'answer_keys') {
     query.answerKeyUrl = { $exists: true, $ne: '' };
   } else if (tab === 'exam_notices') {
-    query.$or = [
+    addOr([
       { examDate: { $exists: true, $ne: null } },
       { examDateNote: { $exists: true, $ne: '' } },
       { syllabusUrl: { $exists: true, $ne: '' } }
-    ];
+  ]);
   } else if (tab === 'offline_forms') {
-    query.$or = [
+    addOr([
       { applicationMode: { $in: ['offline', 'both'] } },
       { 'offlineFormDetails.formPdfUrl': { $exists: true, $ne: '' } }
-    ];
+  ]);
   } else if (tab === 'archive') {
-    query.$or = [
+    addOr([
       { status: 'archived' },
       { status: 'closed' },
       { lastDate: { $lt: now } }
-    ];
+  ]);
   } else if (tab === 'active' || !tab) {
     // Default Active view: open vacancies whose lastDate is strictly in future
     // and not upcoming
     if (!status) {
       query.status = { $nin: ['archived', 'closed', 'cancelled'] };
-      query.$or = [
+      addOr([
         { lastDate: { $gte: now } },
         { lastDate: { $exists: false } },
         { lastDate: null }
-      ];
+  ]);
       // Do not show upcoming in currently open
-      query.startDate = { $lte: now };
+      addOr([
+        { startDate: { $lte: now } },
+        { startDate: { $exists: false } },
+        { startDate: null }
+      ]);
     }
   }
 
@@ -242,15 +249,15 @@ router.get('/', asyncHandler(async (req, res) => {
   // Scope filter (MP vs All India vs State)
   if (scope) {
     if (scope.toLowerCase() === 'mp') {
-      query.$or = [
+      addOr([
         { locationScope: 'MP' },
         { state: /madhya pradesh/i }
-      ];
+  ]);
     } else if (scope.toLowerCase() === 'all india') {
-      query.$or = [
+      addOr([
         { locationScope: 'All India' },
         { vacancyType: 'central' }
-      ];
+  ]);
     } else {
       query.locationScope = scope;
     }
@@ -258,11 +265,11 @@ router.get('/', asyncHandler(async (req, res) => {
 
   // Department & Authority
   if (department && department !== 'All Departments') {
-    query.$or = [
+    addOr([
       { department: { $regex: department, $options: 'i' } },
       { departmentHi: { $regex: department, $options: 'i' } },
       { recruitingAuthority: { $regex: department, $options: 'i' } }
-    ];
+  ]);
   }
 
   if (authority) {
@@ -273,11 +280,11 @@ router.get('/', asyncHandler(async (req, res) => {
   if (qualificationLevel && qualificationLevel !== 'All') {
     query.qualificationLevel = qualificationLevel;
   } else if (qualification && qualification !== 'All') {
-    query.$or = [
+    addOr([
       { qualification: { $regex: qualification, $options: 'i' } },
       { qualificationTags: { $in: [qualification] } },
       { qualificationLevel: qualification }
-    ];
+  ]);
   }
 
   // Mode
@@ -302,7 +309,7 @@ router.get('/', asyncHandler(async (req, res) => {
   // Search
   if (search) {
     const sRegex = { $regex: search.trim(), $options: 'i' };
-    query.$or = [
+    addOr([
       { title: sRegex },
       { titleHi: sRegex },
       { organization: sRegex },
@@ -311,7 +318,7 @@ router.get('/', asyncHandler(async (req, res) => {
       { departmentHi: sRegex },
       { recruitingAuthority: sRegex },
       { advertisementNumber: sRegex }
-    ];
+  ]);
   }
 
   const pageNum = Math.max(1, parseInt(page, 10));

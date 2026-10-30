@@ -1,136 +1,114 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Play, Pause, ExternalLink, FileText, Clock, Ticket, BarChart3, Gift, Bell } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Play, Pause, ExternalLink, FileText, Clock, Ticket, BarChart3, Bell } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { vacancyApi } from "@/lib/api";
 
-interface MarqueeItem {
+type MarqueeItem = {
   id: string;
-  type: "vacancy" | "deadline" | "admit_card" | "result" | "scheme" | "notice";
   title: string;
   titleHi: string;
   url: string;
+  type: "vacancy" | "deadline" | "admit_card" | "result" | "notice";
   priority: "normal" | "urgent" | "critical";
-}
-
-// Sample data - in production, this would come from the API
-const sampleMarqueeItems: MarqueeItem[] = [
-  {
-    id: "1",
-    type: "vacancy",
-    title: "MP Police Constable (GD & Radio) 2026 - 7500 Posts Open",
-    titleHi: "एमपी पुलिस आरक्षक (जीडी व रेडियो) 2026 - 7500 पद आवेदन शुरू",
-    url: "/vacancy-update/mp-police-constable-gd-radio-recruitment-2026",
-    priority: "urgent"
-  },
-  {
-    id: "2",
-    type: "deadline",
-    title: "Railway RRB ALP & Technician - Deadline Approaching!",
-    titleHi: "रेलवे आरआरबी एएलपी एवं तकनीशियन - अंतिम तिथि निकट!",
-    url: "/vacancy-update/rrb-alp-technician-centralized-recruitment-2026",
-    priority: "critical"
-  },
-  {
-    id: "3",
-    type: "vacancy",
-    title: "MPESB Sub Engineer & Group 3 Combined Exam 2026 - Apply Online",
-    titleHi: "एमपीईएसबी उप अभियंता एवं ग्रुप-3 भर्ती 2026 - ऑनलाइन आवेदन जारी",
-    url: "/vacancy-update/mpesb-group-3-sub-engineer-recruitment-2026",
-    priority: "urgent"
-  },
-  {
-    id: "4",
-    type: "admit_card",
-    title: "SSC CGL 2026 Application Portal Active - Live Photo Standard",
-    titleHi: "एसएससी सीजीएल 2026 आवेदन पोर्टल सक्रिय - लाइव फोटो नियम लागू",
-    url: "/vacancy-update/ssc-combined-graduate-level-cgl-exam-2026",
-    priority: "normal"
-  },
-  {
-    id: "5",
-    type: "scheme",
-    title: "PM Kisan Samman Nidhi & Ladli Behna Yojana Status Verification",
-    titleHi: "पीएम किसान सम्मान निधि एवं लाड़ली बहना योजना स्थिति जांचें",
-    url: "/services",
-    priority: "urgent"
-  },
-];
+};
 
 export default function MarqueeSection() {
   const { lang } = useLanguage();
   const [isPaused, setIsPaused] = useState(false);
-  const [items, setItems] = useState<MarqueeItem[]>(sampleMarqueeItems);
+  const [items, setItems] = useState<MarqueeItem[]>([]);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "critical": return "bg-red-500";
-      case "urgent": return "bg-orange-500";
-      default: return "bg-green-500";
-    }
+  useEffect(() => {
+    let active = true;
+    const loadLatest = async () => {
+      try {
+        const response = await vacancyApi.getAll({ tab: "active", page: 1, limit: 12 });
+        if (!active) return;
+        const records = Array.isArray(response.data?.vacancies) ? response.data.vacancies : [];
+        const latest = records
+          .filter((v: any) => v?.slug && (v?.title || v?.titleHi))
+          .sort((a: any, b: any) =>
+            new Date(b.publishedAt || b.createdAt || 0).getTime() -
+            new Date(a.publishedAt || a.createdAt || 0).getTime()
+          )
+          .map((v: any) => {
+            const closing = v.lastDate && new Date(v.lastDate).getTime() - Date.now() <= 7 * 86400000;
+            return {
+              id: String(v._id || v.id || v.slug),
+              title: v.title || v.titleHi,
+              titleHi: v.titleHi || v.title,
+              url: `/vacancy-update/${v.slug}`,
+              type: "vacancy" as const,
+              priority: closing ? "urgent" as const : "normal" as const,
+            };
+          });
+        setItems(latest);
+      } catch {
+        // Keep the ticker empty rather than showing stale or fabricated vacancy alerts.
+      }
+    };
+
+    loadLatest();
+    const refresh = window.setInterval(loadLatest, 5 * 60 * 1000);
+    return () => {
+      active = false;
+      window.clearInterval(refresh);
+    };
+  }, []);
+
+  const iconFor = (type: MarqueeItem["type"]) => {
+    if (type === "deadline") return <Clock className="w-3.5 h-3.5 text-red-400" />;
+    if (type === "admit_card") return <Ticket className="w-3.5 h-3.5 text-purple-400" />;
+    if (type === "result") return <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />;
+    if (type === "notice") return <Bell className="w-3.5 h-3.5 text-amber-400" />;
+    return <FileText className="w-3.5 h-3.5 text-blue-400" />;
   };
 
-  const renderTypeIcon = (type: string) => {
-    switch (type) {
-      case "vacancy": return <FileText className="w-3.5 h-3.5 text-blue-400" />;
-      case "deadline": return <Clock className="w-3.5 h-3.5 text-red-400" />;
-      case "admit_card": return <Ticket className="w-3.5 h-3.5 text-purple-400" />;
-      case "result": return <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />;
-      case "scheme": return <Gift className="w-3.5 h-3.5 text-saffron-400" />;
-      default: return <Bell className="w-3.5 h-3.5 text-amber-400" />;
-    }
-  };
+  if (!items.length) return null;
+  const loopItems = [...items, ...items];
 
   return (
     <div className="bg-navy-50 dark:bg-navy-900 border-y border-navy-200 dark:border-navy-700">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-4 py-3">
-          {/* Control Button */}
+        <div className="flex items-center gap-3 py-2.5">
           <button
-            onClick={() => setIsPaused(!isPaused)}
+            type="button"
+            onClick={() => setIsPaused((value) => !value)}
             className="flex-shrink-0 p-2 rounded-full hover:bg-navy-200 dark:hover:bg-navy-800 transition"
             aria-label={isPaused ? "Play marquee" : "Pause marquee"}
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
-
-          {/* Label */}
-          <span className="flex-shrink-0 text-sm font-medium text-navy-700 dark:text-navy-200">
-            {lang === "hi" ? "ताज़ा अपडेट:" : "Latest Updates:"}
+          <span className="flex-shrink-0 text-sm font-semibold text-navy-700 dark:text-navy-200">
+            {lang === "hi" ? "ताज़ा वैकेंसी:" : "Latest Vacancies:"}
           </span>
-
-          {/* Marquee Container */}
-          <div 
+          <div
             className="flex-1 overflow-hidden"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
+            onFocus={() => setIsPaused(true)}
+            onBlur={() => setIsPaused(false)}
           >
-            <div 
-              className={`flex gap-8 ${isPaused ? '' : 'animate-marquee'}`}
+            <div
+              className="flex w-max gap-6"
               style={{
-                animation: isPaused ? 'none' : 'marquee 30s linear infinite',
+                animation: isPaused ? "none" : "pds-marquee 12s linear infinite",
+                willChange: "transform",
               }}
             >
-              {/* Duplicate items for seamless loop */}
-              {[...items, ...items].map((item, index) => (
+              {loopItems.map((item, index) => (
                 <Link
                   key={`${item.id}-${index}`}
                   href={item.url}
                   className="flex items-center gap-2 flex-shrink-0 px-4 py-2 bg-white dark:bg-navy-800 rounded-lg border border-navy-200 dark:border-navy-700 hover:border-saffron-500 dark:hover:border-saffron-400 transition group"
                 >
-                  {/* Priority Indicator */}
-                  <div className={`w-2 h-2 rounded-full ${getPriorityColor(item.priority)}`} />
-                  
-                  {/* Type Icon */}
-                  <span className="flex items-center">{renderTypeIcon(item.type)}</span>
-                  
-                  {/* Title */}
+                  <span className={`w-2 h-2 rounded-full ${item.priority === "urgent" ? "bg-orange-500" : "bg-green-500"}`} />
+                  <span className="flex items-center">{iconFor(item.type)}</span>
                   <span className="text-sm text-navy-700 dark:text-navy-200 group-hover:text-saffron-600 dark:group-hover:text-saffron-400 transition">
                     {lang === "hi" ? item.titleHi : item.title}
                   </span>
-                  
-                  {/* External Link Icon */}
                   <ExternalLink className="w-3 h-3 text-navy-400 group-hover:text-saffron-500 transition" />
                 </Link>
               ))}
@@ -138,15 +116,13 @@ export default function MarqueeSection() {
           </div>
         </div>
       </div>
-
       <style jsx>{`
-        @keyframes marquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+        @keyframes pds-marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          div[style*="pds-marquee"] { animation: none !important; }
         }
       `}</style>
     </div>

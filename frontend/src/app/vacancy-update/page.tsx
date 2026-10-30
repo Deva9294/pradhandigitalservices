@@ -9,7 +9,7 @@ import {
   DownloadCloud, HelpCircle
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { sampleVacancies, indianStates, qualifications, recruitmentAuthorities, Vacancy } from "@/data/vacancies";
+import { indianStates, qualifications, recruitmentAuthorities, Vacancy } from "@/data/vacancies";
 import { vacancyApi } from "@/lib/api";
 import { whatsAppUrl, telSupportUrl } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ interface TabItem {
 
 export default function VacancyUpdatePage() {
   const { lang } = useLanguage();
-  const [vacancies, setVacancies] = useState<Vacancy[]>(sampleVacancies);
+  const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [search, setSearch] = useState("");
@@ -64,7 +64,7 @@ export default function VacancyUpdatePage() {
     }
   };
 
-  // Fetch real data from backend API with fallback
+  // Fetch live vacancy data from the backend; never substitute demo vacancies.
   useEffect(() => {
     let isMounted = true;
 
@@ -96,11 +96,11 @@ export default function VacancyUpdatePage() {
           setVacancies(res.data.vacancies);
         } else if (isMounted) {
           // Fallback to sampleVacancies with dynamic client-side filtering
-          setVacancies(sampleVacancies);
+          setVacancies([]);
         }
       } catch (err) {
         if (isMounted) {
-          setVacancies(sampleVacancies);
+          setVacancies([]);
         }
       } finally {
         if (isMounted) setLoading(false);

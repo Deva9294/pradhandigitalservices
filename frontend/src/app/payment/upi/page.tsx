@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Payment = { paymentId: string; amount: number; status: string; metadata?: { utr?: string; verificationStatus?: string }; createdAt: string };
@@ -40,7 +41,7 @@ export default function DirectUpiPaymentPage() {
 
   return <main className="min-h-screen bg-slate-50 dark:bg-[#07132f] px-4 py-8">
     <div className="mx-auto max-w-2xl space-y-6">
-      <header><h1 className="text-2xl font-black text-slate-900 dark:text-white">Direct UPI Payment</h1><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">QR scan karke payment karein, phir UTR submit karein. Bank credit check ke baad admin payment approve karega.</p></header>
+      <header><h1 className="text-2xl font-black text-slate-900 dark:text-white">Direct UPI Payment</h1><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">QR scan karke payment karein, phir UTR submit karein. Bank credit check ke baad admin payment approve karega.</p><Link href="/payment/razorpay" className="mt-3 inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white shadow">Pay Online with Razorpay →</Link></header>
       {!payment ? <form onSubmit={createPayment} className="rounded-2xl border bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900 space-y-4">
         <label className="block text-sm font-semibold">Amount (₹)<input required type="number" min="1" max="500000" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} className="mt-1 w-full rounded-xl border p-3 dark:bg-slate-800" placeholder="Enter amount"/></label>
         <label className="block text-sm font-semibold">Payment purpose<input value={purpose} onChange={e=>setPurpose(e.target.value)} maxLength={160} className="mt-1 w-full rounded-xl border p-3 dark:bg-slate-800"/></label>

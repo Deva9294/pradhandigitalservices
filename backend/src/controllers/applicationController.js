@@ -26,7 +26,34 @@ export const createApplication = catchAsync(async (req, res) => {
   const total = Math.round((governmentFee + serviceCharge) * 100) / 100;
   if (!Number.isFinite(total) || total <= 0) throw new AppError('The service fee is not configured correctly. Please contact support.', 400);
 
-  const application = await ServiceApplication.create({
+  let application = await ServiceApplication.findOne({
+    user: req.user._id,
+    service: service._id,
+    status: 'draft'
+  });
+
+  if (application) {
+    application.applicantDetails = { ...applicantDetails, name, phone };
+    application.serviceData = serviceData || {};
+    application.payment = {
+      ...application.payment?.toObject?.(),
+      amount: total,
+      governmentFee,
+      portalFee: serviceCharge,
+      totalAmount: total,
+      paymentMethod,
+      status: 'pending'
+    };
+    application.feeBreakdown = {
+      governmentFee,
+      assistanceCharge: serviceCharge,
+      convenienceFee: 0,
+      tax: 0,
+      total
+    };
+    await application.save();
+  } else {
+    application = await ServiceApplication.create({
     user: req.user._id,
     service: service._id,
     applicantDetails: { ...applicantDetails, name, phone },
@@ -48,7 +75,8 @@ export const createApplication = catchAsync(async (req, res) => {
     },
     status: 'draft',
     createdBy: req.user._id
-  });
+    });
+  }
 
   res.status(201).json({
     success: true,

@@ -53,9 +53,18 @@ function LoginContent() {
 
   useEffect(() => {
     if (authReady && isAuthenticated && user) {
-      router.replace(getRoleRedirect(user.role));
+      router.replace(getPostLoginPath(user.role));
     }
   }, [authReady, isAuthenticated, user, router]);
+
+  const getPostLoginPath = (role?: string) => {
+    const requested = searchParams.get("redirect");
+    if (role !== "admin" && role !== "superadmin" && role !== "agent" && role !== "staff" &&
+        requested && requested.startsWith("/") && !requested.startsWith("//")) {
+      return requested;
+    }
+    return getRoleRedirect(role);
+  };
 
   // Read URL query params on mount (e.g. ?role=agent or ?action=register)
   useEffect(() => {
@@ -133,7 +142,7 @@ function LoginContent() {
       const res = await authApi.verifyOtp(cleanPhone, formData.otp.trim(), formData.name.trim() || undefined);
       if (res.data?.token && res.data?.user) {
         login(res.data.token, res.data.user);
-        const redirect = getRoleRedirect(res.data.user.role);
+        const redirect = getPostLoginPath(res.data.user.role);
         router.push(redirect);
       }
     } catch (err: any) {
@@ -171,7 +180,7 @@ function LoginContent() {
       login(data.token, data.user);
       
       // Systematic Redirection based on user's actual confirmed role
-      const targetPath = getRoleRedirect(data.user.role);
+      const targetPath = getPostLoginPath(data.user.role);
       router.push(targetPath);
     } catch (err: any) {
       const message =

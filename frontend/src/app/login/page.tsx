@@ -246,11 +246,11 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A1B4D] via-[#071333] to-[#0A1B4D] flex items-center justify-center p-4 text-white">
-      <div className="w-full max-w-lg my-8">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_left,_rgba(255,122,0,0.18),_transparent_34%),linear-gradient(135deg,#061235_0%,#0A1B4D_52%,#071333_100%)] flex items-center justify-center p-4 sm:p-6 text-white">
+      <div className="relative w-full max-w-xl my-8">
         
         {/* Brand Card */}
-        <div className="glass-panel rounded-3xl border border-white/10 shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
+        <div className="glass-panel rounded-[2rem] border border-white/15 bg-white/[0.075] shadow-[0_28px_90px_rgba(0,0,0,0.38)] p-6 sm:p-9 backdrop-blur-2xl ring-1 ring-white/5">
           
           {/* Top Brand Logo */}
           <div className="text-center mb-6">
@@ -592,6 +592,7 @@ function LoginContent() {
                 </div>
               )}
 
+              {activeRole !== "admin" && <div className="flex justify-end -mt-2"><Link href="/forgot-password" className="rounded-lg px-2 py-1 text-[11px] font-bold text-[#FFB477] hover:bg-white/5 hover:text-white transition">पासवर्ड भूल गए? (Forgot password)</Link></div>}
               <button
                 type="submit"
                 disabled={loading}

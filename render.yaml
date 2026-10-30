@@ -20,9 +20,33 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://pradhandigitalservices.in,https://pradhan-frontend.onrender.com,https://pradhan-frontend-4g39.onrender.com
+      - key: ADMIN_REGISTRATION_SECRET
+        sync: false
+      - key: PDS_UPI_ID
+        sync: false
+      - key: ADMIN_DEFAULT_NAME
+        sync: false
+      - key: ADMIN_DEFAULT_EMAIL
+        sync: false
+      - key: ADMIN_DEFAULT_PHONE
+        sync: false
       - key: ADMIN_DEFAULT_PASSWORD
         sync: false
+      - key: AGENT_DEFAULT_NAME
+        sync: false
+      - key: AGENT_DEFAULT_EMAIL
+        sync: false
+      - key: AGENT_DEFAULT_PHONE
+        sync: false
       - key: AGENT_DEFAULT_PASSWORD
+        sync: false
+      - key: CUSTOMER_DEFAULT_NAME
+        sync: false
+      - key: CUSTOMER_DEFAULT_EMAIL
+        sync: false
+      - key: CUSTOMER_DEFAULT_PHONE
+        sync: false
+      - key: CUSTOMER_DEFAULT_PASSWORD
         sync: false
       - key: RAZORPAY_KEY_ID
         sync: false

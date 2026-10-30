@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Users, FileText, Wallet, TrendingUp, CheckCircle, Clock,
   MessageCircle, Settings, LogOut, BarChart3, Download,
@@ -12,7 +13,8 @@ import {
 import api from '@/lib/api';
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, isReady, isAuthenticated, isAdmin } = useAuth();
+  const router = useRouter();
   const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -30,10 +32,13 @@ export default function AdminDashboard() {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAdmin) { router.replace(user?.role === 'agent' || user?.role === 'staff' ? '/agent' : '/dashboard'); return; }
     fetchDashboardData();
     const interval = window.setInterval(fetchDashboardData, 20000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [isReady, isAuthenticated, isAdmin, user?.role, router]);
 
   const fetchDashboardData = async () => {
     try {
@@ -105,6 +110,10 @@ export default function AdminDashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-saffron-600"></div>
       </div>
     );
+  }
+
+  if (!isReady || !isAuthenticated || !isAdmin) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-navy-700">Checking administrator account…</div>;
   }
 
   return (

@@ -80,8 +80,8 @@ google: "pk5_eaVyybHjzd-Z80vsqn1W_KQkGD0h5igmLeioSV0",
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0B192C" },
-    { media: "(prefers-color-scheme: dark)", color: "#071018" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#FFFFFF" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -119,7 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Skip to main content
           </a>
           <Header />
-          <main id="main-content" className="min-h-screen">{children}</main>
+          <main id="main-content" className="flex-1">{children}</main>
           <Footer />
           <LiveVisitorCounter />
           <WhatsAppButton />

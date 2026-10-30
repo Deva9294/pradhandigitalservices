@@ -98,7 +98,7 @@ app.use(securityHeaders);
 app.use(rateLimiter);
 app.use(sanitizeInput);
 app.use(preventNoSQLInjection);
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({\n  limit: '10mb',\n  verify: (req, res, buffer) => {\n    if (req.originalUrl === '/api/payments/webhook/razorpay') req.rawBody = Buffer.from(buffer);\n  }\n}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/uploads', express.static('uploads'));

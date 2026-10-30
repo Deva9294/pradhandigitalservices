@@ -97,7 +97,7 @@ export const getMyUpiPayments = catchAsync(async (req, res) => {
 export const getUpiAdminPayments = catchAsync(async (req, res) => {
   requireAdmin(req);
   const filter = { gateway: 'manual' };
-  if (req.query.status === 'submitted') filter['metadata.verificationStatus'] = 'awaiting_admin_review';
+  if (req.query.status === 'submitted') { filter.status = 'pending'; filter['metadata.verificationStatus'] = 'awaiting_admin_review'; }
   if (req.query.status === 'completed') filter.status = 'completed';
   const payments = await Payment.find(filter)
     .populate('user', 'name phone email')
@@ -132,6 +132,17 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
   payment.metadata.reviewedBy = String(req.user._id);
   payment.metadata.reviewedAt = new Date();
   await payment.save();
+
+  if (action === 'approve' && payment.application) {
+    const ServiceApplication = (await import('../models/ServiceApplication.js')).default;
+    const application = await ServiceApplication.findById(payment.application);
+    if (application?.payment) {
+      application.payment.status = 'completed';
+      application.payment.paidAt = new Date();
+      application.payment.paymentId = payment.metadata.utr;
+      await application.save();
+    }
+  }
 
   res.json({ success: true, message: action === 'approve' ? 'Payment verified and marked completed' : 'Payment claim rejected', data: payment });
 });

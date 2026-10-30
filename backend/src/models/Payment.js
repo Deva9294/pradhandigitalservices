@@ -17,7 +17,7 @@ const paymentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup'],
+    enum: ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'],
     required: true
   },
   amount: {

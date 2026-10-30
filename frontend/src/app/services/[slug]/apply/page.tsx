@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, UploadCloud } from "lucide-react";
+import { ArrowLeft, CreditCard, FileText, Loader2, ShieldCheck, UploadCloud } from "lucide-react";
 import api, { applicationApi, paymentApi, uploadApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 

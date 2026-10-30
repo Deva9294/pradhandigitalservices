@@ -8,19 +8,22 @@ import { AppError } from '../utils/AppError.js';
 const isAdmin = (user) => ['admin', 'superadmin'].includes(user?.role);
 
 async function markPaymentCompleted(payment, gatewayPaymentId) {
-  if (payment.status === 'completed') return payment;
-  payment.status = 'completed';
-  payment.gatewayTransactionId = gatewayPaymentId;
-  payment.gatewayPaymentId = gatewayPaymentId;
-  payment.verified = true;
-  payment.completedAt = new Date();
-  await payment.save();
+  const wasCompleted = payment.status === 'completed';
+  if (!wasCompleted) {
+    payment.status = 'completed';
+    payment.gatewayTransactionId = gatewayPaymentId;
+    payment.gatewayPaymentId = gatewayPaymentId;
+    payment.verified = true;
+    payment.completedAt = new Date();
+  }
 
+  // Always reconcile the linked application, even if a previous attempt saved the
+  // payment first but failed before the application update completed.
   if (payment.application) {
     const application = await ServiceApplication.findById(payment.application);
     if (application?.payment) {
       application.payment.status = 'paid';
-      application.payment.paidAt = new Date();
+      application.payment.paidAt = application.payment.paidAt || new Date();
       application.payment.paymentId = gatewayPaymentId;
       if (application.status === 'draft') {
         application.status = 'submitted';
@@ -36,6 +39,8 @@ async function markPaymentCompleted(payment, gatewayPaymentId) {
       await application.save();
     }
   }
+
+  if (!wasCompleted) await payment.save();
   return payment;
 }
 

@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import ClientSideLogic from "@/components/layout/ClientSideLogic";
+import LiveVisitorCounter from "@/components/layout/LiveVisitorCounter";
 import { SITE_NAME, SITE_URL, DISCLAIMER } from "@/lib/utils";
 
 const inter = Inter({ 
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main id="main-content" className="min-h-screen">{children}</main>
           <Footer />
+          <LiveVisitorCounter />
           <WhatsAppButton />
         </AppProviders>
       </body>

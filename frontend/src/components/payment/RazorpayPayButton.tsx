@@ -4,6 +4,7 @@ import { useState } from "react";
 import Script from "next/script";
 import { CreditCard, Loader2 } from "lucide-react";
 import { paymentApi } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 declare global {
   interface Window {
@@ -29,12 +30,18 @@ export default function RazorpayPayButton({
   disabled = false, className = "", label = "Pay securely with Razorpay",
   onSuccess, onError
 }: Props) {
+  const { isReady, isAuthenticated } = useAuth();
   const [scriptReady, setScriptReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function startPayment() {
     if (busy || disabled) return;
+    if (!isReady || !isAuthenticated) {
+      const next = window.location.pathname + window.location.search;
+      window.location.href = `/login?redirect=${encodeURIComponent(next)}`;
+      return;
+    }
     if (!Number.isFinite(amount) || amount < 1 || amount > 500000) {
       const message = "कृपया ₹1 से ₹5,00,000 के बीच सही राशि दर्ज करें।";
       setError(message); onError?.(message); return;

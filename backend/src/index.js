@@ -28,10 +28,9 @@ import visitorRoutes from './routes/visitors.js';
 
 dotenv.config();
 
-// Resilient JWT_SECRET handling in production
-const jwtSecret = process.env.JWT_SECRET || 'pds_production_super_secure_jwt_secret_token_key_2026';
-if (jwtSecret.length < 32) {
-  console.warn('⚠️ Warning: JWT_SECRET should ideally be at least 32 characters in production.');
+if (process.env.NODE_ENV === 'production' &&
+    (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
+  throw new Error('JWT_SECRET must be configured with at least 32 characters in production.');
 }
 
 const app = express();
@@ -49,56 +48,53 @@ connectDB().then(async () => {
       await seedCatalogue();
     }
     try {
-      const { seedVacancies } = await import("./utils/seedVacancies.js");
+      const { seedVacancies } = await import('./utils/seedVacancies.js');
       await seedVacancies();
     } catch (vErr) {
-      console.error("Vacancies sync notice:", vErr.message);
+      console.error('Vacancies sync notice:', vErr.message);
     }
   } catch (err) {
     console.error('Catalogue initialization notice:', err.message);
   }
-}).catch(() => {
-  console.log('⚠️ MongoDB connection failed. Running without database.');
+}).catch((error) => {
+  console.error('Required MongoDB connection failed; API startup aborted:', error.message);
+  process.exit(1);
 });
 
-// Resilient CORS configuration for Render, Vercel, and Production domains
 const configuredOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
-  .map((o) => o.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
-const defaultAllowedOrigins = [
+const allowedOrigins = new Set([
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
-  'http://localhost:8000',
   'https://pradhandigitalservices.in',
-  'https://www.pradhandigitalservices.in'
-];
+  'https://www.pradhandigitalservices.in',
+  ...configuredOrigins
+]);
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (
-        configuredOrigins.includes(origin) ||
-        defaultAllowedOrigins.includes(origin) ||
-        origin.endsWith('.onrender.com') ||
-        origin.endsWith('.vercel.app')
-      ) {
-        return callback(null, true);
-      }
-      console.warn('[CORS Allowed with warning for Render/Domain]:', origin);
-      return callback(null, true);
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
 app.use(securityHeaders);
 app.use(rateLimiter);
 app.use(sanitizeInput);
 app.use(preventNoSQLInjection);
-app.use(express.json({\n  limit: '10mb',\n  verify: (req, res, buffer) => {\n    if (req.originalUrl === '/api/payments/webhook/razorpay') req.rawBody = Buffer.from(buffer);\n  }\n}));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buffer) => {
+    if (req.originalUrl.split('?')[0] === '/api/payments/webhook/razorpay') {
+      req.rawBody = Buffer.from(buffer);
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/uploads', express.static('uploads'));
@@ -123,15 +119,17 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/visitors', visitorRoutes);
 
-// Render Health & Status Endpoints
 app.get(['/', '/health'], (req, res) => {
-  res.json({ status: 'ok', service: 'Pradhan Digital Services Backend API', timestamp: new Date() });
+  res.json({
+    status: 'ok',
+    service: 'Pradhan Digital Services Backend API',
+    timestamp: new Date()
+  });
 });
 
 app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection.readyState;
   const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
-  const rawUri = process.env.MONGODB_URI || '';
 
   res.json({
     status: dbState === 1 ? 'ok' : 'degraded',
@@ -139,10 +137,8 @@ app.get('/api/health', (req, res) => {
     database: {
       status: states[dbState] || 'unknown',
       readyState: dbState,
-      isConfigured: Boolean(rawUri && !rawUri.includes('localhost')),
-      uriType: rawUri.startsWith('mongodb+srv://') ? 'Atlas Cloud' : (rawUri ? 'Custom' : 'None (Default Localhost)'),
-      hasPasswordPlaceholder: rawUri.includes('<password>'),
-      troubleshooting: dbState !== 1 ? 'Add MONGODB_URI to Render Dashboard > Environment, and in MongoDB Atlas > Network Access > add 0.0.0.0/0' : undefined
+      isConfigured: Boolean(process.env.MONGODB_URI),
+      uriType: process.env.MONGODB_URI?.startsWith('mongodb+srv://') ? 'Atlas Cloud' : (process.env.MONGODB_URI ? 'Custom' : 'Not configured')
     },
     timestamp: new Date()
   });
@@ -151,7 +147,7 @@ app.get('/api/health', (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`,
+    message: 'Requested API route was not found.'
   });
 });
 

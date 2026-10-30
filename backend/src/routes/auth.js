@@ -110,7 +110,7 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     const validSecret = process.env.ADMIN_REGISTRATION_SECRET;
     const suppliedSecret = typeof adminSecret === 'string' ? adminSecret : '';
     const crypto = await import('crypto');
-    const valid = Boolean(validSecret && suppliedSecret && Buffer.byteLength(validSecret) === Buffer.byteLength(suppliedSecret) && crypto.timingSafeEqual(Buffer.from(validSecret), Buffer.from(suppliedSecret)));
+    const valid = Boolean(validSecret && validSecret.length >= 32 && suppliedSecret && Buffer.byteLength(validSecret) === Buffer.byteLength(suppliedSecret) && crypto.timingSafeEqual(Buffer.from(validSecret), Buffer.from(suppliedSecret)));
     if (!valid) {
       return res.status(403).json({
         success: false,

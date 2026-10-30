@@ -72,6 +72,7 @@ const allowedOrigins = new Set([
   'http://localhost:3002',
   'https://pradhandigitalservices.in',
   'https://www.pradhandigitalservices.in',
+  'https://pradhan-frontend-4g39.onrender.com',
   ...configuredOrigins
 ]);
 

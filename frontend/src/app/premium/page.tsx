@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { whatsAppUrl, telSupportUrl } from "@/lib/utils";
+import RazorpayPayButton from "@/components/payment/RazorpayPayButton";
 
 export default function PremiumPage() {
   const { lang } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly");
+  const [paymentSuccess, setPaymentSuccess] = useState("");
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white">
@@ -34,6 +36,7 @@ export default function PremiumPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12 max-w-5xl">
+        {paymentSuccess && <div role="status" className="mb-6 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">{paymentSuccess}</div>}
         {/* Toggle Switch */}
         <div className="flex justify-center mb-10">
           <div className="p-1 rounded-2xl bg-navy-100 dark:bg-navy-900 border border-navy-200 dark:border-white/10 flex items-center gap-1">
@@ -106,15 +109,15 @@ export default function PremiumPage() {
               </ul>
             </div>
 
-            <a
-              href={whatsAppUrl("नमस्ते, मुझे PDS Monthly Premium (₹99) प्लान लेना है।")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-white dark:bg-white/10 dark:hover:bg-white/20 font-bold text-xs text-center transition flex items-center justify-center gap-1.5 shadow"
-            >
-              <span>Get Monthly Pro (₹99)</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
+            <RazorpayPayButton
+              amount={99}
+              purpose="PDS Monthly Premium Membership"
+              type="membership"
+              metadata={{ plan: "monthly", durationDays: "30" }}
+              className="w-full py-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-white dark:bg-white/10 dark:hover:bg-white/20 font-bold text-xs text-center transition flex items-center justify-center gap-2 shadow"
+              label="Get Monthly Pro (₹99)"
+              onSuccess={(payment) => setPaymentSuccess(`₹99 भुगतान सत्यापित। Payment ID: ${payment?.paymentId || "verified"}. सदस्यता सक्रिय करने के लिए टीम की पुष्टि बाकी है।`)}
+            />        </a>
           </div>
 
           {/* Plan 2: Annual */}
@@ -167,15 +170,15 @@ export default function PremiumPage() {
               </ul>
             </div>
 
-            <a
-              href={whatsAppUrl("नमस्ते, मुझे PDS Annual Pro (₹499) वार्षिक प्लान लेना है।")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-black text-xs text-center transition flex items-center justify-center gap-1.5 shadow-lg"
-            >
-              <span>Activate Annual Pro (₹499)</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
+            <RazorpayPayButton
+              amount={499}
+              purpose="PDS Annual Citizen Pro Membership"
+              type="membership"
+              metadata={{ plan: "yearly", durationDays: "365" }}
+              className="w-full py-3 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-black text-xs text-center transition flex items-center justify-center gap-2 shadow-lg"
+              label="Activate Annual Pro (₹499)"
+              onSuccess={(payment) => setPaymentSuccess(`₹499 भुगतान सत्यापित। Payment ID: ${payment?.paymentId || "verified"}. सदस्यता सक्रिय करने के लिए टीम की पुष्टि बाकी है।`)}
+            />        </a>
           </div>
         </div>
 

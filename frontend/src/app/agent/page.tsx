@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Users, FileText, Wallet, Clock, CheckCircle2, 
   TrendingUp, Plus, Download, MessageSquare, User, 
@@ -15,7 +16,8 @@ import { applicationApi } from '@/lib/api';
 import { whatsAppUrl, telSupportUrl } from '@/lib/utils';
 
 export default function AgentDashboard() {
-  const { user } = useAuth();
+  const { user, isReady, isAuthenticated, isAdmin, isAgent, getRoleRedirect } = useAuth();
+  const router = useRouter();
   const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -65,10 +67,13 @@ export default function AgentDashboard() {
   };
 
   useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAgent) { router.replace(isAdmin ? '/admin' : '/dashboard'); return; }
     loadWorkQueue();
     const interval = window.setInterval(loadWorkQueue, 20000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [isReady, isAuthenticated, isAgent, isAdmin, router]);
 
   const filteredQueue = useMemo(() => {
     return workQueue.filter(item => {
@@ -121,6 +126,10 @@ export default function AgentDashboard() {
     review: workQueue.filter(q => q.stage === 'review').length,
     done: workQueue.filter(q => q.stage === 'done').length
   };
+
+  if (!isReady || !isAuthenticated || !isAgent) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-navy-700">Checking operator account…</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white flex flex-col justify-between">

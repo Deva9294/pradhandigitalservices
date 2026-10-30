@@ -324,7 +324,10 @@ router.post('/verify-otp', authRateLimiter, asyncHandler(async (req, res) => {
   }
 
   const stored = otpStore.get(phone);
-  if (process.env.NODE_ENV === 'production') {\n    return res.status(503).json({ success: false, message: 'OTP login is temporarily unavailable. Please use password login.' });\n  }\n  const isValid = Boolean(stored && stored.otp === String(otp).trim() && Date.now() <= stored.expiresAt);
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ success: false, message: 'OTP login is temporarily unavailable. Please use password login.' });
+  }
+  const isValid = Boolean(stored && stored.otp === String(otp).trim() && Date.now() <= stored.expiresAt);
 
   if (!isValid) {
     return res.status(400).json({

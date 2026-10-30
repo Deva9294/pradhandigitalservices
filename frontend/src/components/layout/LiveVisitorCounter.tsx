@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Users } from "lucide-react";
+import { Users } from "lucide-react";
 
 import { API_ORIGIN } from "@/lib/utils";
 

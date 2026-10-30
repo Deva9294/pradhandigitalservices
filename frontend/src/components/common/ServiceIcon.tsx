@@ -25,61 +25,96 @@ const iconMap = {
   shield: Shield, "credit-card": CreditCard, zap: Zap, globe: Globe,
 };
 
-const departmentDomains: Array<[string[], string]> = [
-  [["aadhaar", "uidai", "आधार"], "uidai.gov.in"],
-  [["pan", "income tax", "incometax", "आयकर", "पैन"], "incometax.gov.in"],
-  [["voter", "eci", "election", "मतदाता", "निर्वाचन"], "eci.gov.in"],
-  [["samagra", "समग्र"], "samagra.gov.in"],
-  [["ayushman", "pmjay", "nha", "आयुष्मान", "abha"], "nha.gov.in"],
-  [["pm-kisan", "pmkisan", "किसान"], "pmkisan.gov.in"],
-  [["parivahan", "driving licence", "driving license", "rto", "वाहन"], "parivahan.gov.in"],
-  [["passport", "mea", "पासपोर्ट"], "passportindia.gov.in"],
-  [["ration", "nfsa", "राशन"], "nfsa.gov.in"],
-  [["ladli behna", "लाड़ली बहना"], "cmladlibehna.mp.gov.in"],
-  [["digilocker", "डिजिलॉकर", "abc id", "apaar"], "digilocker.gov.in"],
-  [["umang", "उमंग"], "web.umang.gov.in"],
-  [["epfo", "uan", "provident fund", "भविष्य निधि"], "epfindia.gov.in"],
-  [["e-shram", "eshram", "labour", "श्रम"], "eshram.gov.in"],
-  [["bhulekh", "khasra", "खसरा", "भूलेख"], "mpbhulekh.gov.in"],
-  [["electricity", "bijli", "mppkvvcl", "बिजली"], "portal.mpcz.in"],
-  [["lpg", "indane", "bharat gas", "hp gas"], "mylpg.in"],
-  [["fastag", "नैशनल हाईवे", "toll"], "nhai.gov.in"],
-  [["birth certificate", "death certificate", "crs", "जन्म", "मृत्यु"], "crsorgi.gov.in"],
-  [["mpesb", "vyapam", "व्यापम"], "esb.mp.gov.in"],
-  [["mppsc", "लोक सेवा आयोग"], "mppsc.mp.gov.in"],
-  [["ssc"], "ssc.gov.in"],
-  [["railway", "rrb", "रेलवे"], "indianrailways.gov.in"],
-  [["irctc"], "irctc.co.in"],
-  [["sbi", "aeps", "banking", "बैंक"], "sbi.co.in"],
-  [["ibps"], "ibps.in"],
-  [["gst", "जीएसटी"], "gst.gov.in"],
-  [["udyam", "msme", "उद्यम"], "udyamregistration.gov.in"],
-  [["fssai", "food safety", "खाद्य सुरक्षा"], "fssai.gov.in"],
-  [["police", "fir", "cybercrime", "पुलिस"], "mppolice.gov.in"],
-  [["court", "ecourts", "न्यायालय"], "ecourts.gov.in"],
-  [["lokseva", "edistrict", "income certificate", "caste certificate", "domicile", "जाति", "आय प्रमाण", "मूल निवास"], "mpedistrict.gov.in"],
-  [["scholarship", "scholarship portal", "छात्रवृत्ति"], "scholarshipportal.mp.nic.in"],
-  [["employment", "rojgar", "रोजगार"], "mprojgar.gov.in"],
-  [["fssai"], "fssai.gov.in"],
-  [["jio"], "jio.com"],
-  [["airtel"], "airtel.in"],
-  [["vi ", "vodafone idea"], "myvi.in"],
-  [["bsnl"], "bsnl.co.in"],
+type DepartmentRule = { match: RegExp; domain: string };
+
+/**
+ * Verified government/service portal hosts, ordered from specific to broad.
+ * These URLs are used only to show the portal's favicon as a source cue;
+ * a favicon is NOT represented as an official logo or endorsement.
+ * Services without a confidently identified owner use a neutral icon.
+ */
+const departmentRules: DepartmentRule[] = [
+  { match: /aadhaar|uidai|आधार/i, domain: "uidai.gov.in" },
+  { match: /pan.?card|e.?pan|incometax|income.?tax|आयकर|पैन/i, domain: "incometax.gov.in" },
+  { match: /voter|epic|election|मतदाता|निर्वाचन/i, domain: "voters.eci.gov.in" },
+  { match: /samagra|समग्र/i, domain: "samagra.gov.in" },
+  { match: /digilocker|डिजिलॉकर/i, domain: "digilocker.gov.in" },
+  { match: /umang|उमंग/i, domain: "web.umang.gov.in" },
+  { match: /apaar/i, domain: "apaar.education.gov.in" },
+  { match: /abc.?id|academic.?bank.?of.?credits/i, domain: "abc.gov.in" },
+  { match: /ayushman|pm.?jay|nha|आयुष्मान/i, domain: "nha.gov.in" },
+  { match: /abha|health.?id|health.?record/i, domain: "abha.abdm.gov.in" },
+  { match: /e.?sanjeevani/i, domain: "esanjeevani.mohfw.gov.in" },
+  { match: /udid|disability.?card|दिव्यांग/i, domain: "swavlambancard.gov.in" },
+  { match: /crs|birth.?certificate|death.?certificate|birth.?registration|death.?registration|जन्म|मृत्यु/i, domain: "crsorgi.gov.in" },
+  { match: /income.?certificate|caste.?certificate|domicile|ews.?certificate|solvency|character.?certificate|lok.?seva|edistrict|जाति|मूल.?निवास|आय.?प्रमाण/i, domain: "mpedistrict.gov.in" },
+  { match: /cm.?helpline|मुख्यमंत्री.*हेल्पलाइन/i, domain: "cmhelpline.mp.gov.in" },
+  { match: /rti.?online|right.?to.?information/i, domain: "rtionline.gov.in" },
+  { match: /ration|nfsa|food.?department|राशन|खाद्य/i, domain: "nfsa.gov.in" },
+  { match: /lpg|indane|bharat.?gas|hp.?gas|gas.?connection/i, domain: "mylpg.in" },
+  { match: /fssai|food.?safety|foscos|खाद्य.?सुरक्षा/i, domain: "foscos.fssai.gov.in" },
+  { match: /driving.?licen[cs]e|learner.?licen[cs]e|parivahan|vehicle.?rc|vehicle.?registration|rto|वाहन/i, domain: "parivahan.gov.in" },
+  { match: /e.?challan|traffic.?challan/i, domain: "echallan.parivahan.gov.in" },
+  { match: /passport|पासपोर्ट/i, domain: "passportindia.gov.in" },
+  { match: /cybercrime|cyber.?complaint/i, domain: "cybercrime.gov.in" },
+  { match: /fir|police.?complaint|police.?verification|mppolice|पुलिस/i, domain: "mppolice.gov.in" },
+  { match: /e.?courts|court.?case|cause.?list|court.?order|e.?filing|न्यायालय/i, domain: "ecourts.gov.in" },
+  { match: /bhulekh|khasra|khatauni|b.?1|bhu.?naksha|land.?record|land.?mutation|खसरा|भूलेख/i, domain: "mpbhulekh.gov.in" },
+  { match: /registry|property.?registration|stamp.?duty|igr|e.?stamp|guideline.?rate/i, domain: "mpigr.gov.in" },
+  { match: /pm.?kisan|kisan.?samman/i, domain: "pmkisan.gov.in" },
+  { match: /fasal.?bima|crop.?insurance|pmfby/i, domain: "pmfby.gov.in" },
+  { match: /farmer.?registry|farmer.?id|agristack/i, domain: "agristack.gov.in" },
+  { match: /e.?uparjan|uparjan/i, domain: "mpeuparjan.nic.in" },
+  { match: /e.?mandi|mandi.?rate|mandi.?payment/i, domain: "emandirates.mp.gov.in" },
+  { match: /krishi|fertilizer|seed.?subsidy|farm.?machinery|solar.?pump|horticulture|किसान|कृषि/i, domain: "mpkrishi.mp.gov.in" },
+  { match: /mppsc|public.?service.?commission/i, domain: "mppsc.mp.gov.in" },
+  { match: /mpesb|vyapam|patwari.?recruitment|group.?[1234].?recruitment/i, domain: "esb.mp.gov.in" },
+  { match: /ssc.?recruitment|staff.?selection/i, domain: "ssc.gov.in" },
+  { match: /upsc.?recruitment|union.?public.?service/i, domain: "upsc.gov.in" },
+  { match: /railway.?recruitment|rrb.?recruitment/i, domain: "indianrailways.gov.in" },
+  { match: /irctc|train.?ticket|tatkal|pnr.?status|ticket.?cancellation|railway/i, domain: "irctc.co.in" },
+  { match: /banking.?recruitment|ibps|bank.?jobs/i, domain: "ibps.in" },
+  { match: /india.?post|gds.?recruitment|post.?office/i, domain: "indiapost.gov.in" },
+  { match: /army|navy|air.?force|agniveer|defence.?recruitment/i, domain: "joinindianarmy.nic.in" },
+  { match: /scholarship|छात्रवृत्ति/i, domain: "scholarshipportal.mp.nic.in" },
+  { match: /mp.?board|mpbse|board.?exam|marksheet|migration.?certificate/i, domain: "mpbse.nic.in" },
+  { match: /e.?pravesh|college.?admission|ug.?admission|pg.?admission|counselling/i, domain: "epravesh.mponline.gov.in" },
+  { match: /neet|jee.?form|cuet|nta/i, domain: "nta.ac.in" },
+  { match: /employment.?exchange|job.?seeker|rojgar|रोजगार/i, domain: "mprojgar.gov.in" },
+  { match: /e.?shram|eshram|श्रम/i, domain: "eshram.gov.in" },
+  { match: /epfo|uan|provident.?fund|pf.?passbook|pf.?withdrawal|pf.?transfer/i, domain: "epfindia.gov.in" },
+  { match: /esic/i, domain: "esic.gov.in" },
+  { match: /apprenticeship/i, domain: "apprenticeshipindia.gov.in" },
+  { match: /gst|जीएसटी|e.?way.?bill|e.?invoice/i, domain: "gst.gov.in" },
+  { match: /udyam|msme|उद्यम/i, domain: "udyamregistration.gov.in" },
+  { match: /mca.?filing|company.?registration|llp.?registration|director.?kyc/i, domain: "mca.gov.in" },
+  { match: /trademark/i, domain: "ipindia.gov.in" },
+  { match: /iec|import.?export/i, domain: "dgft.gov.in" },
+  { match: /gem.?seller|government.?e.?marketplace/i, domain: "gem.gov.in" },
+  { match: /trade.?licen[cs]e|gumasta|shop.?and.?establishment|municipal|property.?tax|water.?connection|garbage.?fee|fire.?noc|panchayat/i, domain: "mpenagarpalika.gov.in" },
+  { match: /lic.?premium|lic.?policy/i, domain: "licindia.in" },
+  { match: /atal.?pension|pmjjby|pmsby/i, domain: "jansuraksha.gov.in" },
+  { match: /aeps|aadhaar.?enabled.?payment|upi.?complaint|upi.?setup/i, domain: "npci.org.in" },
+  { match: /electricity|bijli|mppkvvcl|mpez|discom|मीटर|बिजली/i, domain: "portal.mpcz.in" },
+  { match: /fastag|nhai|toll/i, domain: "nhai.gov.in" },
+  { match: /jio/i, domain: "jio.com" },
+  { match: /airtel/i, domain: "airtel.in" },
+  { match: /vodafone|idea|\bvi\b/i, domain: "myvi.in" },
+  { match: /bsnl/i, domain: "bsnl.co.in" },
+  { match: /dth|broadband|mobile.?recharge|postpaid.?bill/i, domain: "bbps.org" },
+  { match: /mp.?tourism/i, domain: "tourism.mp.gov.in" },
+  { match: /speed.?post|courier.?tracking/i, domain: "indiapost.gov.in" },
 ];
 
 function resolveDepartmentDomain(slug = "", department = "", name = ""): string | null {
-  const haystack = `${slug} ${department} ${name}`.toLowerCase();
-  for (const [keywords, domain] of departmentDomains) {
-    if (keywords.some((keyword) => haystack.includes(keyword))) return domain;
-  }
-  return null;
+  const haystack = `${slug.replace(/[-_]/g, " ")} ${department} ${name}`;
+  return departmentRules.find(({ match }) => match.test(haystack))?.domain || null;
 }
 
 /**
- * Uses a department website's favicon as a recognizable site identity mark.
- * It deliberately does not draw or imitate government emblems/logos.
- * A department's actual brand asset must be supplied only from a verified,
- * authorized source.
+ * Displays the favicon published by a matched department/service portal.
+ * It is a portal identity cue, not a substitute for that department's
+ * official logo artwork. Unknown or ambiguous services use a neutral icon.
  */
 export function getOfficialLogoUrl(slug = "", department = "", name = "", explicitSrc?: string): string | null {
   if (explicitSrc && /^https:\/\//i.test(explicitSrc)) return explicitSrc;
@@ -89,7 +124,7 @@ export function getOfficialLogoUrl(slug = "", department = "", name = "", explic
 
 export default function ServiceIcon({
   type = "official", src, slug = "", department = "", name = "",
-  fallback = "id-card", alt = "Department website icon", size = 48, className = ""
+  fallback = "id-card", alt = "Department portal icon", size = 48, className = ""
 }: ServiceIconProps) {
   const [hasError, setHasError] = useState(false);
   const IconComponent = (fallback && iconMap[fallback as keyof typeof iconMap]) || IdCard;
@@ -105,11 +140,11 @@ export default function ServiceIcon({
   }
 
   return (
-    <div className={`relative flex items-center justify-center shrink-0 overflow-hidden rounded-2xl ${className}`}
+    <div className={`relative flex items-center justify-center shrink-0 overflow-hidden rounded-2xl bg-white ${className}`}
       style={{ width: size, height: size }}>
       <img
         src={logoUrl}
-        alt={alt || name || slug || "Department website icon"}
+        alt={alt || name || slug || "Department portal icon"}
         width={size}
         height={size}
         loading="lazy"

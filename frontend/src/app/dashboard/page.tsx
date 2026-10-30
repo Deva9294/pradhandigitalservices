@@ -158,6 +158,13 @@ export default function CustomerDashboard() {
 
           <div className="flex items-center gap-2.5">
             <Link
+              href="/payment/upi"
+              className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-xs transition shadow flex items-center gap-1.5"
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>{lang === "hi" ? "UPI भुगतान" : "Pay via UPI"}</span>
+            </Link>
+            <Link
               href="/services"
               className="px-4 py-2.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-bold text-xs transition shadow flex items-center gap-1.5"
             >

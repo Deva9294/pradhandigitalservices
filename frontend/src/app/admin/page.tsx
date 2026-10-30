@@ -30,28 +30,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    const interval = window.setInterval(fetchDashboardData, 20000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const response = await api.get('/admin/analytics');
-      setStats(response.data.data.overview);
-      setRecentActivity(response.data.data.recent?.applications || []);
+      const overview = response.data?.data?.overview;
+      setStats(overview || {
+        users: 0, agents: 0, applications: 0, pendingApplications: 0,
+        payments: 0, revenue: 0, openTickets: 0, vacancies: 0, forms: 0
+      });
+      setRecentActivity(Array.isArray(response.data?.data?.recent?.applications)
+        ? response.data.data.recent.applications
+        : []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Use mock data if API fails
+      // Never display invented analytics when the live API is unavailable.
       setStats({
-        users: 1250,
-        agents: 45,
-        applications: 892,
-        pendingApplications: 34,
-        payments: 756,
-        revenue: 285000,
-        openTickets: 12,
-        vacancies: 156,
-        forms: 234
+        users: 0, agents: 0, applications: 0, pendingApplications: 0,
+        payments: 0, revenue: 0, openTickets: 0, vacancies: 0, forms: 0
       });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }

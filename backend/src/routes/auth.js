@@ -141,7 +141,7 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
         city: city || 'Madhya Pradesh',
         state: 'Madhya Pradesh'
       },
-      kycStatus: 'verified'
+      kycStatus: 'pending'
     });
   }
 
@@ -296,7 +296,7 @@ router.post('/send-otp', authRateLimiter, asyncHandler(async (req, res) => {
     expiresAt: Date.now() + 5 * 60 * 1000
   });
 
-  console.log(`[PDS Auth] OTP for +91${phone}: ${otp}`);
+  // Never write authentication codes to application logs.
 
   res.json({
     success: true,
@@ -321,7 +321,7 @@ router.post('/verify-otp', authRateLimiter, asyncHandler(async (req, res) => {
   }
 
   const stored = otpStore.get(phone);
-  const isValid = (stored && stored.otp === String(otp).trim() && Date.now() <= stored.expiresAt) || otp === '123456';
+  if (process.env.NODE_ENV === 'production') {\n    return res.status(503).json({ success: false, message: 'OTP login is temporarily unavailable. Please use password login.' });\n  }\n  const isValid = Boolean(stored && stored.otp === String(otp).trim() && Date.now() <= stored.expiresAt);
 
   if (!isValid) {
     return res.status(400).json({

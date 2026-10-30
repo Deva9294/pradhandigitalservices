@@ -1,13 +1,38 @@
 import Payment from '../models/Payment.js';
+import ServiceApplication from '../models/ServiceApplication.js';
 import { catchAsync } from '../utils/catchAsync.js';
 import { AppError } from '../utils/AppError.js';
 
-const MERCHANT_UPI_ID = process.env.PDS_UPI_ID || '9294899787@sbi';
+function getMerchantUpiId() {
+  const upiId = process.env.PDS_UPI_ID?.trim();
+  if (!upiId || !/^[A-Z0-9._-]{2,256}@[A-Z0-9.-]{2,64}$/i.test(upiId)) {
+    throw new AppError('Direct UPI is temporarily unavailable. Configure a valid PDS_UPI_ID in the backend environment.', 503);
+  }
+  return upiId;
+}
 
 function requireAdmin(req) {
   if (!['admin', 'superadmin'].includes(req.user?.role)) {
     throw new AppError('Admin access required', 403);
   }
+}
+
+async function validateApplicationPayment(applicationId, user, amount) {
+  if (!applicationId) return null;
+  const application = await ServiceApplication.findById(applicationId);
+  if (!application) throw new AppError('Application not found', 404);
+  if (String(application.user) !== String(user._id) && !['admin', 'superadmin'].includes(user.role)) {
+    throw new AppError('Not authorized for this application', 403);
+  }
+  const expectedAmount = Number(application.payment?.totalAmount || application.payment?.amount || 0);
+  if (!Number.isFinite(expectedAmount) || expectedAmount <= 0 ||
+      Math.round(expectedAmount * 100) !== Math.round(amount * 100)) {
+    throw new AppError('Payment amount does not match the application fee.', 400);
+  }
+  if (['paid', 'completed'].includes(application.payment?.status)) {
+    throw new AppError('This application is already marked as paid.', 409);
+  }
+  return application;
 }
 
 export const createUpiPayment = catchAsync(async (req, res) => {
@@ -17,9 +42,11 @@ export const createUpiPayment = catchAsync(async (req, res) => {
     throw new AppError('Amount must be between ₹1 and ₹5,00,000', 400);
   }
 
+  const merchantUpiId = getMerchantUpiId();
+  const application = await validateApplicationPayment(applicationId, req.user, amount);
   const payment = await Payment.create({
-    user: req.user._id,
-    application: applicationId || undefined,
+    user: application ? application.user : req.user._id,
+    application: application?._id,
     type: 'service_application',
     amount,
     currency: 'INR',
@@ -29,7 +56,7 @@ export const createUpiPayment = catchAsync(async (req, res) => {
     status: 'pending',
     metadata: {
       paymentMethod: 'direct_upi_qr',
-      merchantUpiId: MERCHANT_UPI_ID,
+      merchantUpiId,
       purpose: String(purpose).slice(0, 160),
       utr: null,
       utrSubmittedAt: null,
@@ -38,14 +65,14 @@ export const createUpiPayment = catchAsync(async (req, res) => {
   });
 
   const note = `PDS-${payment.paymentId}`;
-  const upiUri = `upi://pay?pa=${encodeURIComponent(MERCHANT_UPI_ID)}&pn=${encodeURIComponent('Pradhan Digital Services')}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
+  const upiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Pradhan Digital Services')}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
   res.status(201).json({
     success: true,
     data: {
       id: payment._id,
       paymentId: payment.paymentId,
       amount: payment.amount,
-      upiId: MERCHANT_UPI_ID,
+      upiId: merchantUpiId,
       upiUri,
       qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(upiUri)}`,
       status: payment.status
@@ -97,7 +124,10 @@ export const getMyUpiPayments = catchAsync(async (req, res) => {
 export const getUpiAdminPayments = catchAsync(async (req, res) => {
   requireAdmin(req);
   const filter = { gateway: 'manual' };
-  if (req.query.status === 'submitted') { filter.status = 'pending'; filter['metadata.verificationStatus'] = 'awaiting_admin_review'; }
+  if (req.query.status === 'submitted') {
+    filter.status = 'pending';
+    filter['metadata.verificationStatus'] = 'awaiting_admin_review';
+  }
   if (req.query.status === 'completed') filter.status = 'completed';
   const payments = await Payment.find(filter)
     .populate('user', 'name phone email')
@@ -135,15 +165,18 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
   await payment.save();
 
   if (action === 'approve' && payment.application) {
-    const ServiceApplication = (await import('../models/ServiceApplication.js')).default;
     const application = await ServiceApplication.findById(payment.application);
     if (application?.payment) {
-      application.payment.status = 'completed';
+      application.payment.status = 'paid';
       application.payment.paidAt = new Date();
       application.payment.paymentId = payment.metadata.utr;
       await application.save();
     }
   }
 
-  res.json({ success: true, message: action === 'approve' ? 'Payment verified and marked completed' : 'Payment claim rejected', data: payment });
+  res.json({
+    success: true,
+    message: action === 'approve' ? 'Payment verified and marked completed' : 'Payment claim rejected',
+    data: payment
+  });
 });

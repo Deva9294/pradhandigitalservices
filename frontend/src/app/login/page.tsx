@@ -70,14 +70,6 @@ function LoginContent() {
     }
   }, [searchParams]);
 
-  if (!authReady || (isAuthenticated && user)) {
-    return (
-      <div className="min-h-screen bg-[#0A1B4D] flex items-center justify-center text-white text-xs">
-        {lang === "hi" ? "आपका सुरक्षित सत्र जाँचा जा रहा है..." : "Checking your secure session..."}
-      </div>
-    );
-  }
-
   // OTP Countdown timer
   useEffect(() => {
     if (otpCountdown > 0) {
@@ -85,6 +77,14 @@ function LoginContent() {
       return () => clearTimeout(timer);
     }
   }, [otpCountdown]);
+
+  if (!authReady || (isAuthenticated && user)) {
+    return (
+      <div className="min-h-screen bg-[#0A1B4D] flex items-center justify-center text-white text-xs">
+        {lang === "hi" ? "आपका सुरक्षित सत्र जाँचा जा रहा है..." : "Checking your secure session..."}
+      </div>
+    );
+  }
 
   // Handle Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {

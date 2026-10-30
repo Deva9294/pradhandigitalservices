@@ -55,8 +55,7 @@ router.use(async (req, res, next) => {
     } catch (err) {
       return res.status(503).json({
         success: false,
-        message: 'डेटाबेस कनेक्शन उपलब्ध नहीं है (Database unavailable). कृपया Render Dashboard में MONGODB_URI जोड़ें एवं MongoDB Atlas Network Access में 0.0.0.0/0 IP Whitelist करें।',
-        detail: err.message
+        message: 'डेटाबेस कनेक्शन उपलब्ध नहीं है (Database unavailable). Render Environment में MONGODB_URI और Atlas network allowlist की जाँच करें।'
       });
     }
   }
@@ -108,8 +107,11 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
   if (role === 'agent') {
     assignedRole = 'agent';
   } else if (role === 'admin' || role === 'superadmin') {
-    const validSecret = process.env.ADMIN_REGISTRATION_SECRET || 'PDS_SUPER_ADMIN_2026';
-    if (adminSecret !== validSecret) {
+    const validSecret = process.env.ADMIN_REGISTRATION_SECRET;
+    const suppliedSecret = typeof adminSecret === 'string' ? adminSecret : '';
+    const crypto = await import('crypto');
+    const valid = Boolean(validSecret && suppliedSecret && Buffer.byteLength(validSecret) === Buffer.byteLength(suppliedSecret) && crypto.timingSafeEqual(Buffer.from(validSecret), Buffer.from(suppliedSecret)));
+    if (!valid) {
       return res.status(403).json({
         success: false,
         message: 'Invalid administrative registration authorization code'
@@ -125,7 +127,7 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     phone,
     password,
     role: assignedRole,
-    isPhoneVerified: true
+    isPhoneVerified: false
   });
 
   // If registering as an agent, create agent profile
@@ -286,10 +288,11 @@ router.post('/send-otp', authRateLimiter, asyncHandler(async (req, res) => {
     });
   }
 
-  // Generate 6-digit OTP (for dev / demo, standard default 123456 or random)
-  const otp = process.env.NODE_ENV === 'production' && process.env.SMS_API_KEY
-    ? Math.floor(100000 + Math.random() * 900000).toString()
-    : '123456';
+  // Production SMS delivery is not implemented yet. Fail closed rather than issuing a known OTP.
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ success: false, message: 'OTP login is temporarily unavailable. Please use password login until SMS delivery is configured.' });
+  }
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   otpStore.set(phone, {
     otp,

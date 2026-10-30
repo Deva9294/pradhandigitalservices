@@ -101,8 +101,8 @@ export const rechargeApi = {
 export const applicationApi = {
   mine: () => api.get("/applications/my"),
   workQueue: () => api.get("/applications/work-queue"),
-  updateStatus: (id: string, status: string, remarks?: string) =>
-    api.patch(`/applications/${id}/status`, { status, remarks }),
+  updateStatus: (id: string, status: string, remarks?: string, metadata?: { referenceNumber?: string }) =>
+    api.patch(`/applications/${id}/status`, { status, remarks, ...metadata }),
   track: (applicationId: string, phone: string) =>
     api.get(`/applications/track/${encodeURIComponent(applicationId)}`, { params: { phone } }),
 };

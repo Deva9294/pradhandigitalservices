@@ -117,7 +117,7 @@ export default function PremiumPage() {
               className="w-full py-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-white dark:bg-white/10 dark:hover:bg-white/20 font-bold text-xs text-center transition flex items-center justify-center gap-2 shadow"
               label="Get Monthly Pro (₹99)"
               onSuccess={(payment) => setPaymentSuccess(`₹99 भुगतान सत्यापित। Payment ID: ${payment?.paymentId || "verified"}. सदस्यता सक्रिय करने के लिए टीम की पुष्टि बाकी है।`)}
-            />        </a>
+            />
           </div>
 
           {/* Plan 2: Annual */}
@@ -178,7 +178,7 @@ export default function PremiumPage() {
               className="w-full py-3 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-black text-xs text-center transition flex items-center justify-center gap-2 shadow-lg"
               label="Activate Annual Pro (₹499)"
               onSuccess={(payment) => setPaymentSuccess(`₹499 भुगतान सत्यापित। Payment ID: ${payment?.paymentId || "verified"}. सदस्यता सक्रिय करने के लिए टीम की पुष्टि बाकी है।`)}
-            />        </a>
+            />
           </div>
         </div>
 

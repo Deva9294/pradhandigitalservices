@@ -27,6 +27,16 @@ const iconMap = {
 
 type DepartmentRule = { match: RegExp; domain: string };
 
+const officialAssetRules: { match: RegExp; url: string }[] = [
+  // Official artwork files published in the Government of India's UX4G logo library.
+  { match: /aadhaar|uidai|आधार/i, url: "https://www.ux4g.gov.in/images/logo-download/AADHAAR/logo.png" },
+  { match: /voter|epic|election|मतदाता|निर्वाचन/i, url: "https://www.ux4g.gov.in/images/logo-download/Election-Commission-of-India/logo.png" },
+  { match: /digilocker|डिजिलॉकर/i, url: "https://www.ux4g.gov.in/images/logo-download/DigiLocker/logo.png" },
+  { match: /umang|उमंग/i, url: "https://www.ux4g.gov.in/images/logo-download/UMANG/logo.png" },
+];
+
+
+
 /**
  * Verified government/service portal hosts, ordered from specific to broad.
  * These URLs are used only to show the portal's favicon as a source cue;
@@ -142,6 +152,9 @@ function resolveDepartmentDomain(slug = "", department = "", name = ""): string 
  */
 export function getOfficialLogoUrl(slug = "", department = "", name = "", explicitSrc?: string): string | null {
   if (explicitSrc && /^https:\/\//i.test(explicitSrc)) return explicitSrc;
+  const haystack = `${slug.replace(/[-_]/g, " ")} ${department} ${name}`;
+  const officialAsset = officialAssetRules.find(({ match }) => match.test(haystack));
+  if (officialAsset) return officialAsset.url;
   const domain = resolveDepartmentDomain(slug, department, name);
   return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : null;
 }

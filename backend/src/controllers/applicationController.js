@@ -67,6 +67,28 @@ export const getMyApplications = catchAsync(async (req, res) => {
   res.json({ success: true, data: applications });
 });
 
+export const getWorkQueue = catchAsync(async (req, res) => {
+  const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+  const isOperator = ['agent', 'staff'].includes(req.user.role);
+  if (!isAdmin && !isOperator) throw new AppError('Not authorized', 403);
+
+  const filter = isAdmin
+    ? {}
+    : {
+        status: { $ne: 'draft' },
+        $or: [{ agent: req.user._id }, { agent: null }]
+      };
+
+  const applications = await ServiceApplication.find(filter)
+    .populate('user', 'name phone email')
+    .populate('service', 'name slug category')
+    .populate('agent', 'name phone')
+    .sort('-createdAt')
+    .limit(100);
+
+  res.json({ success: true, data: applications });
+});
+
 export const getApplication = catchAsync(async (req, res) => {
   const application = await ServiceApplication.findById(req.params.id)
     .populate('service')
@@ -195,16 +217,19 @@ export const deleteDocument = catchAsync(async (req, res) => {
 });
 
 export const updateStatus = catchAsync(async (req, res) => {
-  const { status, remarks } = req.body;
+  const { status, remarks, referenceNumber } = req.body;
   const application = await ServiceApplication.findById(req.params.id);
   if (!application) throw new AppError('Application not found', 404);
 
   // Only admin/agent can update status
   const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
-  const isAgent = ['agent'].includes(req.user.role);
+  const isAgent = ['agent', 'staff'].includes(req.user.role);
 
   if (!isAdmin && !isAgent) {
     throw new AppError('Not authorized', 403);
+  }
+  if (isAgent && application.agent && String(application.agent) !== String(req.user._id)) {
+    throw new AppError('This application is assigned to another operator', 403);
   }
 
   // Validate status transition
@@ -233,6 +258,11 @@ export const updateStatus = catchAsync(async (req, res) => {
 
   application.status = status;
   application.updatedBy = req.user._id;
+  if (isAgent && !application.agent) application.agent = req.user._id;
+  if (referenceNumber !== undefined) {
+    application.processingDetails = application.processingDetails || {};
+    application.processingDetails.referenceNumber = String(referenceNumber).trim();
+  }
 
   if (remarks) {
     application.adminRemarks = remarks;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Users, FileText, Wallet, TrendingUp, CheckCircle, Clock,
   MessageCircle, Settings, LogOut, BarChart3, Download,
@@ -12,7 +13,8 @@ import {
 import api from '@/lib/api';
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, isReady, isAuthenticated, isAdmin } = useAuth();
+  const router = useRouter();
   const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -26,32 +28,40 @@ export default function AdminDashboard() {
     vacancies: 0,
     forms: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAdmin) { router.replace(user?.role === 'agent' || user?.role === 'staff' ? '/agent' : '/dashboard'); return; }
     fetchDashboardData();
-  }, []);
+    const interval = window.setInterval(fetchDashboardData, 20000);
+    return () => window.clearInterval(interval);
+  }, [isReady, isAuthenticated, isAdmin, user?.role, router]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const response = await api.get('/admin/analytics');
-      setStats(response.data.data.overview);
-      setRecentActivity(response.data.data.recent?.applications || []);
+      const overview = response.data?.data?.overview;
+      setStats(overview || {
+        users: 0, agents: 0, applications: 0, pendingApplications: 0,
+        payments: 0, revenue: 0, openTickets: 0, vacancies: 0, forms: 0
+      });
+      setRecentActivity(Array.isArray(response.data?.data?.recent?.applications)
+        ? response.data.data.recent.applications
+        : []);
+      setLoadError('');
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Use mock data if API fails
+      setLoadError('Live analytics are unavailable. Displayed values are not live until the API reconnects.');
+      // Never display invented analytics when the live API is unavailable.
       setStats({
-        users: 1250,
-        agents: 45,
-        applications: 892,
-        pendingApplications: 34,
-        payments: 756,
-        revenue: 285000,
-        openTickets: 12,
-        vacancies: 156,
-        forms: 234
+        users: 0, agents: 0, applications: 0, pendingApplications: 0,
+        payments: 0, revenue: 0, openTickets: 0, vacancies: 0, forms: 0
       });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -102,6 +112,10 @@ export default function AdminDashboard() {
     );
   }
 
+  if (!isReady || !isAuthenticated || !isAdmin) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-navy-700">Checking administrator account…</div>;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -122,6 +136,12 @@ export default function AdminDashboard() {
           {lang === 'hi' ? 'लॉगआउट' : 'Logout'}
         </button>
       </div>
+
+      {loadError && (
+        <div role="status" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {loadError}
+        </div>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

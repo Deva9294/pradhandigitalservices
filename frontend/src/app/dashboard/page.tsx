@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   FileText, Clock, CheckCircle2, Wallet, 
   Settings, User, MessageSquare, ExternalLink, 
@@ -23,60 +24,22 @@ import {
 type TabType = 'requests' | 'documents' | 'deliveries' | 'payments' | 'membership';
 
 export default function CustomerDashboard() {
-  const { user } = useAuth();
+  const { user, isReady, isAuthenticated, isAdmin, isAgent, getRoleRedirect } = useAuth();
+  const router = useRouter();
   const { lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('requests');
   const [applications, setApplications] = useState<any[]>([]);
-
-  // Default sample records if backend returns empty or user is exploring
-  const sampleDashboardApps = [
-    {
-      _id: "app-101",
-      applicationNumber: "PDS-2026-8941",
-      serviceTitle: "PAN Card New Application (NSDL)",
-      category: "Identity & Documents",
-      createdAt: "2026-04-12",
-      serviceStage: "review", // submitted | review | done
-      paymentStatus: "paid", // paid | pending | refunded
-      deliveryStatus: "dispatched", // not_requested | processing | dispatched | delivered
-      trackingNumber: "EM894120392IN",
-      courierPartner: "India Post Speed Post",
-      officialAcknowledgementNo: "NSDL-892401824",
-      pdfUrl: "https://example.com/receipt.pdf",
-      applicantName: user?.name || "Rahul Sharma",
-      fee: 107
-    },
-    {
-      _id: "app-102",
-      applicationNumber: "PDS-2026-8942",
-      serviceTitle: "MP Rojgar Panjiyan (Employment Registration Renewal)",
-      category: "Government Schemes",
-      createdAt: "2026-04-15",
-      serviceStage: "done",
-      paymentStatus: "paid",
-      deliveryStatus: "not_requested",
-      officialAcknowledgementNo: "MP-ROJ-2026-9912",
-      pdfUrl: "https://example.com/rojgar_slip.pdf",
-      applicantName: user?.name || "Rahul Sharma",
-      fee: 50
-    },
-    {
-      _id: "app-103",
-      applicationNumber: "PDS-2026-8943",
-      serviceTitle: "MP Police Constable Online Form Assistance",
-      category: "Government Jobs",
-      createdAt: "2026-04-18",
-      serviceStage: "submitted",
-      paymentStatus: "paid",
-      deliveryStatus: "not_requested",
-      officialAcknowledgementNo: "Pending Vyapam Submission",
-      applicantName: user?.name || "Rahul Sharma",
-      fee: 310
-    }
-  ];
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
+    if (!isReady) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (isAdmin || isAgent) router.replace(getRoleRedirect(user?.role));
+  }, [isReady, isAuthenticated, isAdmin, isAgent, user?.role, getRoleRedirect, router]);
+
+  useEffect(() => {
+    if (!isReady || !isAuthenticated || isAdmin || isAgent) return;
     let cancelled = false;
 
     async function loadData() {
@@ -84,21 +47,51 @@ export default function CustomerDashboard() {
         setLoading(true);
         const res = await applicationApi.mine();
         if (cancelled) return;
-        if (res.data?.success && Array.isArray(res.data.applications) && res.data.applications.length > 0) {
-          setApplications(res.data.applications);
-        } else {
-          setApplications(sampleDashboardApps);
+        const records = Array.isArray(res.data?.data) ? res.data.data : [];
+        const realApplications = records.map((record: any) => {
+          const status = String(record.status || "submitted").toLowerCase();
+          const serviceStage =
+            status === "completed" ? "done" :
+            ["documents_under_review", "processing"].includes(status) ? "review" :
+            "submitted";
+          const completedDoc = Array.isArray(record.completedDocuments)
+            ? record.completedDocuments.find((doc: any) => doc?.url)
+            : null;
+          return {
+            _id: record._id,
+            applicationNumber: record.applicationId,
+            serviceTitle: record.service?.name || "Service application",
+            category: record.service?.category || "Service",
+            createdAt: record.createdAt ? new Date(record.createdAt).toLocaleDateString() : "—",
+            serviceStage,
+            paymentStatus: record.payment?.status || "pending",
+            deliveryStatus: "not_requested",
+            officialAcknowledgementNo: record.processingDetails?.referenceNumber || record.processingDetails?.applicationNumber || "",
+            pdfUrl: completedDoc?.url || "",
+            applicantName: record.applicantDetails?.name || user?.name || "",
+            fee: record.payment?.totalAmount || 0
+          };
+        });
+        setApplications(realApplications);
+        setLoadError('');
+      } catch (error) {
+        console.error("Unable to load customer applications:", error);
+        if (!cancelled) {
+          setApplications([]);
+          setLoadError('Your service history could not be reached. Please retry when the server is available.');
         }
-      } catch {
-        if (!cancelled) setApplications(sampleDashboardApps);
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
     loadData();
-    return () => { cancelled = true; };
-  }, []);
+    const interval = window.setInterval(loadData, 20000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [user?.id, isReady, isAuthenticated, isAdmin, isAgent]);
 
   // Map any backend status into the EXACT 3 specified stages:
   // Submitted -> Review / Pending -> Done
@@ -136,6 +129,10 @@ export default function CustomerDashboard() {
     deliveries: applications.filter(a => a.deliveryStatus === 'dispatched' || a.deliveryStatus === 'delivered').length,
     wallet: user?.walletBalance || 0
   };
+
+  if (!isReady || !isAuthenticated || isAdmin || isAgent) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-navy-700">Checking account…</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] dark:bg-navy-950 text-navy-900 dark:text-white flex flex-col justify-between">
@@ -301,7 +298,24 @@ export default function CustomerDashboard() {
         {/* Tab 1: Service Requests with 3-Stage Progression */}
         {activeTab === 'requests' && (
           <div className="space-y-4">
-            {applications.map((app) => {
+            {loading ? (
+              <div className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-navy-100 dark:border-white/10">
+                <RefreshCw className="w-7 h-7 animate-spin mx-auto mb-3 text-saffron-500" />
+                <p className="text-sm text-navy-600 dark:text-white/70">{lang === "hi" ? "आपके वास्तविक आवेदन लोड हो रहे हैं..." : "Loading your applications..."}</p>
+              </div>
+            ) : loadError ? (
+              <div role="status" className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-amber-300 text-amber-800 dark:text-amber-300">
+                <AlertCircle className="w-10 h-10 mx-auto mb-3" />
+                <p className="font-semibold">{loadError}</p>
+              </div>
+            ) : applications.length === 0 ? (
+              <div className="p-10 text-center rounded-2xl bg-white dark:bg-navy-900 border border-dashed border-navy-200 dark:border-white/15">
+                <FileText className="w-12 h-12 mx-auto mb-3 text-navy-300 dark:text-white/30" />
+                <h3 className="font-bold text-navy-900 dark:text-white">{lang === "hi" ? "अभी कोई सेवा आवेदन नहीं है" : "No service applications yet"}</h3>
+                <p className="text-xs mt-2 text-navy-500 dark:text-white/60">{lang === "hi" ? "आप जो सेवा चुनकर आवेदन करेंगे, वही यहाँ दिखाई देगी।" : "Services you actually apply for will appear here."}</p>
+                <Link href="/services" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-saffron-500 text-navy-950 font-bold text-xs">{lang === "hi" ? "सेवाएँ देखें" : "Explore Services"}</Link>
+              </div>
+            ) : applications.map((app) => {
               const stageMeta = getStageMeta(app.serviceStage);
               return (
                 <div

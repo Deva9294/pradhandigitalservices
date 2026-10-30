@@ -21,7 +21,7 @@ type AuthMode = "password" | "otp";
 
 function LoginContent() {
   const { lang } = useLanguage();
-  const { login } = useAuth();
+  const { login, isReady: authReady, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -51,6 +51,12 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (authReady && isAuthenticated && user) {
+      router.replace(getRoleRedirect(user.role));
+    }
+  }, [authReady, isAuthenticated, user, router]);
+
   // Read URL query params on mount (e.g. ?role=agent or ?action=register)
   useEffect(() => {
     const roleParam = searchParams.get("role")?.toLowerCase();
@@ -71,6 +77,14 @@ function LoginContent() {
       return () => clearTimeout(timer);
     }
   }, [otpCountdown]);
+
+  if (!authReady || (isAuthenticated && user)) {
+    return (
+      <div className="min-h-screen bg-[#0A1B4D] flex items-center justify-center text-white text-xs">
+        {lang === "hi" ? "आपका सुरक्षित सत्र जाँचा जा रहा है..." : "Checking your secure session..."}
+      </div>
+    );
+  }
 
   // Handle Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {

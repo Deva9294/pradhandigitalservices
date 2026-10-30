@@ -14,6 +14,9 @@ router.use(protect);
 // Create application
 router.post('/', ctrl.createApplication);
 
+// Get applications assigned to this operator (and unassigned work)
+router.get('/work-queue', ctrl.getWorkQueue);
+
 // Get my applications
 router.get('/my', ctrl.getMyApplications);
 

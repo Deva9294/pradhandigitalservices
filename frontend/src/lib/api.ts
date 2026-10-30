@@ -23,6 +23,7 @@ api.interceptors.response.use(
       if (path.startsWith("/dashboard") || path.startsWith("/admin") || path.startsWith("/agent")) {
         localStorage.removeItem("pds-token");
         localStorage.removeItem("pds-user");
+        window.dispatchEvent(new Event("pds:unauthorized"));
       }
     }
     return Promise.reject(error);
@@ -99,6 +100,9 @@ export const rechargeApi = {
 
 export const applicationApi = {
   mine: () => api.get("/applications/my"),
+  workQueue: () => api.get("/applications/work-queue"),
+  updateStatus: (id: string, status: string, remarks?: string, metadata?: { referenceNumber?: string }) =>
+    api.patch(`/applications/${id}/status`, { status, remarks, ...metadata }),
   track: (applicationId: string, phone: string) =>
     api.get(`/applications/track/${encodeURIComponent(applicationId)}`, { params: { phone } }),
 };

@@ -1,125 +1,84 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
 import { connectDB } from './db.js';
 import User from '../models/User.js';
 import AgentProfile from '../models/AgentProfile.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dotenv.config(); // fallback
+dotenv.config();
+
+const configuredUsers = [
+  {
+    name: process.env.ADMIN_DEFAULT_NAME,
+    email: process.env.ADMIN_DEFAULT_EMAIL,
+    phone: process.env.ADMIN_DEFAULT_PHONE,
+    password: process.env.ADMIN_DEFAULT_PASSWORD,
+    role: 'admin'
+  },
+  {
+    name: process.env.AGENT_DEFAULT_NAME,
+    email: process.env.AGENT_DEFAULT_EMAIL,
+    phone: process.env.AGENT_DEFAULT_PHONE,
+    password: process.env.AGENT_DEFAULT_PASSWORD,
+    role: 'agent'
+  },
+  {
+    name: process.env.CUSTOMER_DEFAULT_NAME,
+    email: process.env.CUSTOMER_DEFAULT_EMAIL,
+    phone: process.env.CUSTOMER_DEFAULT_PHONE,
+    password: process.env.CUSTOMER_DEFAULT_PASSWORD,
+    role: 'customer'
+  }
+];
 
 export async function seedUsers() {
-  console.log('--- Starting Systematic Users Seed / Bootstrap ---');
-  try {
-    await connectDB();
+  const usersToCreate = configuredUsers.filter((user) =>
+    user.name && user.email && user.phone && user.password
+  );
+  if (!usersToCreate.length) {
+    throw new Error('No bootstrap users configured. Set explicit *_DEFAULT_NAME, *_DEFAULT_EMAIL, *_DEFAULT_PHONE and *_DEFAULT_PASSWORD variables.');
+  }
 
-    const usersToSeed = [
-      {
-        name: "Ravi Pradhan",
-        email: "help@pradhandigitalservices.in",
-        phone: "9294899787",
-        rawPassword: process.env.ADMIN_DEFAULT_PASSWORD || "Admin@Password2026",
-        role: "admin",
-        isVerified: true
-      },
-      {
-        name: "PDS Kiosk Operator",
-        email: "agent@pradhandigitalservices.in",
-        phone: "9826012345",
-        rawPassword: process.env.AGENT_DEFAULT_PASSWORD || "Agent@Password2026",
-        role: "agent",
-        isVerified: true,
-        agentCode: "PDS-AGT-001",
-        shopName: "Pradhan Digital Seva Kendra, Rehti"
-      },
-      {
-        name: "Rahul Sharma",
-        email: "customer@pradhandigitalservices.in",
-        phone: "9131098765",
-        rawPassword: process.env.CUSTOMER_DEFAULT_PASSWORD || "Customer@Password2026",
-        role: "customer",
-        isVerified: true
-      }
-    ];
-
-    for (const u of usersToSeed) {
-      let existingUser = await User.findOne({ 
-        $or: [{ phone: u.phone }, { email: u.email }] 
-      }).select('+password');
-
-      if (!existingUser) {
-        console.log(`Creating default ${u.role}: ${u.name} (${u.phone})...`);
-        const created = await User.create({
-          name: u.name,
-          email: u.email,
-          phone: u.phone,
-          password: u.rawPassword,
-          role: u.role,
-          isVerified: true,
-          isPhoneVerified: true
-        });
-
-        if (u.role === 'agent') {
-          await AgentProfile.updateOne(
-            { user: created._id },
-            {
-              $set: {
-                user: created._id,
-                agentCode: u.agentCode || "PDS-AGT-001",
-                shopName: u.shopName || "Digital Seva Center",
-                businessName: "Pradhan Digital Services Kiosk",
-                kycStatus: "verified"
-              }
-            },
-            { upsert: true }
-          );
-        }
-      } else {
-        console.log(`User already exists: ${existingUser.name} (${existingUser.phone}) with role ${existingUser.role}. Updating role if needed...`);
-        existingUser.role = u.role;
-        existingUser.isVerified = true;
-        // Ensure password is set
-        if (!existingUser.password) {
-          existingUser.password = u.rawPassword;
-        }
-        await existingUser.save();
-
-        if (u.role === 'agent') {
-          await AgentProfile.updateOne(
-            { user: existingUser._id },
-            {
-              $set: {
-                user: existingUser._id,
-                agentCode: u.agentCode || "PDS-AGT-001",
-                shopName: u.shopName || "Digital Seva Center",
-                kycStatus: "verified"
-              }
-            },
-            { upsert: true }
-          );
-        }
-      }
+  await connectDB();
+  for (const userData of usersToCreate) {
+    const email = userData.email.trim().toLowerCase();
+    const phone = userData.phone.replace(/\D/g, '');
+    if (!/^\d{10}$/.test(phone) || userData.password.length < 12) {
+      throw new Error(`Invalid bootstrap configuration for role ${userData.role}; use a 10-digit phone and a password of at least 12 characters.`);
     }
 
-    console.log('✓ Systematic Users seeded / updated successfully.');
-    console.log('--- User Seed Complete ---');
-    return { success: true };
-  } catch (error) {
-    console.error('Error during users seeding:', error);
-    throw error;
+    const existing = await User.findOne({ $or: [{ phone }, { email }] });
+    if (existing) {
+      console.log(`Skipped existing account for configured role ${userData.role}; no role or password changes were made.`);
+      continue;
+    }
+
+    const created = await User.create({
+      name: userData.name.trim(),
+      email,
+      phone,
+      password: userData.password,
+      role: userData.role,
+      isVerified: false,
+      isPhoneVerified: false
+    });
+
+    if (userData.role === 'agent') {
+      await AgentProfile.create({
+        user: created._id,
+        agentCode: `PDS-AGT-${Date.now().toString().slice(-8)}`,
+        shopName: 'Pending Kiosk Verification',
+        businessName: created.name,
+        kycStatus: 'pending',
+        isVerified: false
+      });
+    }
+    console.log(`Created configured ${userData.role} account.`);
   }
+  console.log('Bootstrap user creation completed.');
 }
 
-// Standalone execution
 if (process.argv[1]?.endsWith('seedUsers.js')) {
-  seedUsers().then(() => {
-    console.log('Exiting user seed process.');
-    process.exit(0);
-  }).catch((err) => {
-    console.error('Seed process failed:', err);
+  seedUsers().then(() => process.exit(0)).catch((error) => {
+    console.error('Bootstrap user creation failed:', error.message);
     process.exit(1);
   });
 }

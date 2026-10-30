@@ -4,8 +4,8 @@ import User from '../models/User.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.slice(7).trim();
   }
 
   if (!token) {
@@ -16,44 +16,29 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const secret =
-      process.env.JWT_SECRET ||
-      (process.env.NODE_ENV !== 'production'
-        ? 'dev-only-jwt-secret-change-before-production'
-        : undefined);
+    const secret = process.env.JWT_SECRET ||
+      (process.env.NODE_ENV !== 'production' ? 'dev-only-jwt-secret-change-before-production' : undefined);
     if (!secret) {
-      return res.status(500).json({
+      return res.status(503).json({
         success: false,
         message: 'Authentication is not configured properly'
       });
     }
+
     const decoded = jwt.verify(token, secret);
     req.user = await User.findById(decoded.id);
 
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(401).json({ success: false, message: 'User not found' });
     }
-
-    // Check if user is active
     if (!req.user.isActive) {
-      return res.status(403).json({
-        success: false,
-        message: 'User account is not active'
-      });
+      return res.status(403).json({ success: false, message: 'User account is not active' });
     }
-
-    // Check if user is blocked
     if (req.user.isBlocked) {
-      return res.status(403).json({
-        success: false,
-        message: 'User account has been blocked'
-      });
+      return res.status(403).json({ success: false, message: 'User account has been blocked' });
     }
 
-    next();
+    return next();
   } catch (error) {
     return res.status(401).json({
       success: false,
@@ -62,23 +47,20 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `User role ${req.user.role} is not authorized to access this route`
-      });
-    }
-    next();
-  };
+export const authorize = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Your account is not authorized to access this route'
+    });
+  }
+  return next();
 };
 
 export const optionalAuth = async (req, res, next) => {
   let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.slice(7).trim();
   }
 
   if (!token) {
@@ -87,16 +69,17 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    const secret =
-      process.env.JWT_SECRET ||
-      (process.env.NODE_ENV !== 'production'
-        ? 'dev-only-jwt-secret-change-before-production'
-        : 'pds_production_super_secure_jwt_secret_token_key_2026');
+    const secret = process.env.JWT_SECRET ||
+      (process.env.NODE_ENV !== 'production' ? 'dev-only-jwt-secret-change-before-production' : undefined);
+    if (!secret) {
+      req.user = null;
+      return next();
+    }
     const decoded = jwt.verify(token, secret);
     req.user = await User.findById(decoded.id);
-  } catch (err) {
+  } catch (error) {
     req.user = null;
   }
 
-  next();
+  return next();
 };

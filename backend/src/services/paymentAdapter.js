@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
-import Payment from '../models/Payment.js';
 import { AppError } from '../utils/AppError.js';
 
 class PaymentAdapter {
@@ -35,7 +34,7 @@ class RazorpayAdapter extends PaymentAdapter {
         key_secret: process.env.RAZORPAY_KEY_SECRET
       });
     } else {
-      console.warn('[PDS Razorpay] Live keys not detected. Operating in high-reliability Sandbox/Simulation mode.');
+      console.warn('[PDS Razorpay] Credentials are missing. Razorpay checkout is disabled until keys are configured.');
     }
   }
 
@@ -58,16 +57,9 @@ class RazorpayAdapter extends PaymentAdapter {
         };
       }
 
-      // Authentic Sandbox Simulation
-      const sandboxOrderId = `order_sim_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-      return {
-        success: true,
-        orderId: sandboxOrderId,
-        amount: orderData.amount,
-        currency: orderData.currency || 'INR',
-        isSimulation: true
-      };
+      throw new AppError('Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the backend environment.', 503);
     } catch (error) {
+      if (error instanceof AppError) throw error;
       console.error('Razorpay order creation error:', error);
       throw new AppError('Failed to create payment order', 500);
     }
@@ -77,21 +69,17 @@ class RazorpayAdapter extends PaymentAdapter {
     try {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
 
-      if (!this.isConfigured || String(razorpay_order_id || '').startsWith('order_sim_')) {
-        return {
-          success: true,
-          paymentId: razorpay_payment_id || `pay_sim_${Date.now()}`,
-          amount: paymentData.amount || 0,
-          status: 'captured',
-          method: 'upi_simulation'
-        };
+      if (!this.isConfigured || !this.razorpay) {
+        throw new AppError('Razorpay is not configured.', 503);
       }
 
       const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
       shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
       const digest = shasum.digest('hex');
 
-      if (digest !== razorpay_signature) {
+      const expected = Buffer.from(digest, 'hex');
+      const received = /^[a-f0-9]{64}$/i.test(razorpay_signature || '') ? Buffer.from(razorpay_signature, 'hex') : Buffer.alloc(0);
+      if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
         throw new AppError('Invalid payment signature', 400);
       }
 
@@ -99,13 +87,16 @@ class RazorpayAdapter extends PaymentAdapter {
       const payment = await this.razorpay.payments.fetch(razorpay_payment_id);
       
       return {
-        success: true,
+        success: payment.status === 'captured',
         paymentId: payment.id,
+        orderId: payment.order_id,
         amount: payment.amount / 100,
+        currency: payment.currency,
         status: payment.status,
         method: payment.method
       };
     } catch (error) {
+      if (error instanceof AppError) throw error;
       console.error('Razorpay verification error:', error);
       throw new AppError('Payment verification failed', 400);
     }

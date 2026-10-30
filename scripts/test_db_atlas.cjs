@@ -1,21 +1,23 @@
 const path = require('path');
 const mongoose = require(path.join(__dirname, '..', 'backend', 'node_modules', 'mongoose'));
 
-const uri = 'mongodb+srv://ravibhalavi06121998_db_user:Deva9787@cluster0.2qidvee.mongodb.net/pradhandigitalservices?retryWrites=true&w=majority&appName=Cluster0';
+const uri = process.env.MONGODB_URI;
+if (!uri || !/^mongodb(\\+srv)?:\\/\\//i.test(uri)) {
+  console.error('Set a valid MONGODB_URI environment variable before running this diagnostic.');
+  process.exit(1);
+}
 
 async function test() {
   try {
-    console.log('Connecting to MongoDB Atlas...');
+    console.log('Connecting to MongoDB using the configured environment variable...');
     const conn = await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000, family: 4 });
-    console.log('✅ SUCCESS! Connected to Atlas Host:', conn.connection.host);
-    console.log('✅ Database Name:', conn.connection.name);
-    const collections = await conn.connection.db.listCollections().toArray();
-    console.log('✅ Collections found:', collections.map(c => c.name));
+    console.log('Connected successfully. Host:', conn.connection.host);
+    console.log('Database:', conn.connection.name);
     await mongoose.disconnect();
-    process.exit(0);
   } catch (err) {
-    console.error('❌ FAILED to connect:', err.message);
-    process.exit(1);
+    console.error('MongoDB connection test failed:', err.message);
+    process.exitCode = 1;
   }
 }
+
 test();

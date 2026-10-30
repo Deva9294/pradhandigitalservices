@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { FileDown, Shield, CreditCard, Wallet, CheckCircle } from "lucide-react";
+import { FileDown, Shield, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { offlineForms } from "@/data/offlineForms";
@@ -29,11 +29,7 @@ export default function FormDetailPage() {
     );
   }
 
-  const handlePayment = () => {
-    if (!isAuthenticated) {
-      window.location.href = `/login?redirect=/offline-forms/${form.slug}`;
-    }
-  };
+
 
   if (purchased) {
     return (

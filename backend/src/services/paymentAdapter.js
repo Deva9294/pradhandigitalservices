@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
-import Payment from '../models/Payment.js';
 import { AppError } from '../utils/AppError.js';
 
 class PaymentAdapter {
@@ -77,7 +76,9 @@ class RazorpayAdapter extends PaymentAdapter {
       shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
       const digest = shasum.digest('hex');
 
-      if (digest !== razorpay_signature) {
+      const expected = Buffer.from(digest, 'hex');
+      const received = /^[a-f0-9]{64}$/i.test(razorpay_signature || '') ? Buffer.from(razorpay_signature, 'hex') : Buffer.alloc(0);
+      if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
         throw new AppError('Invalid payment signature', 400);
       }
 

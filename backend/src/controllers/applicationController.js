@@ -257,6 +257,7 @@ export const updateStatus = catchAsync(async (req, res) => {
   application.updatedBy = req.user._id;
   if (isAgent && !application.agent) application.agent = req.user._id;
   if (referenceNumber !== undefined) {
+    application.processingDetails = application.processingDetails || {};
     application.processingDetails.referenceNumber = String(referenceNumber).trim();
   }
 

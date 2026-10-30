@@ -200,6 +200,7 @@ export const verifyPayment = catchAsync(async (req, res) => {
     throw new AppError('Not authorized to verify this payment', 403);
   }
   if (payment.status === 'completed') {
+    await markPaymentCompleted(payment, payment.gatewayPaymentId || payment.gatewayTransactionId);
     return res.json({ success: true, message: 'Payment already verified', data: payment });
   }
   if (gateway !== 'razorpay' || payment.gateway !== 'razorpay') {

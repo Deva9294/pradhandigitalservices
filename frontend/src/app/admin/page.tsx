@@ -26,7 +26,8 @@ export default function AdminDashboard() {
     vacancies: 0,
     forms: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -46,8 +47,10 @@ export default function AdminDashboard() {
       setRecentActivity(Array.isArray(response.data?.data?.recent?.applications)
         ? response.data.data.recent.applications
         : []);
+      setLoadError('');
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setLoadError('Live analytics are unavailable. Displayed values are not live until the API reconnects.');
       // Never display invented analytics when the live API is unavailable.
       setStats({
         users: 0, agents: 0, applications: 0, pendingApplications: 0,
@@ -124,6 +127,12 @@ export default function AdminDashboard() {
           {lang === 'hi' ? 'लॉगआउट' : 'Logout'}
         </button>
       </div>
+
+      {loadError && (
+        <div role="status" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {loadError}
+        </div>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

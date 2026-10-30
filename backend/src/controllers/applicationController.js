@@ -214,7 +214,7 @@ export const deleteDocument = catchAsync(async (req, res) => {
 });
 
 export const updateStatus = catchAsync(async (req, res) => {
-  const { status, remarks } = req.body;
+  const { status, remarks, referenceNumber } = req.body;
   const application = await ServiceApplication.findById(req.params.id);
   if (!application) throw new AppError('Application not found', 404);
 
@@ -256,6 +256,9 @@ export const updateStatus = catchAsync(async (req, res) => {
   application.status = status;
   application.updatedBy = req.user._id;
   if (isAgent && !application.agent) application.agent = req.user._id;
+  if (referenceNumber !== undefined) {
+    application.processingDetails.referenceNumber = String(referenceNumber).trim();
+  }
 
   if (remarks) {
     application.adminRemarks = remarks;

@@ -592,7 +592,6 @@ function LoginContent() {
                 </div>
               )}
 
-              {activeRole !== "admin" && <div className="flex justify-end -mt-2"><Link href="/forgot-password" className="rounded-lg px-2 py-1 text-[11px] font-bold text-[#FFB477] hover:bg-white/5 hover:text-white transition">पासवर्ड भूल गए? (Forgot password)</Link></div>}
               <button
                 type="submit"
                 disabled={loading}
@@ -671,6 +670,7 @@ function LoginContent() {
                 </div>
               </div>
 
+              {activeRole !== "admin" && <div className="flex justify-end -mt-2"><Link href="/forgot-password" className="rounded-lg px-2 py-1 text-[11px] font-bold text-[#FFB477] hover:bg-white/5 hover:text-white transition">पासवर्ड भूल गए? (Forgot password)</Link></div>}
               <button
                 type="submit"
                 disabled={loading}

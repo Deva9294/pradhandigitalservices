@@ -336,7 +336,7 @@ export default function RechargePage() {
               {/* Trust Strip */}
               <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-navy-950/50 rounded-xl border border-white/5 text-xs text-saffron-200/80">
                 <span className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-saffron-400" /> {lang === "hi" ? "तत्काल ऑपरेटर कन्फर्मेशन" : "Instant Confirmation"}
+                  <Zap className="w-3.5 h-3.5 text-saffron-400" /> {lang === "hi" ? "Razorpay payment confirmation" : "Razorpay Payment Confirmation"}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" /> {lang === "hi" ? "100% सुरक्षित भुगतान" : "100% Encrypted"}

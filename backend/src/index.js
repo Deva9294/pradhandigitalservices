@@ -38,26 +38,55 @@ const PORT = process.env.PORT || process.env.BACKEND_PORT || 8000;
 
 app.set('trust proxy', 1);
 
-connectDB().then(async () => {
+const startupReady = connectDB().then(async () => {
+  const Service = (await import('./models/Service.js')).default;
+  const count = await Service.countDocuments();
+
+  // Keep the original first-time setup for a nearly empty database.
+  if (count < 20) {
+    console.log('🔄 Initializing Master Service Catalogue...');
+    const { seedCatalogue } = await import('./utils/seedCatalogue.js');
+    await seedCatalogue();
+  }
+
+  // The public frontend catalogue can contain more services than an older
+  // production database. Add only missing slugs; never overwrite admin edits.
+  const { MASTER_SERVICES } = await import('./data/masterCatalogue.js');
+  const existingSlugs = new Set(await Service.distinct('slug'));
+  const missingServices = MASTER_SERVICES.filter((service) => !existingSlugs.has(service.slug));
+
+  if (missingServices.length > 0) {
+    console.log(`🔄 Adding ${missingServices.length} missing master services...`);
+    await Service.bulkWrite(missingServices.map((service) => {
+      const totalFee = Math.round(((Number(service.governmentFee) || 0) + (Number(service.serviceCharge ?? 50) || 0)) * 100) / 100;
+      return {
+        updateOne: {
+          filter: { slug: service.slug },
+          update: {
+            $setOnInsert: {
+              ...service,
+              totalFee,
+              price: totalFee,
+              isActive: service.isActive !== false
+            }
+          },
+          upsert: true
+        }
+      };
+    }));
+    console.log('✓ Missing master service records added without changing existing services.');
+  } else {
+    console.log('✓ Master service catalogue is already synchronized.');
+  }
+
   try {
-    const Service = (await import('./models/Service.js')).default;
-    const count = await Service.countDocuments();
-    if (count < 20) {
-      console.log('🔄 Initializing Master Service Catalogue...');
-      const { seedCatalogue } = await import('./utils/seedCatalogue.js');
-      await seedCatalogue();
-    }
-    try {
-      const { seedVacancies } = await import('./utils/seedVacancies.js');
-      await seedVacancies();
-    } catch (vErr) {
-      console.error('Vacancies sync notice:', vErr.message);
-    }
-  } catch (err) {
-    console.error('Catalogue initialization notice:', err.message);
+    const { seedVacancies } = await import('./utils/seedVacancies.js');
+    await seedVacancies();
+  } catch (vErr) {
+    console.error('Vacancies sync notice:', vErr.message);
   }
 }).catch((error) => {
-  console.error('Required MongoDB connection failed; API startup aborted:', error.message);
+  console.error('Required MongoDB/catalogue initialization failed:', error.message);
   process.exit(1);
 });
 
@@ -97,6 +126,14 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(['/api/services', '/api/applications'], async (req, res, next) => {
+  try {
+    await startupReady;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use('/uploads', express.static('uploads'));
 

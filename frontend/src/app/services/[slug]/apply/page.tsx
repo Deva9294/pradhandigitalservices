@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Script from "next/script";
 import Link from "next/link";
-import { ArrowLeft, CreditCard, FileText, Loader2, ShieldCheck, UploadCloud } from "lucide-react";
-import api, { applicationApi, paymentApi, uploadApi } from "@/lib/api";
+import { ArrowLeft, FileText, Loader2, ShieldCheck, UploadCloud } from "lucide-react";
+import api, { applicationApi, uploadApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import DirectUpiPayButton from "@/components/payment/RazorpayPayButton";
 
 declare global {
   interface Window {
@@ -35,7 +35,6 @@ export default function ServiceApplyPage() {
   const [service, setService] = useState<ServiceRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [scriptReady, setScriptReady] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -49,6 +48,7 @@ export default function ServiceApplyPage() {
     address: ""
   });
   const [extraDetails, setExtraDetails] = useState("");
+  const [pendingApplicationId, setPendingApplicationId] = useState("");
   const total = useMemo(() => {
     if (!service) return 0;
     return Math.round(((Number(service.governmentFee) || 0) + (Number(service.serviceCharge ?? 50) || 0)) * 100) / 100;
@@ -100,10 +100,6 @@ export default function ServiceApplyPage() {
     setError("");
     setInfo("");
     if (!service) return;
-    if (!window.Razorpay || !scriptReady) {
-      setError("Razorpay checkout अभी load नहीं हुआ है। थोड़ी देर बाद फिर कोशिश करें।");
-      return;
-    }
     if (files.length > 5) {
       setError("एक बार में अधिकतम 5 दस्तावेज़ अपलोड कर सकते हैं।");
       return;
@@ -142,44 +138,8 @@ export default function ServiceApplyPage() {
         })));
       }
 
-      const orderResponse = await paymentApi.createOrder({
-        amount: total,
-        purpose: `${service.name} application`,
-        type: "service_application",
-        applicationId: application._id
-      });
-      const order = orderResponse.data?.data;
-      if (!order?.orderId || !order?.key || !order?.paymentId) {
-        throw new Error("Razorpay order response अधूरा है।");
-      }
-
-      const checkout = new window.Razorpay({
-        key: order.key,
-        amount: order.amount,
-        currency: order.currency || "INR",
-        name: "Pradhan Digital Services",
-        description: `${service.name} application fee`,
-        order_id: order.orderId,
-        prefill: { name: applicant.name, email: applicant.email, contact: applicant.phone },
-        theme: { color: "#0A1B4D" },
-        handler: async (result: Record<string, string>) => {
-          try {
-            await paymentApi.verifyPayment({ paymentId: order.paymentId, gateway: "razorpay", ...result });
-            setInfo("भुगतान सत्यापित हो गया है। आपका आवेदन सफलतापूर्वक जमा हो गया है।");
-            router.replace("/dashboard");
-          } catch (e: any) {
-            setError(e?.response?.data?.message || "Payment confirmation अभी नहीं मिली। Payment History जाँचें; दोबारा भुगतान न करें।");
-            setBusy(false);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setBusy(false);
-            setInfo("Payment window बंद हुई। आपका आवेदन draft में सुरक्षित है; भुगतान पूरा करने के लिए दोबारा कोशिश कर सकते हैं।");
-          }
-        }
-      });
-      checkout.open();
+      setInfo("Application draft तैयार है। नीचे Direct UPI QR से भुगतान करें और UTR जमा करें। बैंक में राशि verify होने पर Admin आवेदन को submitted करेगा।");
+      setPendingApplicationId(application._id);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "आवेदन जमा नहीं हो पाया।");
       setBusy(false);
@@ -192,14 +152,13 @@ export default function ServiceApplyPage() {
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" onLoad={() => setScriptReady(true)} onError={() => setError("Razorpay Checkout load नहीं हो पाया।")} />
       <main className="min-h-screen bg-slate-50 dark:bg-navy-950 px-4 py-8">
         <div className="mx-auto max-w-3xl space-y-5">
           <Link href={`/services/${slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-navy-700 dark:text-white"><ArrowLeft className="h-4 w-4" /> सेवा विवरण पर वापस</Link>
           <header className="rounded-3xl bg-[#0A1B4D] p-6 text-white">
             <div className="flex items-center gap-2 text-xs font-bold text-orange-300"><ShieldCheck className="h-4 w-4" /> सुरक्षित ऑनलाइन आवेदन</div>
             <h1 className="mt-2 text-2xl font-black">{service?.nameHi || service?.name || "Service Application"}</h1>
-            <p className="mt-1 text-sm text-blue-100">अपनी जानकारी भरें, जरूरी दस्तावेज़ जोड़ें और Razorpay से भुगतान करके आवेदन जमा करें।</p>
+            <p className="mt-1 text-sm text-blue-100">अपनी जानकारी भरें, जरूरी दस्तावेज़ जोड़ें और Direct UPI से भुगतान करके आवेदन जमा करें।</p>
           </header>
 
           {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
@@ -252,13 +211,17 @@ export default function ServiceApplyPage() {
 
             <section className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-navy-950 sm:flex-row sm:items-center sm:justify-between">
               <div><div className="text-xs font-semibold text-slate-500">कुल देय राशि</div><div className="text-2xl font-black text-navy-900 dark:text-white">₹{total.toFixed(2)}</div><p className="text-[11px] text-slate-500">सरकारी शुल्क ₹{Number(service?.governmentFee || 0)} + सेवा शुल्क ₹{Number(service?.serviceCharge ?? 50)}</p></div>
-              <div className="text-xs text-slate-500">Razorpay द्वारा UPI / Card / Netbanking</div>
+              <div className="text-xs text-slate-500">Direct UPI QR • Admin bank verification</div>
             </section>
 
-            <button type="submit" disabled={busy || !scriptReady || !service || total < 1} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-extrabold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
-              {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> भुगतान प्रक्रिया जारी है…</> : <><CreditCard className="h-5 w-5" /> {scriptReady ? "Razorpay से भुगतान करें और आवेदन जमा करें" : "Secure payment load हो रहा है…"}</>}
+            <button type="submit" disabled={busy || !service || total < 1} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-extrabold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
+              {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> आवेदन तैयार हो रहा है…</> : "आवेदन विवरण सुरक्षित करें और UPI भुगतान जारी रखें"}
             </button>
-            <p className="text-center text-[11px] text-slate-500">आपका आवेदन भुगतान सत्यापित होने के बाद ही Customer Dashboard और Agent/Admin Work Queue में submitted दिखाई देगा।</p>
+            <p className="text-center text-[11px] text-slate-500">भुगतान सत्यापित होने तक आवेदन draft रहेगा।</p>
+            {pendingApplicationId && <div className="rounded-xl border p-4">
+              <p className="mb-3 text-sm font-bold text-navy-900 dark:text-white">Direct UPI Payment</p>
+              <DirectUpiPayButton amount={total} purpose={`${service.name} application`} type="service_application" applicationId={pendingApplicationId} className="w-full rounded-xl bg-orange-500 p-3 font-bold text-white" onSuccess={()=>{setInfo("आपका भुगतान Admin द्वारा बैंक में सत्यापित हो गया है। आवेदन Dashboard में उपलब्ध है।");router.replace("/dashboard");}}/>
+            </div>}
           </form>
         </div>
       </main>

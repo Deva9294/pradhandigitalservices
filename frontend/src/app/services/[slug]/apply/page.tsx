@@ -8,12 +8,6 @@ import api, { applicationApi, uploadApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import DirectUpiPayButton from "@/components/payment/RazorpayPayButton";
 
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, any>) => { open: () => void };
-  }
-}
-
 type ServiceRecord = {
   _id: string;
   name: string;
@@ -140,6 +134,7 @@ export default function ServiceApplyPage() {
 
       setInfo("Application draft तैयार है। नीचे Direct UPI QR से भुगतान करें और UTR जमा करें। बैंक में राशि verify होने पर Admin आवेदन को submitted करेगा।");
       setPendingApplicationId(application._id);
+      setBusy(false);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "आवेदन जमा नहीं हो पाया।");
       setBusy(false);
@@ -214,7 +209,7 @@ export default function ServiceApplyPage() {
               <div className="text-xs text-slate-500">Direct UPI QR • Admin bank verification</div>
             </section>
 
-            <button type="submit" disabled={busy || !service || total < 1} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-extrabold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={busy || !!pendingApplicationId || !service || total < 1} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-4 font-extrabold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
               {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> आवेदन तैयार हो रहा है…</> : "आवेदन विवरण सुरक्षित करें और UPI भुगतान जारी रखें"}
             </button>
             <p className="text-center text-[11px] text-slate-500">भुगतान सत्यापित होने तक आवेदन draft रहेगा।</p>

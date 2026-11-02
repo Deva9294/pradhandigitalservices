@@ -46,6 +46,9 @@ export const paymentApi = {
     api.post("/payments/create-order", payload),
   verifyPayment: (data: Record<string, string>) => api.post("/payments/verify", data),
   getMyPayments: () => api.get("/payments/my"),
+  createUpiPayment: (payload: { amount: number; purpose: string; type?: string; applicationId?: string; metadata?: Record<string, string> }) => api.post("/payments/upi/create", payload),
+  submitUpiUtr: (payload: { paymentId: string; utr: string }) => api.post("/payments/upi/submit-utr", payload),
+  getMyUpiPayments: () => api.get("/payments/upi/my"),
 };
 
 export const uploadApi = {

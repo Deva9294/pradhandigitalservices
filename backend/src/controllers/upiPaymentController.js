@@ -37,7 +37,15 @@ async function validateApplicationPayment(applicationId, user, amount) {
 
 export const createUpiPayment = catchAsync(async (req, res) => {
   const amount = Number(req.body.amount);
-  const { purpose = 'Pradhan Digital Services payment', applicationId } = req.body;
+  const { purpose = 'Pradhan Digital Services payment', applicationId, metadata = {} } = req.body;
+  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
+  const paymentType = allowedTypes.includes(req.body.type) ? req.body.type : 'service_application';
+  if (paymentType === 'membership') {
+    const plan = String(metadata.plan || '');
+    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
+    if (!expected || Math.round(amount * 100) !== expected * 100) throw new AppError('Membership amount does not match selected plan.', 400);
+  }
+  if (paymentType === 'form_download' && Math.round(amount * 100) !== 50000) throw new AppError('Form download amount does not match catalogue price.', 400);
   if (!Number.isFinite(amount) || amount < 1 || amount > 500000) {
     throw new AppError('Amount must be between ₹1 and ₹5,00,000', 400);
   }
@@ -47,7 +55,7 @@ export const createUpiPayment = catchAsync(async (req, res) => {
   const payment = await Payment.create({
     user: application ? application.user : req.user._id,
     application: application?._id,
-    type: 'service_application',
+    type: paymentType,
     amount,
     currency: 'INR',
     feeBreakdown: { governmentFee: 0, portalFee: amount, gatewayFee: 0, tax: 0, discount: 0, total: amount },
@@ -58,6 +66,7 @@ export const createUpiPayment = catchAsync(async (req, res) => {
       paymentMethod: 'direct_upi_qr',
       merchantUpiId,
       purpose: String(purpose).slice(0, 160),
+      ...(metadata && typeof metadata === 'object' ? metadata : {}),
       utr: null,
       utrSubmittedAt: null,
       verificationStatus: 'awaiting_payment'
@@ -170,6 +179,17 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
       application.payment.status = 'paid';
       application.payment.paidAt = new Date();
       application.payment.paymentId = payment.metadata.utr;
+      if (application.status === 'draft') {
+        application.status = 'submitted';
+        application.processingDetails = application.processingDetails || {};
+        application.processingDetails.submittedAt = new Date();
+        application.statusHistory.push({
+          status: 'submitted',
+          remarks: 'Direct UPI payment verified by admin after bank credit confirmation.',
+          changedBy: application.user,
+          changedAt: new Date()
+        });
+      }
       await application.save();
     }
   }

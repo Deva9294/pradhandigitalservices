@@ -408,6 +408,7 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
 // Send a time-limited password reset link to the account email.
 router.post('/forgot-password', authRateLimiter, asyncHandler(async (req, res) => {
   const email = typeof req.body.email === 'string' ? req.body.email.toLowerCase().trim() : '';
+  const requestedRole = req.body.role === 'admin' ? 'admin' : 'customer';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ success: false, message: 'कृपया वैध ईमेल आईडी दर्ज करें।' });
   }
@@ -418,14 +419,15 @@ router.post('/forgot-password', authRateLimiter, asyncHandler(async (req, res) =
   if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom) {
     return res.status(503).json({ success: false, message: 'Password reset email is not configured yet. Please contact support or configure SMTP settings.' });
   }
-  const user = await User.findOne({ email, isActive: { $ne: false } });
+  const roleFilter = requestedRole === 'admin' ? { role: { $in: ['admin', 'superadmin'] } } : { role: { $nin: ['admin', 'superadmin'] } };
+  const user = await User.findOne({ email, isActive: { $ne: false }, ...roleFilter });
   if (user) {
     const rawToken = crypto.randomBytes(32).toString('hex');
     user.passwordResetTokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
     await user.save();
     const frontendUrl = (process.env.FRONTEND_URL || 'https://pradhandigitalservices.in').split(',')[0].trim().replace(/\/$/, '');
-    const resetUrl = frontendUrl + '/forgot-password?token=' + encodeURIComponent(rawToken);
+    const resetUrl = frontendUrl + '/forgot-password?token=' + encodeURIComponent(rawToken) + (requestedRole === 'admin' ? '&role=admin' : '');
     const port = Number(process.env.SMTP_PORT || 587);
     const transporter = nodemailer.createTransport({ host: smtpHost, port, secure: port === 465, auth: { user: smtpUser, pass: smtpPass } });
     try {
@@ -456,7 +458,9 @@ router.post('/reset-password', authRateLimiter, asyncHandler(async (req, res) =>
     return res.status(400).json({ success: false, message: 'Reset link और कम से कम 8 अक्षरों का पासवर्ड आवश्यक है।' });
   }
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  const user = await User.findOne({ passwordResetTokenHash: tokenHash, passwordResetExpires: { $gt: new Date() }, isActive: { $ne: false } }).select('+passwordResetTokenHash');
+  const requestedRole = req.body.role === 'admin' ? 'admin' : 'customer';
+  const roleFilter = requestedRole === 'admin' ? { role: { $in: ['admin', 'superadmin'] } } : { role: { $nin: ['admin', 'superadmin'] } };
+  const user = await User.findOne({ passwordResetTokenHash: tokenHash, passwordResetExpires: { $gt: new Date() }, isActive: { $ne: false }, ...roleFilter }).select('+passwordResetTokenHash');
   if (!user) {
     return res.status(400).json({ success: false, message: 'यह रीसेट लिंक अमान्य या समाप्त हो चुका है। नया लिंक प्राप्त करें।' });
   }

@@ -53,7 +53,7 @@ function ForgotPasswordContent() {
             {!token ? (
               <div>
                 <label htmlFor="reset-email" className="mb-1.5 block text-xs font-bold text-[#FFD0A8]">रजिस्टर्ड ईमेल आईडी (Registered email)</label>
-                <div className="relative"><Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FFB477]" /><input id="reset-email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Admin का registered email" className="w-full rounded-xl border border-white/15 bg-[#071333]/80 py-3 pl-10 pr-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FF7A00]/30" /></div>
+                <div className="relative"><Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FFB477]" /><input id="reset-email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={isAdminRecovery ? "Admin का registered email" : "name@example.com"} className="w-full rounded-xl border border-white/15 bg-[#071333]/80 py-3 pl-10 pr-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FF7A00]/30" /></div>
                 <p className="mt-2 text-[11px] leading-relaxed text-white/50">{isAdminRecovery ? "केवल Admin या Super Admin खाते से जुड़ा ईमेल स्वीकार होगा।" : "यह सुविधा उसी ईमेल के लिए काम करेगी जो आपके खाते में पहले से जुड़ा है।"}</p>
               </div>
             ) : (

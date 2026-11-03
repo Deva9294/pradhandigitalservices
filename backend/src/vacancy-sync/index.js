@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 
+const TRUSTED_VACANCY_AGGREGATORS = ['indgovtjobs.in'];
+
 const APPROVED_DOMAINS = [
   'esb.mp.gov.in',
   'mppsc.mp.gov.in',
@@ -10,6 +12,11 @@ const APPROVED_DOMAINS = [
 export function normalizeDomain(value) {
   if (!value) return '';
   return String(value).replace(/^https?:\/\//i, '').replace(/\/.*$/, '').split('?')[0].toLowerCase();
+}
+
+export function isTrustedVacancyAggregatorDomain(domain) {
+  const normalized = normalizeDomain(domain);
+  return TRUSTED_VACANCY_AGGREGATORS.some((allowed) => normalized === allowed || normalized.endsWith(`.${allowed}`));
 }
 
 export function isApprovedDomain(domain) {
@@ -121,8 +128,8 @@ export function validateVacancy(record = {}) {
   if (!title) errors.push('Title is required.');
   if (!department) errors.push('Department or organization is required.');
   if (!notificationUrl) errors.push('Official notification or official source page is required.');
-  if (sourceDomain && !isApprovedDomain(sourceDomain)) {
-    errors.push(`Source domain is not on the approved official domain allowlist: ${sourceDomain}`);
+  if (sourceDomain && !isApprovedDomain(sourceDomain) && !isTrustedVacancyAggregatorDomain(sourceDomain)) {
+    errors.push(`Source domain is not on the approved official or trusted aggregator allowlist: ${sourceDomain}`);
   }
   if (notificationUrl && !notificationUrl.startsWith('https://')) {
     errors.push('Official URLs must use HTTPS where supported.');

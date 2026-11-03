@@ -94,3 +94,24 @@ services:
         value: https://pradhan-frontend-4g39.onrender.com
       - key: NEXT_PUBLIC_API_URL
         value: https://pradhan-backend.onrender.com/api
+
+  # 3. Scheduled RSS vacancy importer (runs every 6 hours)
+  - type: cron
+    name: pradhan-vacancy-rss-sync
+    env: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run cron:vacancies
+    schedule: "0 */6 * * *"
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: VACANCY_FEED_URLS
+        sync: false
+      - key: AUTO_PUBLISH_VERIFIED
+        value: "true"

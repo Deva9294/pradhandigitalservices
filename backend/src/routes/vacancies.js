@@ -5,6 +5,7 @@ import ServiceApplication from '../models/ServiceApplication.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { isCronAuthorized } from '../vacancy-sync/index.js';
+import { syncRssVacancies } from '../vacancy-sync/rss.js';
 
 const router = express.Router();
 
@@ -557,8 +558,9 @@ router.all('/sync', asyncHandler(async (req, res) => {
  */
 router.post('/sync/manual', protect, authorize('admin'), asyncHandler(async (req, res) => {
   const syncModule = await import('../vacancy-sync/sync.js');
-  const summary = await syncModule.syncAllVacancies();
-  res.json({ success: true, summary });
+  const catalogue = await syncModule.syncAllVacancies();
+  const rss = await syncRssVacancies();
+  res.json({ success: true, summary: { catalogue, rss } });
 }));
 
 /**
@@ -571,9 +573,10 @@ router.post('/cron', asyncHandler(async (req, res) => {
   }
 
   const syncModule = await import('../vacancy-sync/sync.js');
-  const summary = await syncModule.syncAllVacancies();
+  const catalogue = await syncModule.syncAllVacancies();
+  const rss = await syncRssVacancies();
 
-  res.json({ success: true, summary });
+  res.json({ success: true, summary: { catalogue, rss } });
 }));
 
 export default router;

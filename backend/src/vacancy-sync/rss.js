@@ -1,8 +1,7 @@
 import crypto from 'node:crypto';
 import Parser from 'rss-parser';
 import Vacancy from '../models/Vacancy.js';
-import { connectDB } from '../utils/db.js';
-import { isApprovedDomain, normalizeDomain, normalizeText, normalizeUrl, validateVacancy } from '../vacancy-sync/index.js';
+import { isApprovedDomain, isTrustedVacancyAggregatorDomain, normalizeDomain, normalizeText, normalizeUrl, validateVacancy } from '../vacancy-sync/index.js';
 
 const parser = new Parser({
   timeout: 15000,
@@ -10,6 +9,9 @@ const parser = new Parser({
   customFields: { item: [['deadline', 'deadline'], ['lastDate', 'lastDate'], ['department', 'department']] }
 });
 const MAX_ITEMS_PER_FEED = 100;
+const RECRUITMENT_TITLE = /\b(recruitment|recruit|vacanc(?:y|ies)|jobs?|career|engagement|apprentice|walk[ -]?in|hiring|applications? invited)\b/i;
+const EXCLUDED_TITLE = /\b(result|merit list|admit card|answer key|appointment order|joining letter|interview result)\b/i;
+const MP_MARKER = /\b(madhya pradesh|madhya-pradesh|mpesb|mppsc|mp online|mponline)\b/i;
 
 function safeSlug(title, sourceKey) {
   const base = normalizeText(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90) || 'vacancy';
@@ -18,6 +20,16 @@ function safeSlug(title, sourceKey) {
 
 function getFeedUrls() {
   return (process.env.VACANCY_FEED_URLS || '').split(/[;,\n]/).map(x => x.trim()).filter(Boolean);
+}
+
+function classifyFeedItem(title, description, feedDomain) {
+  const isMP = MP_MARKER.test(`${title} ${description}`);
+  const isOfficialCentral = feedDomain === 'incometaxindia.gov.in';
+  return {
+    vacancyType: isMP ? 'state' : 'central',
+    locationScope: isMP ? 'MP' : 'All India',
+    state: isMP ? 'Madhya Pradesh' : (isOfficialCentral ? 'All India' : 'All India')
+  };
 }
 
 export async function syncRssVacancies() {
@@ -32,12 +44,15 @@ export async function syncRssVacancies() {
     let feedDomain = '';
     try {
       const parsedUrl = new URL(feedUrl);
-      if (parsedUrl.protocol !== 'https:' || !isApprovedDomain(parsedUrl.hostname)) {
+      feedDomain = normalizeDomain(parsedUrl.hostname);
+      const trustedFeed = parsedUrl.protocol === 'https:' &&
+        (isApprovedDomain(feedDomain) || isTrustedVacancyAggregatorDomain(feedDomain));
+      if (!trustedFeed) {
         summary.skipped++;
-        summary.errors.push(`Skipped non-official or non-HTTPS feed: ${parsedUrl.hostname}`);
+        summary.errors.push(`Skipped untrusted or non-HTTPS feed: ${feedDomain || parsedUrl.hostname}`);
         continue;
       }
-      feedDomain = normalizeDomain(parsedUrl.hostname);
+
       const response = await fetch(parsedUrl, {
         headers: { 'User-Agent': 'PradhanDigitalServices-VacancyBot/1.0', Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' },
         signal: AbortSignal.timeout(20000)
@@ -52,29 +67,32 @@ export async function syncRssVacancies() {
         try {
           const title = normalizeText(item.title || '');
           const link = normalizeUrl(item.link || item.guid || '');
+          const description = normalizeText(item.contentSnippet || item.summary || item.content || '').slice(0, 1200);
           if (!title || !link || !link.startsWith('https://')) { summary.skipped++; continue; }
+          if (!RECRUITMENT_TITLE.test(title) || EXCLUDED_TITLE.test(title)) { summary.skipped++; continue; }
+
           const linkDomain = normalizeDomain(new URL(link).hostname);
-          if (!isApprovedDomain(linkDomain)) { summary.skipped++; continue; }
-          if (/\b(result|merit list|admit card|answer key|appointment order)\b/i.test(title)) { summary.skipped++; continue; }
+          const sourceAllowed = isApprovedDomain(linkDomain) ||
+            (isTrustedVacancyAggregatorDomain(feedDomain) && linkDomain === feedDomain);
+          if (!sourceAllowed) { summary.skipped++; continue; }
 
           const sourceKey = link.replace(/\/$/, '');
           const department = normalizeText(item.department || feed.title || feedDomain).slice(0, 160);
           const published = item.isoDate || item.pubDate || item.date || null;
           const publishedAt = published && !Number.isNaN(new Date(published).getTime()) ? new Date(published) : new Date();
+          const classification = classifyFeedItem(title, description, feedDomain);
           const record = {
             title,
             slug: safeSlug(title, sourceKey),
-            shortDescription: normalizeText(item.contentSnippet || item.summary || item.content || '').slice(0, 1200),
+            shortDescription: description,
             department,
             organization: department,
             recruitingAuthority: department,
-            vacancyType: 'state',
-            locationScope: 'MP',
-            state: 'Madhya Pradesh',
+            ...classification,
             category: 'government',
             qualificationLevel: 'Other',
             sourceName: normalizeText(feed.title || feedDomain).slice(0, 120),
-            sourceDomain: feedDomain,
+            sourceDomain: linkDomain,
             sourcePageUrl: link,
             notificationUrl: link,
             applyUrl: '',
@@ -83,18 +101,23 @@ export async function syncRssVacancies() {
             firstSeenAt: new Date(),
             lastSeenAt: new Date(),
             lastCheckedAt: new Date(),
-            confidenceScore: 0.75,
-            isActive: true,
+            confidenceScore: 0.45,
+            isActive: false,
             isNewlyAdded: true,
-            status: 'active',
-            verificationStatus: 'auto_verified',
-            syncMetadata: { sourceName: feed.title || feedDomain, sourceDomain: feedDomain, sourcePageUrl: link, sourceKey, parserVersion: 'rss-parser', lastSyncAt: new Date() }
+            status: 'pending',
+            verificationStatus: 'pending_review',
+            syncMetadata: { sourceName: feed.title || feedDomain, sourceDomain: linkDomain, feedDomain, sourcePageUrl: link, sourceKey, parserVersion: 'rss-parser', lastSyncAt: new Date() }
           };
           const validation = validateVacancy(record);
-          if (!validation.valid) { summary.skipped++; continue; }
+          if (!validation.valid) {
+            summary.skipped++;
+            summary.errors.push(`Rejected ${title}: ${validation.errors.join(' ')}`);
+            continue;
+          }
 
           const existing = await Vacancy.findOne({ sourceKey }).select('_id title').lean();
           if (existing) {
+            // A feed refresh must never approve or reactivate a record; only update source metadata.
             await Vacancy.updateOne({ _id: existing._id }, { $set: {
               shortDescription: record.shortDescription,
               sourceName: record.sourceName,

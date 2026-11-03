@@ -74,8 +74,10 @@ export default function AdminVacanciesPage() {
       setSyncMessage(null);
       const res = await vacancyApi.manualSync();
       if (res.data?.success) {
-        setSyncMessage('Official source sync completed successfully!');
-        loadVacancies();
+        const rss = res.data?.summary?.rss;
+        const rssMessage = rss ? `RSS feeds: ${rss.feedsRead}/${rss.feedsConfigured} read, ${rss.inserted} new jobs, ${rss.updated} refreshed, ${rss.skipped} skipped.` : 'RSS sync completed.';
+        setSyncMessage(`Official catalogue sync completed. ${rssMessage}`);
+        await loadVacancies();
       } else {
         setSyncMessage('Sync finished with standard updates.');
       }

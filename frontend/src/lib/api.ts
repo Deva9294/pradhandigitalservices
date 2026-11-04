@@ -63,8 +63,8 @@ export const uploadApi = {
 
 export const formsApi = {
   getAll: () => api.get("/forms"),
-  purchase: (formId: string) => api.post(`/forms/${formId}/purchase`),
-  getDownloadLink: (purchaseId: string) => api.get(`/forms/download/${purchaseId}`),
+  submit: (payload: { formId: string; formData: Record<string, unknown>; documents: Array<{ type: string; url: string; fileName?: string }> }) =>
+    api.post("/forms/submit", payload),
   getHistory: () => api.get("/forms/history"),
 };
 

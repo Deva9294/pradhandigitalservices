@@ -64,13 +64,13 @@ export const getAnalytics = catchAsync(async (req, res) => {
 // Agent provisioning (admin-only; public registration cannot assign this role)
 export const createAgent = catchAsync(async (req, res) => {
   const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
-  const phone = typeof req.body.phone === 'string' ? req.body.phone.replace(/\\D/g, '').slice(-10) : '';
+  const phone = typeof req.body.phone === 'string' ? req.body.phone.replace(/\D/g, '').slice(-10) : '';
   const email = typeof req.body.email === 'string' && req.body.email.trim() ? req.body.email.trim().toLowerCase() : undefined;
   const password = typeof req.body.password === 'string' ? req.body.password : '';
   const shopName = typeof req.body.shopName === 'string' ? req.body.shopName.trim() : '';
   const city = typeof req.body.city === 'string' ? req.body.city.trim() : '';
 
-  if (!name || !/^\\d{10}$/.test(phone) || password.length < 8 || !shopName) {
+  if (!name || !/^\d{10}$/.test(phone) || password.length < 8 || !shopName) {
     throw new AppError('Name, valid 10-digit phone, shop name and password (minimum 8 characters) are required.', 400);
   }
   const duplicate = await User.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
@@ -159,20 +159,27 @@ export const updateUser = catchAsync(async (req, res) => {
 
   Object.assign(target, updates, { updatedBy: req.user._id });
   await target.save();
-  target.password = undefined;
-  target.otp = undefined;
-  target.refreshToken = undefined;
-  res.json({ success: true, data: target });
+  const safeUser = target.toObject();
+  delete safeUser.password;
+  delete safeUser.otp;
+  delete safeUser.refreshToken;
+  delete safeUser.passwordResetTokenHash;
+  delete safeUser.passwordResetExpires;
+  res.json({ success: true, data: safeUser });
 });
 
 export const deleteUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false, updatedBy: req.user._id },
-    { new: true }
-  );
-
+  const user = await User.findById(req.params.id);
   if (!user) throw new AppError('User not found', 404);
+  if (String(user._id) === String(req.user._id)) {
+    throw new AppError('You cannot deactivate your own account.', 400);
+  }
+  if (['admin', 'superadmin'].includes(user.role) && req.user.role !== 'superadmin') {
+    throw new AppError('Only a superadmin can deactivate another administrator account.', 403);
+  }
+  user.isActive = false;
+  user.updatedBy = req.user._id;
+  await user.save();
   res.json({ success: true, message: 'User deactivated successfully' });
 });
 

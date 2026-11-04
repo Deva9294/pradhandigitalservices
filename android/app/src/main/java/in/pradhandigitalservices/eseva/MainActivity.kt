@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +54,16 @@ private fun PradhanApp() {
     var search by remember { mutableStateOf("") }
     var selectedService by remember { mutableStateOf<String?>(null) }
     var showLogin by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var loginError by remember { mutableStateOf("") }
+    var loggedInName by remember { mutableStateOf(PdsApi.savedName(context)) }
+    var isLoggedIn by remember { mutableStateOf(!PdsApi.savedToken(context).isNullOrBlank()) }
+    var remoteServices by remember { mutableStateOf<List<ApiService>>(emptyList()) }
+    var servicesError by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        try { remoteServices = PdsApi.services() } catch (e: Exception) { servicesError = e.message ?: "Services are temporarily unavailable" }
+    }
 
     MaterialTheme(
         colorScheme = lightColorScheme(
@@ -117,17 +129,28 @@ private fun PradhanApp() {
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when {
-                    showLogin -> LoginScreen(onBack = { showLogin = false })
+                    showLogin -> LoginScreen(onBack = { showLogin = false }, onLogin = { phone, password ->
+                        scope.launch {
+                            loginError = ""
+                            try {
+                                loggedInName = PdsApi.login(context, phone, password)
+                                isLoggedIn = true
+                                showLogin = false
+                                current = Screen.ACCOUNT
+                            } catch (e: Exception) { loginError = e.message ?: "Login failed" }
+                        }
+                    }, error = loginError)
                     selectedService != null -> ServiceDetail(selectedService!!, onBack = { selectedService = null }, onLogin = { showLogin = true })
                     current == Screen.HOME -> HomeScreen(
                         search = search,
+                        services = remoteServices,
                         onServices = { current = Screen.SERVICES },
                         onSelect = { selectedService = it },
                         onLogin = { showLogin = true }
                     )
-                    current == Screen.SERVICES -> ServicesScreen(search, onSelect = { selectedService = it })
-                    current == Screen.ORDERS -> OrdersScreen(onLogin = { showLogin = true })
-                    else -> AccountScreen(onLogin = { showLogin = true })
+                    current == Screen.SERVICES -> ServicesScreen(search, remoteServices, servicesError, onSelect = { selectedService = it })
+                    current == Screen.ORDERS -> OrdersScreen(context, isLoggedIn, onLogin = { showLogin = true })
+                    else -> AccountScreen(loggedInName, isLoggedIn, onLogin = { showLogin = true }, onLogout = { PdsApi.logout(context); isLoggedIn = false; loggedInName = "" })
                 }
             }
         }
@@ -150,7 +173,7 @@ private val serviceItems = listOf(
 )
 
 @Composable
-private fun HomeScreen(search: String, onServices: () -> Unit, onSelect: (String) -> Unit, onLogin: () -> Unit) {
+private fun HomeScreen(search: String, services: List<ApiService>, onServices: () -> Unit, onSelect: (String) -> Unit, onLogin: () -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -179,9 +202,9 @@ private fun HomeScreen(search: String, onServices: () -> Unit, onSelect: (String
             }
         }
         item { SectionHeading("Popular services", "View all", onServices) }
-        items(serviceItems.take(6).filter { search.isBlank() || it.first.contains(search, true) || it.second.contains(search, true) }.size) { index ->
-            val item = serviceItems.take(6).filter { search.isBlank() || it.first.contains(search, true) || it.second.contains(search, true) }[index]
-            ServiceRow(item.first, item.second) { onSelect(item.first) }
+        items(services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }.take(6).size) { index ->
+            val item = services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }.take(6)[index]
+            ServiceRow(item.name, item.description) { onSelect(item.name) }
         }
         item {
             Surface(color = Color(0xFFFFF1E5), shape = RoundedCornerShape(16.dp)) {
@@ -199,12 +222,13 @@ private fun HomeScreen(search: String, onServices: () -> Unit, onSelect: (String
 }
 
 @Composable
-private fun ServicesScreen(search: String, onSelect: (String) -> Unit) {
-    val filtered = serviceItems.filter { search.isBlank() || it.first.contains(search, true) || it.second.contains(search, true) }
+private fun ServicesScreen(search: String, services: List<ApiService>, error: String, onSelect: (String) -> Unit) {
+    val filtered = services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item { Text("All Services", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Navy); Text("Choose a service to view details", color = Muted, fontSize = 13.sp) }
-        items(filtered.size) { i -> ServiceRow(filtered[i].first, filtered[i].second) { onSelect(filtered[i].first) } }
-        if (filtered.isEmpty()) item { Text("No matching services found.", color = Muted, modifier = Modifier.padding(20.dp)) }
+        item { Text("All Services", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Navy); Text("Live catalogue from Pradhan Digital Services", color = Muted, fontSize = 13.sp) }
+        if (error.isNotBlank()) item { Text(error, color = Color(0xFFB42318), modifier = Modifier.padding(8.dp)) }
+        items(filtered.size) { i -> ServiceRow(filtered[i].name, filtered[i].description) { onSelect(filtered[i].name) } }
+        if (filtered.isEmpty() && error.isBlank()) item { Text("No services found or catalogue is loading.", color = Muted, modifier = Modifier.padding(20.dp)) }
     }
 }
 
@@ -228,22 +252,41 @@ private fun ServiceDetail(name: String, onBack: () -> Unit, onLogin: () -> Unit)
 }
 
 @Composable
-private fun OrdersScreen(onLogin: () -> Unit) {
-    EmptyState(Icons.Default.ReceiptLong, "Your orders will appear here", "Sign in to view application status, receipts and order history.", "Sign in", onLogin)
+private fun OrdersScreen(context: android.content.Context, isLoggedIn: Boolean, onLogin: () -> Unit) {
+    var bookings by remember { mutableStateOf<List<ApiBooking>>(emptyList()) }
+    var error by remember { mutableStateOf("") }
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) try { bookings = PdsApi.bookings(context) } catch (e: Exception) { error = e.message ?: "Could not load orders" }
+    }
+    if (!isLoggedIn) EmptyState(Icons.Default.ReceiptLong, "Your orders will appear here", "Sign in to view application status and order history.", "Sign in", onLogin)
+    else LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { Text("My Orders", fontSize = 24.sp, color = Navy, fontWeight = FontWeight.Bold) }
+        if (error.isNotBlank()) item { Text(error, color = Color(0xFFB42318)) }
+        items(bookings.size) { i ->
+            Surface(color = Color.White, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(bookings[i].serviceName, color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Status: " + bookings[i].status, color = Muted, fontSize = 12.sp)
+                    Text(bookings[i].createdAt.take(10), color = Muted, fontSize = 11.sp)
+                }
+            }
+        }
+        if (bookings.isEmpty() && error.isBlank()) item { Text("No orders found yet.", color = Muted) }
+    }
 }
 
 @Composable
-private fun AccountScreen(onLogin: () -> Unit) {
+private fun AccountScreen(userName: String, isLoggedIn: Boolean, onLogin: () -> Unit, onLogout: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("My Account", fontSize = 24.sp, color = Navy, fontWeight = FontWeight.Bold)
         Surface(color = Color.White, shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp)) {
                 Icon(Icons.Default.AccountCircle, null, tint = Navy, modifier = Modifier.size(48.dp))
                 Spacer(Modifier.height(8.dp))
-                Text("Welcome to Pradhan eSeva", fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Sign in to manage your profile and services.", color = Muted, fontSize = 13.sp)
+                Text(if (isLoggedIn) "Hello, " + userName else "Welcome to Pradhan eSeva", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Text(if (isLoggedIn) "Your account is connected." else "Sign in to manage your profile and services.", color = Muted, fontSize = 13.sp)
                 Spacer(Modifier.height(14.dp))
-                Button(onClick = onLogin, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Orange)) { Text("Login / Register") }
+                Button(onClick = if (isLoggedIn) onLogout else onLogin, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Orange)) { Text(if (isLoggedIn) "Sign out" else "Login / Register") }
             }
         }
         listOf("Profile details", "Saved documents", "Payment history", "Help & support", "Privacy policy").forEach {
@@ -256,7 +299,7 @@ private fun AccountScreen(onLogin: () -> Unit) {
 }
 
 @Composable
-private fun LoginScreen(onBack: () -> Unit) {
+private fun LoginScreen(onBack: () -> Unit, onLogin: (String, String) -> Unit, error: String) {
     var mobile by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -266,8 +309,8 @@ private fun LoginScreen(onBack: () -> Unit) {
         Text("Sign in to your Pradhan eSeva account", color = Muted)
         OutlinedTextField(mobile, { mobile = it.filter(Char::isDigit).take(10) }, modifier = Modifier.fillMaxWidth(), label = { Text("Mobile number") }, leadingIcon = { Icon(Icons.Default.Phone, null) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), singleLine = true)
         OutlinedTextField(password, { password = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Password") }, leadingIcon = { Icon(Icons.Default.Lock, null) }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
-        Button(onClick = { }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Orange), enabled = mobile.length == 10 && password.isNotBlank()) { Text("Sign in") }
-        Text("Login service connection is required before credentials can be submitted.", color = Muted, fontSize = 11.sp)
+        Button(onClick = { onLogin(mobile, password) }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = Orange), enabled = mobile.length == 10 && password.isNotBlank()) { Text("Sign in") }
+        if (error.isNotBlank()) Text(error, color = Color(0xFFB42318), fontSize = 12.sp)
     }
 }
 

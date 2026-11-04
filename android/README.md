@@ -11,11 +11,11 @@ The app keeps the existing website account, service catalogue, backend APIs, ord
 
 ## Build
 
-From this directory with JDK 17 and Gradle 8.9, run: gradle assembleRelease
+From this directory with JDK 17 and Gradle 8.9, run: gradle assembleDebug assembleRelease
 
-APK output: app/build/outputs/apk/release/app-release-unsigned.apk
+The debug APK is signed with Android's debug key and can be installed for testing. The release APK is unsigned until a private release signing key is configured.
 
-A GitHub Actions workflow builds the APK and uploads it as the artifact named Pradhan-eSeva-Android-APK.
+A GitHub Actions workflow builds both APKs and uploads them as the artifact named Pradhan-eSeva-Android-APK.
 
 ## Important
 

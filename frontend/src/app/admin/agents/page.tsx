@@ -60,7 +60,7 @@ export default function AdminAgentsPage() {
     try {
       const response = await adminApi.createAgent({
         name: form.name.trim(),
-        phone: form.phone.replace(/\\D/g, "").slice(-10),
+        phone: form.phone.replace(/\D/g, "").slice(-10),
         email: form.email.trim() || undefined,
         shopName: form.shopName.trim(),
         city: form.city.trim() || undefined,
@@ -108,7 +108,7 @@ export default function AdminAgentsPage() {
           </div>
           <form onSubmit={createAgent} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-semibold">Full name<input required value={form.name} onChange={e => setForm({...form,name:e.target.value})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00] focus:ring-2 focus:ring-orange-100" placeholder="Agent name" /></label>
-            <label className="text-sm font-semibold">Mobile number<input required inputMode="numeric" maxLength={10} value={form.phone} onChange={e => setForm({...form,phone:e.target.value.replace(/\\D/g,"").slice(0,10)})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00]" placeholder="10-digit mobile" /></label>
+            <label className="text-sm font-semibold">Mobile number<input required inputMode="numeric" maxLength={10} value={form.phone} onChange={e => setForm({...form,phone:e.target.value.replace(/\D/g,"").slice(0,10)})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00]" placeholder="10-digit mobile" /></label>
             <label className="text-sm font-semibold">Email (optional)<input type="email" value={form.email} onChange={e => setForm({...form,email:e.target.value})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00]" placeholder="agent@example.com" /></label>
             <label className="text-sm font-semibold">Shop / kiosk name<input required value={form.shopName} onChange={e => setForm({...form,shopName:e.target.value})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00]" placeholder="Digital Seva Kendra" /></label>
             <label className="text-sm font-semibold">City / Tehsil<input value={form.city} onChange={e => setForm({...form,city:e.target.value})} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-[#FF7A00]" placeholder="City or tehsil" /></label>
@@ -130,7 +130,7 @@ export default function AdminAgentsPage() {
           {loading ? <div className="p-8 text-center text-sm text-slate-500">Loading agents…</div> : agents.length === 0 ? <div className="p-8 text-center text-sm text-slate-500">अभी कोई एजेंट पंजीकृत नहीं है।</div> : (
             <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-5 py-3">Agent</th><th className="px-5 py-3">Contact</th><th className="px-5 py-3">Role</th><th className="px-5 py-3">Joined</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">{agents.map(agent => <tr key={agent._id} className="hover:bg-slate-50/80"><td className="px-5 py-4"><p className="font-semibold text-[#0A1B4D]">{agent.name}</p><p className="text-xs text-slate-500">{agent.agentCode || "Agent account"}</p></td><td className="px-5 py-4"><p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-slate-400" />{agent.phone}</p>{agent.email && <p className="mt-1 flex items-center gap-2 text-xs text-slate-500"><Mail className="h-3.5 w-3.5" />{agent.email}</p>}</td><td className="px-5 py-4"><span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">Agent</span></td><td className="px-5 py-4 text-xs text-slate-500">{agent.createdAt ? new Date(agent.createdAt).toLocaleDateString() : "—"}</td></tr>)}</tbody>
+                  <p className="text-xs text-slate-500">{agent.agentProfile?.agentCode || "Agent account"}{agent.agentProfile?.shopName ? ` · ${agent.agentProfile.shopName}` : ""}</p>
             </table></div>
           )}
         </section>

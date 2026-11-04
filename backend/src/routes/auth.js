@@ -104,6 +104,15 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     });
   }
 
+  // Agent accounts must be provisioned by an administrator. Public self-registration
+  // must never grant an operational role, even if the client submits role='agent'.
+  if (role === 'agent') {
+    return res.status(403).json({
+      success: false,
+      message: 'एजेंट खाता केवल एडमिन बना सकता है। कृपया Pradhan Digital Services से संपर्क करें।'
+    });
+  }
+
   // Systematically handle roles
   let assignedRole = 'customer';
   if (role === 'agent') {
@@ -132,22 +141,7 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     isPhoneVerified: false
   });
 
-  // If registering as an agent, create agent profile
-  let agentCode = null;
-  if (assignedRole === 'agent') {
-    agentCode = `PDS-AGT-${Date.now().toString().slice(-5)}`;
-    await AgentProfile.create({
-      user: user._id,
-      agentCode,
-      shopName: shopName || 'Digital Seva Kiosk',
-      businessName: `${user.name} Digital Center`,
-      shopAddress: {
-        city: city || 'Madhya Pradesh',
-        state: 'Madhya Pradesh'
-      },
-      kycStatus: 'pending'
-    });
-  }
+  const agentCode = null;
 
   const token = generateToken(user._id);
 

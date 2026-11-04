@@ -101,7 +101,7 @@ export default function PradhanESevaAppSection() {
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
                 <Clock className="w-4 h-4 text-saffron-400" />
-                <span className="font-semibold text-white/90">Lightweight ~12 MB</span>
+                <span className="font-semibold text-white/90">Lightweight Android app</span>
               </div>
             </div>
 
@@ -131,8 +131,7 @@ export default function PradhanESevaAppSection() {
                 
                 {/* 1. Direct APK Download Button */}
                 <a
-                  href="/apps/pradhan-eseva.apk"
-                  download="pradhan-eseva.apk"
+                  href="https://github.com/Deva9294/pradhandigitalservices/releases/download/android-latest/app-debug.apk"
                   className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-saffron-500 to-amber-500 hover:from-saffron-400 hover:to-amber-400 text-navy-950 font-extrabold text-sm transition-all shadow-xl shadow-saffron-500/20 flex items-center justify-center gap-2.5 group"
                 >
                   <DownloadCloud className="w-5 h-5 text-navy-950 group-hover:-translate-y-0.5 transition-transform" />
@@ -303,12 +302,11 @@ export default function PradhanESevaAppSection() {
 
               <div className="pt-2">
                 <a
-                  href="/apps/pradhan-eseva.apk"
-                  download="pradhan-eseva.apk"
+                  href="https://github.com/Deva9294/pradhandigitalservices/releases/download/android-latest/app-debug.apk"
                   className="w-full py-2.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-navy-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow"
                 >
                   <DownloadCloud className="w-4 h-4" />
-                  <span>सीधे APK डाउनलोड करें (12 MB)</span>
+                  <span>सीधे APK डाउनलोड करें</span>
                 </a>
               </div>
             </div>

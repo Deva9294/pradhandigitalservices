@@ -97,14 +97,33 @@ export const getUser = catchAsync(async (req, res) => {
 });
 
 export const updateUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { ...req.body, updatedBy: req.user._id },
-    { new: true, runValidators: true }
-  ).select('-password -otp -refreshToken');
+  // Never pass an untrusted request body directly into a MongoDB update.
+  // In particular, role, password, walletBalance and verification flags must
+  // not be changed through this general profile-management endpoint.
+  const allowedFields = ['name', 'email', 'phone', 'isBlocked', 'isActive'];
+  const updates = {};
+  for (const field of allowedFields) {
+    if (req.body?.[field] !== undefined) updates[field] = req.body[field];
+  }
+  if (Object.keys(updates).length === 0) {
+    throw new AppError('No editable user fields were supplied.', 400);
+  }
 
-  if (!user) throw new AppError('User not found', 404);
-  res.json({ success: true, data: user });
+  const target = await User.findById(req.params.id);
+  if (!target) throw new AppError('User not found', 404);
+  if (String(target._id) === String(req.user._id) && updates.isActive === false) {
+    throw new AppError('You cannot deactivate your own administrator account.', 400);
+  }
+  if (['admin', 'superadmin'].includes(target.role) && req.user.role !== 'superadmin') {
+    throw new AppError('Only a superadmin can modify another administrator account.', 403);
+  }
+
+  Object.assign(target, updates, { updatedBy: req.user._id });
+  await target.save();
+  target.password = undefined;
+  target.otp = undefined;
+  target.refreshToken = undefined;
+  res.json({ success: true, data: target });
 });
 
 export const deleteUser = catchAsync(async (req, res) => {

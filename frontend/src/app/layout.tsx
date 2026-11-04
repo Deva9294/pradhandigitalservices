@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 import Header from "@/components/layout/Header";
@@ -8,19 +7,6 @@ import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import ClientSideLogic from "@/components/layout/ClientSideLogic";
 import LiveVisitorCounter from "@/components/layout/LiveVisitorCounter";
 import { SITE_NAME, SITE_URL, DISCLAIMER } from "@/lib/utils";
-
-const inter = Inter({ 
-  subsets: ["latin"], 
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const notoSansDevanagari = Noto_Sans_Devanagari({ 
-  subsets: ["devanagari"], 
-  variable: "--font-noto-sans-devanagari",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -104,6 +90,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
@@ -112,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
-      <body className={`${inter.variable} ${notoSansDevanagari.variable} font-sans`}>
+      <body className="font-sans">
         <AppProviders>
           <ClientSideLogic />
           <a href="#main-content" className="skip-link">

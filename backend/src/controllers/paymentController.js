@@ -138,7 +138,7 @@ export const createOrder = catchAsync(async (req, res) => {
       },
       gateway: 'razorpay',
       status: 'pending',
-      metadata: { purpose: String(purpose || 'Pradhan Digital Services payment').slice(0, 120), ...(metadata || {}) },
+      metadata: { purpose: String(purpose || 'Pradhan Digital Services payment').slice(0, 120) },
       initiatedAt: new Date()
     });
   }

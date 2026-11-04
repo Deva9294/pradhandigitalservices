@@ -115,16 +115,24 @@ export const getUsers = catchAsync(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const users = await User.find(filter)
-    .select('-password -otp -refreshToken')
+    .select('-password -otp -refreshToken -passwordResetTokenHash -passwordResetExpires')
     .sort('-createdAt')
     .skip(skip)
     .limit(limit);
+
+  let userRows = users;
+  if (filter.role === 'agent' && users.length) {
+    const profiles = await AgentProfile.find({ user: { $in: users.map((user) => user._id) } })
+      .select('user agentCode shopName kycStatus');
+    const profileByUser = new Map(profiles.map((profile) => [String(profile.user), profile]));
+    userRows = users.map((user) => ({ ...user.toObject(), agentProfile: profileByUser.get(String(user._id)) || null }));
+  }
 
   const total = await User.countDocuments(filter);
 
   res.json({
     success: true,
-    data: users,
+    data: userRows,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) }
   });
 });

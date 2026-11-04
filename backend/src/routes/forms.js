@@ -109,6 +109,17 @@ router.get('/', asyncHandler(async (req, res) => {
   });
 }));
 
+// @route   GET /api/forms/history
+// @desc    Get the signed-in user's saved offline form submissions
+// @access  Private
+router.get('/history', protect, asyncHandler(async (req, res) => {
+  const submissions = await OfflineFormSubmission.find({ user: req.user._id })
+    .select('-formData -documents.url')
+    .sort('-createdAt')
+    .limit(100);
+  res.json({ success: true, data: submissions });
+}));
+
 // @route   GET /api/forms/:id
 // @desc    Get single form by ID
 // @access  Public
@@ -128,30 +139,19 @@ router.get('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-// @route   GET /api/forms/history
-// @desc    Get the signed-in user's saved offline form submissions
-// @access  Private
-router.get('/history', protect, asyncHandler(async (req, res) => {
-  const submissions = await OfflineFormSubmission.find({ user: req.user._id })
-    .select('-formData -documents.url')
-    .sort('-createdAt')
-    .limit(100);
-  res.json({ success: true, data: submissions });
-}));
-
 // @route   POST /api/forms/submit
 // @desc    Validate and persist an offline form application
 // @access  Private
 router.post('/submit', protect, asyncHandler(async (req, res) => {
   const { formId, formData = {}, documents = [] } = req.body || {};
   const form = offlineForms.find(item => item.id === formId);
-  if (!form) throw Object.assign(new Error('Form not found'), { statusCode: 404 });
+  if (!form) return res.status(404).json({ success: false, message: 'Form not found' });
 
   if (!formData || typeof formData !== 'object' || Array.isArray(formData)) {
-    throw Object.assign(new Error('Applicant form data must be an object.'), { statusCode: 400 });
+    return res.status(400).json({ success: false, message: 'Applicant form data must be an object.' });
   }
   if (!Array.isArray(documents) || documents.length > 20) {
-    throw Object.assign(new Error('Upload between 0 and 20 valid documents.'), { statusCode: 400 });
+    return res.status(400).json({ success: false, message: 'Upload no more than 20 valid documents.' });
   }
 
   const validDocuments = documents.filter(document =>

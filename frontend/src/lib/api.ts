@@ -86,9 +86,10 @@ export const vacancyApi = {
 };
 
 export const adminApi = {
-  getDashboard: () => api.get("/admin/dashboard"),
+  getDashboard: () => api.get("/admin/analytics"),
   getUsers: () => api.get("/admin/users"),
-  getOrders: () => api.get("/admin/orders"),
+  getApplications: (params?: Record<string, string | number>) => api.get("/admin/applications", { params }),
+  createAgent: (payload: { name: string; phone: string; password: string; shopName: string; email?: string; city?: string }) => api.post("/admin/agents", payload),
   getPayments: () => api.get("/admin/payments"),
 };
 

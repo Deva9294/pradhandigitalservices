@@ -71,9 +71,12 @@ async function validateApplicationPayment(applicationId, user, amount) {
 
 export const createOrder = catchAsync(async (req, res) => {
   const currency = String(req.body.currency || 'INR').toUpperCase();
-  const { type, applicationId, purpose, metadata } = req.body;
+  const { applicationId, purpose } = req.body;
 
   if (currency !== 'INR') throw new AppError('Only INR payments are supported.', 400);
+  if (!applicationId) {
+    throw new AppError('Payment must be linked to a saved service application. Standalone wallet, recharge, bill and form-download payments are not enabled yet.', 400);
+  }
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     throw new AppError('Online payment is temporarily unavailable. Razorpay credentials are not configured.', 503);
   }
@@ -103,30 +106,8 @@ export const createOrder = catchAsync(async (req, res) => {
     throw new AppError('Enter a valid INR amount between ₹1 and ₹5,00,000.', 400);
   }
 
-  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
-  const paymentType = application ? 'service_application' : (allowedTypes.includes(type) ? type : 'service_application');
+  const paymentType = 'service_application';
 
-  // Enforce catalogue prices on fixed-price products; never trust a browser-supplied amount.
-  if (!application && paymentType === 'membership') {
-    const plan = String(metadata?.plan || '');
-    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
-    if (!expected || Math.round(amount * 100) !== expected * 100) {
-      throw new AppError('Membership amount does not match the selected plan.', 400);
-    }
-  }
-
-  if (!application && paymentType === 'form_download') {
-    const allowedFormSlugs = new Set([
-      'income-certificate-form', 'caste-certificate-form', 'domicile-form',
-      'birth-certificate-form', 'death-certificate-form', 'marriage-registration-form',
-      'pension-forms', 'samagra-forms', 'labour-forms', 'pm-kisan-forms',
-      'madhya-pradesh-forms', 'uttar-pradesh-forms', 'rajasthan-forms',
-      'bihar-forms', 'all-state-government-forms'
-    ]);
-    if (!allowedFormSlugs.has(String(metadata?.formSlug || '')) || Math.round(amount * 100) !== 500) {
-      throw new AppError('Form download amount or catalogue item is invalid.', 400);
-    }
-  }
   let payment = null;
   if (application) {
     payment = await Payment.findOne({ application: application._id }).sort('-createdAt');

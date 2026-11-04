@@ -104,9 +104,15 @@ class RazorpayAdapter extends PaymentAdapter {
 
   async processRefund(paymentId, refundAmount, reason) {
     try {
+      if (!this.isConfigured || !this.razorpay) {
+        throw new AppError('Razorpay is not configured. No refund was attempted.', 503);
+      }
+      if (!paymentId || !Number.isFinite(Number(refundAmount)) || Number(refundAmount) <= 0) {
+        throw new AppError('A valid Razorpay payment reference and refund amount are required.', 400);
+      }
       const refund = await this.razorpay.payments.refund(paymentId, {
-        amount: refundAmount * 100,
-        notes: { reason }
+        amount: Math.round(refundAmount * 100),
+        notes: { reason: String(reason || '').slice(0, 500) }
       });
 
       return {

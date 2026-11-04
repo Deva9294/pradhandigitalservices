@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import AgentProfile from '../models/AgentProfile.js';
 import Service from '../models/Service.js';
 import ServiceApplication from '../models/ServiceApplication.js';
 import Vacancy from '../models/Vacancy.js';
@@ -6,6 +7,7 @@ import DownloadForm from '../models/DownloadForm.js';
 import Payment from '../models/Payment.js';
 import SupportTicket from '../models/SupportTicket.js';
 import SiteSettings from '../models/SiteSettings.js';
+import crypto from 'crypto';
 import { catchAsync } from '../utils/catchAsync.js';
 import { AppError } from '../utils/AppError.js';
 
@@ -57,6 +59,43 @@ export const getAnalytics = catchAsync(async (req, res) => {
       }
     }
   });
+});
+
+// Agent provisioning (admin-only; public registration cannot assign this role)
+export const createAgent = catchAsync(async (req, res) => {
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+  const phone = typeof req.body.phone === 'string' ? req.body.phone.replace(/\\D/g, '').slice(-10) : '';
+  const email = typeof req.body.email === 'string' && req.body.email.trim() ? req.body.email.trim().toLowerCase() : undefined;
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const shopName = typeof req.body.shopName === 'string' ? req.body.shopName.trim() : '';
+  const city = typeof req.body.city === 'string' ? req.body.city.trim() : '';
+
+  if (!name || !/^\\d{10}$/.test(phone) || password.length < 8 || !shopName) {
+    throw new AppError('Name, valid 10-digit phone, shop name and password (minimum 8 characters) are required.', 400);
+  }
+  const duplicate = await User.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
+  if (duplicate) throw new AppError('An account with this phone or email already exists.', 409);
+
+  const agentCode = `PDS-AGT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+  const user = await User.create({ name, phone, email, password, role: 'agent', isPhoneVerified: false, createdBy: req.user._id });
+  try {
+    const profile = await AgentProfile.create({
+      user: user._id,
+      agentCode,
+      shopName,
+      businessName: `${name} Digital Center`,
+      shopAddress: { city: city || 'Madhya Pradesh', state: 'Madhya Pradesh' },
+      kycStatus: 'pending'
+    });
+    return res.status(201).json({
+      success: true,
+      message: 'Agent account created. KYC verification is pending.',
+      data: { id: user._id, name: user.name, phone: user.phone, email: user.email, role: user.role, agentCode: profile.agentCode, kycStatus: profile.kycStatus }
+    });
+  } catch (error) {
+    await User.deleteOne({ _id: user._id });
+    throw error;
+  }
 });
 
 // User Management

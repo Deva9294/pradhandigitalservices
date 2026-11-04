@@ -31,7 +31,7 @@ export default function Footer({ compact = false }: FooterProps) {
           </p>
           <div className="pt-2 border-t border-white/5">
             <p className="text-xs text-saffron-300 font-semibold tracking-wide">
-              Design &amp; Managed by DevaCore Studios
+              Design &amp; Devoloper By DevaCore
             </p>
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function Footer({ compact = false }: FooterProps) {
         {/* Final, separate, centred bottom row containing EXACTLY: Design & Managed by DevaCore Studios */}
         <div className="text-center pt-2">
           <p className="text-xs text-saffron-300 font-semibold tracking-wide">
-            Design &amp; Managed by DevaCore Studios
+            Design &amp; Devoloper By DevaCore
           </p>
         </div>
       </div>

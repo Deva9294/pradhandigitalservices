@@ -5,6 +5,7 @@ import ServiceApplication from '../models/ServiceApplication.js';
 import Vacancy from '../models/Vacancy.js';
 import DownloadForm from '../models/DownloadForm.js';
 import Payment from '../models/Payment.js';
+import PaymentAdapterFactory from '../services/paymentAdapter.js';
 import SupportTicket from '../models/SupportTicket.js';
 import SiteSettings from '../models/SiteSettings.js';
 import crypto from 'crypto';
@@ -405,22 +406,37 @@ export const refundPayment = catchAsync(async (req, res) => {
   const { refundAmount, refundReason } = req.body;
   const payment = await Payment.findById(req.params.id);
   if (!payment) throw new AppError('Payment not found', 404);
-
-  if (payment.status !== 'completed') {
-    throw new AppError('Can only refund completed payments', 400);
+  if (!['completed', 'partially_refunded'].includes(payment.status)) {
+    throw new AppError('Only completed payments can be refunded.', 409);
   }
 
-  if (refundAmount > payment.amount) {
-    throw new AppError('Refund amount cannot exceed payment amount', 400);
+  // Direct UPI / manual transfers must be refunded through the bank manually.
+  // Never mark a manual payment refunded merely because an admin clicked a button.
+  if (payment.gateway !== 'razorpay') {
+    throw new AppError('This payment was not collected through Razorpay. Refund it through the bank first and record the manual refund with support.', 409);
   }
 
-  payment.status = 'refunded';
-  payment.refundAmount = refundAmount;
-  payment.refundReason = refundReason;
+  const amount = Number(refundAmount);
+  const alreadyRefunded = Number(payment.refundAmount || 0);
+  const remaining = Number(payment.amount) - alreadyRefunded;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) {
+    throw new AppError('Refund amount must be greater than zero and no more than the remaining refundable balance.', 400);
+  }
+  const gatewayPaymentId = payment.gatewayPaymentId || payment.gatewayTransactionId;
+  if (!gatewayPaymentId) {
+    throw new AppError('The original Razorpay payment reference is missing. No refund was attempted.', 409);
+  }
+
+  const adapter = PaymentAdapterFactory.getAdapter('razorpay');
+  const refund = await adapter.processRefund(gatewayPaymentId, amount, String(refundReason || '').slice(0, 500));
+  payment.refundAmount = alreadyRefunded + amount;
+  payment.refundReason = String(refundReason || '').slice(0, 500);
+  payment.refundId = refund.refundId;
   payment.refundedAt = new Date();
-
+  payment.status = payment.refundAmount >= Number(payment.amount) ? 'refunded' : 'partially_refunded';
   await payment.save();
-  res.json({ success: true, data: payment });
+
+  res.json({ success: true, message: 'Refund submitted to Razorpay.', data: payment });
 });
 
 // Support Management

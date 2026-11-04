@@ -28,6 +28,15 @@ jobs:
       - name: Build debug and release APKs
         working-directory: android
         run: gradle assembleDebug assembleRelease
+      - name: Verify APK contains the real app screen
+        working-directory: android
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          unzip -p "$APK" classes.dex | strings | grep -q 'in/pradhandigitalservices/eseva/MainActivity' || { echo "MainActivity missing from APK"; exit 1; }
+          SIZE=$(stat -c%s "$APK")
+          echo "Verified debug APK size: $SIZE bytes"
+          test "$SIZE" -gt 100000 || { echo "APK is unexpectedly small"; exit 1; }
       - name: Upload APKs as workflow artifact
         uses: actions/upload-artifact@v4
         with:

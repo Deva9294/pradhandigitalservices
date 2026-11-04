@@ -34,6 +34,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
         window.statusBarColor = Color.rgb(10, 27, 77)
         window.navigationBarColor = Color.rgb(10, 27, 77)
 
@@ -140,6 +141,19 @@ class MainActivity : Activity() {
         })
 
         if (savedInstanceState == null) webView.loadUrl(homeUrl) else webView.restoreState(savedInstanceState)
+        } catch (error: Throwable) {
+            android.util.Log.e("PradhanESeva", "App startup failed", error)
+            val message = TextView(this).apply {
+                text = "Pradhan eSeva start nahi ho paya. Internet aur Android System WebView check karke Retry dabayein.\\n\\n" +
+                    (error.message ?: error.javaClass.simpleName)
+                textSize = 16f
+                setTextColor(Color.rgb(10, 27, 77))
+                gravity = Gravity.CENTER
+                setPadding(dp(24), dp(24), dp(24), dp(24))
+                setOnClickListener { recreate() }
+            }
+            setContentView(message)
+        }
     }
 
     private fun createBottomNavigation(): LinearLayout {
@@ -191,7 +205,7 @@ class MainActivity : Activity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        webView.saveState(outState)
+        if (::webView.isInitialized) webView.saveState(outState)
         super.onSaveInstanceState(outState)
     }
 
@@ -202,8 +216,10 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         fileChooserCallback?.onReceiveValue(null)
-        webView.stopLoading()
-        webView.destroy()
+        if (::webView.isInitialized) {
+            webView.stopLoading()
+            webView.destroy()
+        }
         super.onDestroy()
     }
 }

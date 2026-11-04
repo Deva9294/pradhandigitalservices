@@ -1,8 +1,10 @@
 package `in`.pradhandigitalservices.eseva
 
 import android.os.Bundle
+import android.graphics.BitmapFactory
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +24,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -52,7 +56,7 @@ private enum class Screen(val label: String) {
 private fun PradhanApp() {
     var current by remember { mutableStateOf(Screen.HOME) }
     var search by remember { mutableStateOf("") }
-    var selectedService by remember { mutableStateOf<String?>(null) }
+    var selectedService by remember { mutableStateOf<ApiService?>(null) }
     var showLogin by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -140,7 +144,7 @@ private fun PradhanApp() {
                             } catch (e: Exception) { loginError = e.message ?: "Login failed" }
                         }
                     }, error = loginError)
-                    selectedService != null -> ServiceDetail(selectedService!!, onBack = { selectedService = null }, onLogin = { showLogin = true })
+                    selectedService != null -> ServiceDetail(selectedService!!, context, isLoggedIn, onBack = { selectedService = null }, onLogin = { showLogin = true }, onBooked = { selectedService = null; current = Screen.ORDERS })
                     current == Screen.HOME -> HomeScreen(
                         search = search,
                         services = remoteServices,
@@ -172,8 +176,28 @@ private val serviceItems = listOf(
     "Online Forms" to "Online application and form support"
 )
 
+
 @Composable
-private fun HomeScreen(search: String, services: List<ApiService>, onServices: () -> Unit, onSelect: (String) -> Unit, onLogin: () -> Unit) {
+private fun BrandLogo(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val logo = remember {
+        runCatching {
+            context.assets.open("brand-logo.png.b64").bufferedReader().use { it.readText() }
+                .let { android.util.Base64.decode(it, android.util.Base64.DEFAULT) }
+                .let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+        }.getOrNull()
+    }
+    if (logo != null) {
+        Image(bitmap = logo, contentDescription = "Pradhan Digital Services logo", modifier = modifier, contentScale = ContentScale.Fit)
+    } else {
+        Box(modifier.background(Orange, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+            Text("P", color = Color.White, fontWeight = FontWeight.Black, fontSize = 24.sp)
+        }
+    }
+}
+
+@Composable
+private fun HomeScreen(search: String, services: List<ApiService>, onServices: () -> Unit, onSelect: (ApiService) -> Unit, onLogin: () -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -204,7 +228,7 @@ private fun HomeScreen(search: String, services: List<ApiService>, onServices: (
         item { SectionHeading("Popular services", "View all", onServices) }
         items(services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }.take(6).size) { index ->
             val item = services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }.take(6)[index]
-            ServiceRow(item.name, item.description) { onSelect(item.name) }
+            ServiceRow(item.name, item.description) { onSelect(item) }
         }
         item {
             Surface(color = Color(0xFFFFF1E5), shape = RoundedCornerShape(16.dp)) {
@@ -222,30 +246,79 @@ private fun HomeScreen(search: String, services: List<ApiService>, onServices: (
 }
 
 @Composable
-private fun ServicesScreen(search: String, services: List<ApiService>, error: String, onSelect: (String) -> Unit) {
+private fun ServicesScreen(search: String, services: List<ApiService>, error: String, onSelect: (ApiService) -> Unit) {
     val filtered = services.filter { search.isBlank() || it.name.contains(search, true) || it.description.contains(search, true) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Text("All Services", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Navy); Text("Live catalogue from Pradhan Digital Services", color = Muted, fontSize = 13.sp) }
         if (error.isNotBlank()) item { Text(error, color = Color(0xFFB42318), modifier = Modifier.padding(8.dp)) }
-        items(filtered.size) { i -> ServiceRow(filtered[i].name, filtered[i].description) { onSelect(filtered[i].name) } }
+        items(filtered.size) { i -> ServiceRow(filtered[i].name, filtered[i].description) { onSelect(filtered[i]) } }
         if (filtered.isEmpty() && error.isBlank()) item { Text("No services found or catalogue is loading.", color = Muted, modifier = Modifier.padding(20.dp)) }
     }
 }
 
 @Composable
-private fun ServiceDetail(name: String, onBack: () -> Unit, onLogin: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("‹  Back", color = Navy, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onBack() })
-        Surface(color = Color.White, shape = RoundedCornerShape(20.dp)) {
-            Column(Modifier.padding(22.dp)) {
-                Icon(Icons.Default.Assignment, null, tint = Orange, modifier = Modifier.size(42.dp))
-                Spacer(Modifier.height(14.dp))
-                Text(name, color = Navy, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                Text("Pradhan Digital Services", color = Muted, fontSize = 13.sp)
-                Spacer(Modifier.height(14.dp))
-                Text("Get assistance for this service through your Pradhan eSeva account.", color = Ink)
-                Spacer(Modifier.height(18.dp))
-                Button(onClick = onLogin, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Orange)) { Text("Sign in to continue") }
+private fun ServiceDetail(service: ApiService, context: android.content.Context, isLoggedIn: Boolean, onBack: () -> Unit, onLogin: () -> Unit, onBooked: () -> Unit) {
+    var applicantName by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            Text("‹  Back", color = Navy, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onBack() })
+            Spacer(Modifier.height(8.dp))
+            Surface(color = Color.White, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(service.category.ifBlank { "DIGITAL SERVICE" }.uppercase(), color = Orange, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(service.name, color = Navy, fontWeight = FontWeight.Bold, fontSize = 23.sp)
+                    Text(service.description, color = Muted, fontSize = 14.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("₹" + String.format(java.util.Locale("en", "IN"), "%.0f", service.price), color = Navy, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(12.dp))
+                        Text("Processing: " + service.processingTime.ifBlank { "As per department" }, color = Muted, fontSize = 12.sp)
+                    }
+                    Text("Government fee: ₹" + String.format(java.util.Locale("en", "IN"), "%.0f", service.governmentFee) + "  •  Service charge: ₹" + String.format(java.util.Locale("en", "IN"), "%.0f", service.serviceCharge), color = Muted, fontSize = 11.sp)
+                }
+            }
+        }
+        if (service.requiredDocuments.isNotEmpty()) item {
+            Surface(color = Color.White, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Text("Required documents", color = Navy, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    service.requiredDocuments.forEach { Text("•  $it", color = Ink, fontSize = 13.sp) }
+                }
+            }
+        }
+        item {
+            Surface(color = Color.White, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Apply for this service", color = Navy, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                    if (!isLoggedIn) {
+                        Text("Please sign in before submitting an application.", color = Muted, fontSize = 13.sp)
+                        Button(onClick = onLogin, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Orange)) { Text("Login to continue") }
+                    } else {
+                        OutlinedTextField(applicantName, { applicantName = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Applicant name") }, singleLine = true)
+                        OutlinedTextField(notes, { notes = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Additional notes (optional)") }, minLines = 2)
+                        if (message.isNotBlank()) Text(message, color = if (message.startsWith("Application submitted")) Color(0xFF16803C) else Color(0xFFB42318), fontSize = 12.sp)
+                        Button(
+                            onClick = {
+                                loading = true
+                                message = ""
+                                scope.launch {
+                                    try {
+                                        PdsApi.createBooking(context, service, applicantName, notes)
+                                        message = "Application submitted successfully."
+                                        onBooked()
+                                    } catch (e: Exception) { message = e.message ?: "Could not submit application" }
+                                    finally { loading = false }
+                                }
+                            },
+                            enabled = applicantName.isNotBlank() && !loading && service.id.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                        ) { Text(if (loading) "Submitting..." else "Submit application") }
+                    }
+                }
             }
         }
     }

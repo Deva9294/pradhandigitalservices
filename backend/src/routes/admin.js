@@ -14,6 +14,7 @@ router.get('/analytics', ctrl.getAnalytics);
 
 // User management
 router.get('/users', ctrl.getUsers);
+router.post('/agents', ctrl.createAgent);
 router.get('/users/:id', ctrl.getUser);
 router.patch('/users/:id', ctrl.updateUser);
 router.delete('/users/:id', ctrl.deleteUser);

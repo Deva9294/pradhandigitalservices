@@ -157,7 +157,7 @@ router.post('/submit', protect, asyncHandler(async (req, res) => {
   const validDocuments = documents.filter(document =>
     document && typeof document.type === 'string' &&
     typeof document.url === 'string' &&
-    /^(https?:\\/\\/|\\/uploads\\/)/i.test(document.url)
+    (document.url.startsWith('https://') || document.url.startsWith('http://') || document.url.startsWith('/uploads/'))
   ).map(document => ({
     type: document.type.trim().slice(0, 100),
     url: document.url,

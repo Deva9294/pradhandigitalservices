@@ -148,26 +148,34 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
 
   const payment = await Payment.findOne({ _id: req.params.id, gateway: 'manual' });
   if (!payment) throw new AppError('Payment not found', 404);
-  if (payment.status !== 'pending' || !payment.metadata?.utr) {
+  const alreadyApproved = payment.status === 'completed' && payment.metadata?.verificationStatus === 'admin_verified';
+  if (alreadyApproved && action !== 'approve') {
+    throw new AppError('An approved payment cannot be rejected. Use the refund process if required.', 409);
+  }
+  if (!alreadyApproved && (payment.status !== 'pending' || !payment.metadata?.utr)) {
     throw new AppError('Only UTR-submitted pending payments can be reviewed', 409);
   }
 
-  if (action === 'approve') {
-    payment.status = 'completed';
-    payment.verified = true;
-    payment.gatewayTransactionId = payment.metadata.utr;
-    payment.completedAt = new Date();
-    payment.metadata.verificationStatus = 'admin_verified';
-  } else {
-    payment.status = 'failed';
-    payment.failedAt = new Date();
-    payment.metadata.verificationStatus = 'rejected';
+  // Allow an approved UPI payment to be retried for application reconciliation
+  // if the payment save succeeded but the linked application save previously failed.
+  if (!alreadyApproved) {
+    if (action === 'approve') {
+      payment.status = 'completed';
+      payment.verified = true;
+      payment.gatewayTransactionId = payment.metadata.utr;
+      payment.completedAt = new Date();
+      payment.metadata.verificationStatus = 'admin_verified';
+    } else {
+      payment.status = 'failed';
+      payment.failedAt = new Date();
+      payment.metadata.verificationStatus = 'rejected';
+    }
+    payment.metadata.adminNote = String(note).slice(0, 500);
+    payment.metadata.reviewedBy = String(req.user._id);
+    payment.metadata.reviewedAt = new Date();
+    payment.markModified('metadata');
+    await payment.save();
   }
-  payment.metadata.adminNote = String(note).slice(0, 500);
-  payment.metadata.reviewedBy = String(req.user._id);
-  payment.metadata.reviewedAt = new Date();
-  payment.markModified('metadata');
-  await payment.save();
 
   if (action === 'approve' && payment.application) {
     const application = await ServiceApplication.findById(payment.application);

@@ -173,6 +173,7 @@ export const updateApplication = catchAsync(async (req, res) => {
 });
 
 export const uploadDocument = catchAsync(async (req, res) => {
+  throw new AppError('This legacy upload route is disabled. Upload through POST /api/upload/multiple, then attach files through POST /api/applications/:id/attach-documents.', 410);
   const application = await ServiceApplication.findById(req.params.id);
   if (!application) throw new AppError('Application not found', 404);
 
@@ -227,15 +228,14 @@ export const attachDocuments = catchAsync(async (req, res) => {
   const files = Array.isArray(req.body.documents) ? req.body.documents : [];
   if (!files.length || files.length > 5) throw new AppError('Upload between 1 and 5 documents.', 400);
 
-  const allowedHost = req.get('host');
   const docs = files.map((file) => {
     const fileUrl = String(file.fileUrl || '');
     let parsed;
     try { parsed = new URL(fileUrl); } catch { throw new AppError('Invalid uploaded document URL.', 400); }
-    const isLocalUpload = parsed.protocol === 'https:' && parsed.host === allowedHost && parsed.pathname.startsWith('/uploads/');
-    const isCloudinaryUpload = parsed.protocol === 'https:' && parsed.host === 'res.cloudinary.com' &&
-      parsed.pathname.startsWith(`/${process.env.CLOUDINARY_CLOUD_NAME || '__not_configured__'}/`);
-    if (!isLocalUpload && !isCloudinaryUpload) {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const isCloudinaryUpload = Boolean(cloudName) && parsed.protocol === 'https:' &&
+      parsed.host === 'res.cloudinary.com' && parsed.pathname.startsWith(`/${cloudName}/`);
+    if (!isCloudinaryUpload) {
       throw new AppError('Document must be uploaded to the configured secure storage provider.', 400);
     }
     return {

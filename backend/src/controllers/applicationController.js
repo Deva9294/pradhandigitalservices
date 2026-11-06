@@ -172,51 +172,12 @@ export const updateApplication = catchAsync(async (req, res) => {
   res.json({ success: true, data: updated });
 });
 
-export const uploadDocument = catchAsync(async (req, res) => {
-  throw new AppError('This legacy upload route is disabled. Upload through POST /api/upload/multiple, then attach files through POST /api/applications/:id/attach-documents.', 410);
-  const application = await ServiceApplication.findById(req.params.id);
-  if (!application) throw new AppError('Application not found', 404);
-
-  // Check authorization
-  const isOwner = String(application.user) === String(req.user._id);
-  const isAgent = application.agent && String(application.agent) === String(req.user._id);
-  const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
-
-  if (!isOwner && !isAgent && !isAdmin) {
-    throw new AppError('Not authorized', 403);
-  }
-
-  if (!req.file) throw new AppError('No file uploaded', 400);
-
-  const { documentType, fileName } = req.body;
-  if (!documentType) throw new AppError('Document type is required', 400);
-
-  // In production, upload to cloud storage
-  const fileUrl = `/uploads/${req.file.filename}`;
-
-  const document = await ApplicationDocument.create({
-    application: application._id,
-    documentType,
-    fileName: fileName || req.file.originalname,
-    fileUrl,
-    fileSize: req.file.size,
-    mimeType: req.file.mimetype,
-    uploadedBy: req.user._id
-  });
-
-  // Add to application documents
-  application.documents.push({
-    type: documentType,
-    url: fileUrl,
-    fileName: fileName || req.file.originalname,
-    uploadedAt: new Date()
-  });
-
-  await application.save();
-
-  res.status(201).json({ success: true, data: document });
+export const uploadDocument = catchAsync(async () => {
+  throw new AppError(
+    'This legacy upload route is disabled. Upload through POST /api/upload/multiple, then attach files through POST /api/applications/:id/attach-documents.',
+    410
+  );
 });
-
 export const attachDocuments = catchAsync(async (req, res) => {
   const application = await ServiceApplication.findById(req.params.id);
   if (!application) throw new AppError('Application not found', 404);

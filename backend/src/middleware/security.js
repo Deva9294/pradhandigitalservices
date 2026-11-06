@@ -76,28 +76,21 @@ export const sanitizeInput = (req, res, next) => {
 
 // Prevent NoSQL injection
 export const preventNoSQLInjection = (req, res, next) => {
-  const checkForInjection = (obj) => {
-    if (typeof obj === 'string') {
-      if (obj.includes('$') || obj.includes('{') || obj.includes('}')) {
-        return true;
-      }
-    } else if (typeof obj === 'object' && obj !== null) {
-      for (const key in obj) {
-        if (checkForInjection(obj[key])) {
-          return true;
-        }
-      }
+  const forbiddenKeys = new Set(['__proto__', 'prototype', 'constructor']);
+  const inspect = (value) => {
+    if (!value || typeof value !== 'object') return false;
+    for (const [key, child] of Object.entries(value)) {
+      if (key.startsWith('$') || key.includes('.') || forbiddenKeys.has(key)) return true;
+      if (inspect(child)) return true;
     }
     return false;
   };
 
-  if (checkForInjection(req.body) || checkForInjection(req.query)) {
-    throw new AppError('Invalid input detected', 400);
+  if (inspect(req.body) || inspect(req.query) || inspect(req.params)) {
+    return res.status(400).json({ success: false, message: 'Invalid request structure.' });
   }
-
-  next();
+  return next();
 };
-
 // Mask sensitive data in logs
 export const maskSensitiveData = (data) => {
   const sensitiveFields = [

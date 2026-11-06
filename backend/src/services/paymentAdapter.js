@@ -146,51 +146,22 @@ class RazorpayAdapter extends PaymentAdapter {
 class BBPSAdapter extends PaymentAdapter {
   constructor() {
     super('bbps');
-    // BBPS integration would be implemented here
-    // Currently in sandbox mode
   }
 
-  async createOrder(orderData) {
-    // Sandbox mode - return mock response
-    return {
-      success: true,
-      orderId: `BBPS_${Date.now()}`,
-      amount: orderData.amount,
-      currency: 'INR',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async createOrder() {
+    throw new AppError('BBPS provider integration is not configured. No bill payment order was created.', 503);
   }
 
-  async verifyPayment(paymentData) {
-    // Sandbox mode
-    return {
-      success: true,
-      paymentId: paymentData.transactionId,
-      amount: paymentData.amount,
-      status: 'completed',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async verifyPayment() {
+    throw new AppError('BBPS provider integration is not configured. No bill payment can be verified.', 503);
   }
 
-  async processRefund(paymentId, refundAmount, reason) {
-    // Sandbox mode
-    return {
-      success: true,
-      refundId: `REFUND_${Date.now()}`,
-      amount: refundAmount,
-      status: 'processed',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async processRefund() {
+    throw new AppError('BBPS provider integration is not configured. No bill refund was attempted.', 503);
   }
 
-  async getOrderStatus(orderId) {
-    // Sandbox mode
-    return {
-      success: true,
-      status: 'completed',
-      amount: 0,
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async getOrderStatus() {
+    throw new AppError('BBPS provider integration is not configured. Bill status is unavailable.', 503);
   }
 }
 
@@ -218,13 +189,8 @@ class ManualPaymentAdapter extends PaymentAdapter {
     };
   }
 
-  async processRefund(paymentId, refundAmount, reason) {
-    return {
-      success: true,
-      refundId: `REFUND_${Date.now()}`,
-      amount: refundAmount,
-      status: 'processed'
-    };
+  async processRefund() {
+    throw new AppError('Manual UPI refunds must be completed through the bank and reconciled manually. No automatic refund was attempted.', 503);
   }
 
   async getOrderStatus(orderId) {

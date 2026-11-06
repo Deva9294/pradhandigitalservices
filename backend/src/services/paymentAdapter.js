@@ -170,23 +170,12 @@ class ManualPaymentAdapter extends PaymentAdapter {
     super('manual');
   }
 
-  async createOrder(orderData) {
-    return {
-      success: true,
-      orderId: `MANUAL_${Date.now()}`,
-      amount: orderData.amount,
-      currency: 'INR'
-    };
+  async createOrder() {
+    throw new AppError('Manual UPI payments must use the verified UPI QR flow. No gateway order was created.', 503);
   }
 
-  async verifyPayment(paymentData) {
-    // Manual payments are verified by admin
-    return {
-      success: true,
-      paymentId: paymentData.paymentId,
-      amount: paymentData.amount,
-      status: 'pending_admin_verification'
-    };
+  async verifyPayment() {
+    throw new AppError('Manual UPI payments can only be completed after an administrator verifies actual bank credit.', 503);
   }
 
   async processRefund() {

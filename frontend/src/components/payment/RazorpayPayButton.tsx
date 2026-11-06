@@ -38,6 +38,10 @@ export default function RazorpayPayButton({
       window.location.href = `/login?redirect=${encodeURIComponent(next)}`;
       return;
     }
+    if (!applicationId) {
+      const message = "भुगतान केवल सेव की गई service application के लिए उपलब्ध है। Recharge, bill, wallet या सामान्य payment अभी enabled नहीं है।";
+      setError(message); onError?.(message); return;
+    }
     if (!Number.isFinite(amount) || amount < 1 || amount > 500000) {
       const message = "कृपया ₹1 से ₹5,00,000 के बीच सही राशि दर्ज करें।";
       setError(message); onError?.(message); return;

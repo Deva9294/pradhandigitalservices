@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { allServices } from "@/data/services";
+import { SITE_URL } from "@/lib/utils";
 
-const BASE_URL = "https://pradhan-frontend-4g39.onrender.com";
+const BASE_URL = SITE_URL.replace(/\/$/, "");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date();

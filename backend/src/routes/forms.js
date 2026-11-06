@@ -154,11 +154,17 @@ router.post('/submit', protect, asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Upload no more than 20 valid documents.' });
   }
 
-  const validDocuments = documents.filter(document =>
-    document && typeof document.type === 'string' &&
-    typeof document.url === 'string' &&
-    (document.url.startsWith('https://') || document.url.startsWith('http://') || document.url.startsWith('/uploads/'))
-  ).map(document => ({
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const validDocuments = documents.filter(document => {
+    if (!document || typeof document.type !== 'string' || typeof document.url !== 'string' || !cloudName) return false;
+    try {
+      const url = new URL(document.url);
+      return url.protocol === 'https:' && url.hostname === 'res.cloudinary.com' &&
+        url.pathname.startsWith(`/${cloudName}/`);
+    } catch {
+      return false;
+    }
+  }).map(document => ({
     type: document.type.trim().slice(0, 100),
     url: document.url,
     fileName: typeof document.fileName === 'string' ? document.fileName.slice(0, 180) : ''

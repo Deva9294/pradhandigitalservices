@@ -13,5 +13,5 @@ test('manual UPI adapter cannot create or verify gateway orders', async () => {
   const adapter = PaymentAdapterFactory.getAdapter('manual');
   await assert.rejects(() => adapter.createOrder({ amount: 100 }), /verified UPI QR flow/);
   await assert.rejects(() => adapter.verifyPayment({ paymentId: 'fake' }), /actual bank credit/);
-  await assert.rejects(() => adapter.processRefund('fake', 100), /refunded through the bank/);
+  await assert.rejects(() => adapter.processRefund('fake', 100), /through the bank and reconciled manually/);
 });

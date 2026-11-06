@@ -297,7 +297,7 @@ body {
   flex-direction: column;
   background: var(--pds-canvas);
   color: var(--pds-text);
-  font-family: var(--font-inter), var(--font-noto-sans-devanagari), system-ui, sans-serif;
+  font-family: Inter, "Noto Sans Devanagari", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 body > header { flex: 0 0 auto; background: #fff; color: var(--pds-navy); border-bottom: 1px solid var(--pds-border); box-shadow: 0 5px 22px rgba(10,27,77,.07); }

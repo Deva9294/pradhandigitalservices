@@ -1,11 +1,14 @@
 import User from '../models/User.js';
+import AgentProfile from '../models/AgentProfile.js';
 import Service from '../models/Service.js';
 import ServiceApplication from '../models/ServiceApplication.js';
 import Vacancy from '../models/Vacancy.js';
 import DownloadForm from '../models/DownloadForm.js';
 import Payment from '../models/Payment.js';
+import PaymentAdapterFactory from '../services/paymentAdapter.js';
 import SupportTicket from '../models/SupportTicket.js';
 import SiteSettings from '../models/SiteSettings.js';
+import crypto from 'crypto';
 import { catchAsync } from '../utils/catchAsync.js';
 import { AppError } from '../utils/AppError.js';
 
@@ -59,6 +62,43 @@ export const getAnalytics = catchAsync(async (req, res) => {
   });
 });
 
+// Agent provisioning (admin-only; public registration cannot assign this role)
+export const createAgent = catchAsync(async (req, res) => {
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+  const phone = typeof req.body.phone === 'string' ? req.body.phone.replace(/\D/g, '').slice(-10) : '';
+  const email = typeof req.body.email === 'string' && req.body.email.trim() ? req.body.email.trim().toLowerCase() : undefined;
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const shopName = typeof req.body.shopName === 'string' ? req.body.shopName.trim() : '';
+  const city = typeof req.body.city === 'string' ? req.body.city.trim() : '';
+
+  if (!name || !/^\d{10}$/.test(phone) || password.length < 8 || !shopName) {
+    throw new AppError('Name, valid 10-digit phone, shop name and password (minimum 8 characters) are required.', 400);
+  }
+  const duplicate = await User.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
+  if (duplicate) throw new AppError('An account with this phone or email already exists.', 409);
+
+  const agentCode = `PDS-AGT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+  const user = await User.create({ name, phone, email, password, role: 'agent', isPhoneVerified: false, createdBy: req.user._id });
+  try {
+    const profile = await AgentProfile.create({
+      user: user._id,
+      agentCode,
+      shopName,
+      businessName: `${name} Digital Center`,
+      shopAddress: { city: city || 'Madhya Pradesh', state: 'Madhya Pradesh' },
+      kycStatus: 'pending'
+    });
+    return res.status(201).json({
+      success: true,
+      message: 'Agent account created. KYC verification is pending.',
+      data: { id: user._id, name: user.name, phone: user.phone, email: user.email, role: user.role, agentCode: profile.agentCode, kycStatus: profile.kycStatus }
+    });
+  } catch (error) {
+    await User.deleteOne({ _id: user._id });
+    throw error;
+  }
+});
+
 // User Management
 export const getUsers = catchAsync(async (req, res) => {
   const filter = { isActive: true };
@@ -76,16 +116,24 @@ export const getUsers = catchAsync(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const users = await User.find(filter)
-    .select('-password -otp -refreshToken')
+    .select('-password -otp -refreshToken -passwordResetTokenHash -passwordResetExpires')
     .sort('-createdAt')
     .skip(skip)
     .limit(limit);
+
+  let userRows = users;
+  if (filter.role === 'agent' && users.length) {
+    const profiles = await AgentProfile.find({ user: { $in: users.map((user) => user._id) } })
+      .select('user agentCode shopName kycStatus');
+    const profileByUser = new Map(profiles.map((profile) => [String(profile.user), profile]));
+    userRows = users.map((user) => ({ ...user.toObject(), agentProfile: profileByUser.get(String(user._id)) || null }));
+  }
 
   const total = await User.countDocuments(filter);
 
   res.json({
     success: true,
-    data: users,
+    data: userRows,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) }
   });
 });
@@ -97,24 +145,50 @@ export const getUser = catchAsync(async (req, res) => {
 });
 
 export const updateUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { ...req.body, updatedBy: req.user._id },
-    { new: true, runValidators: true }
-  ).select('-password -otp -refreshToken');
+  // Never pass an untrusted request body directly into a MongoDB update.
+  // In particular, role, password, walletBalance and verification flags must
+  // not be changed through this general profile-management endpoint.
+  const allowedFields = ['name', 'email', 'phone', 'isBlocked', 'isActive'];
+  const updates = {};
+  for (const field of allowedFields) {
+    if (req.body?.[field] !== undefined) updates[field] = req.body[field];
+  }
+  if (Object.keys(updates).length === 0) {
+    throw new AppError('No editable user fields were supplied.', 400);
+  }
 
-  if (!user) throw new AppError('User not found', 404);
-  res.json({ success: true, data: user });
+  const target = await User.findById(req.params.id);
+  if (!target) throw new AppError('User not found', 404);
+  if (String(target._id) === String(req.user._id) && updates.isActive === false) {
+    throw new AppError('You cannot deactivate your own administrator account.', 400);
+  }
+  if (['admin', 'superadmin'].includes(target.role) && req.user.role !== 'superadmin') {
+    throw new AppError('Only a superadmin can modify another administrator account.', 403);
+  }
+
+  Object.assign(target, updates, { updatedBy: req.user._id });
+  await target.save();
+  const safeUser = target.toObject();
+  delete safeUser.password;
+  delete safeUser.otp;
+  delete safeUser.refreshToken;
+  delete safeUser.passwordResetTokenHash;
+  delete safeUser.passwordResetExpires;
+  res.json({ success: true, data: safeUser });
 });
 
 export const deleteUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false, updatedBy: req.user._id },
-    { new: true }
-  );
-
+  const user = await User.findById(req.params.id);
   if (!user) throw new AppError('User not found', 404);
+  if (String(user._id) === String(req.user._id)) {
+    throw new AppError('You cannot deactivate your own account.', 400);
+  }
+  if (['admin', 'superadmin'].includes(user.role) && req.user.role !== 'superadmin') {
+    throw new AppError('Only a superadmin can deactivate another administrator account.', 403);
+  }
+  user.isActive = false;
+  user.updatedBy = req.user._id;
+  await user.save();
   res.json({ success: true, message: 'User deactivated successfully' });
 });
 
@@ -332,22 +406,37 @@ export const refundPayment = catchAsync(async (req, res) => {
   const { refundAmount, refundReason } = req.body;
   const payment = await Payment.findById(req.params.id);
   if (!payment) throw new AppError('Payment not found', 404);
-
-  if (payment.status !== 'completed') {
-    throw new AppError('Can only refund completed payments', 400);
+  if (!['completed', 'partially_refunded'].includes(payment.status)) {
+    throw new AppError('Only completed payments can be refunded.', 409);
   }
 
-  if (refundAmount > payment.amount) {
-    throw new AppError('Refund amount cannot exceed payment amount', 400);
+  // Direct UPI / manual transfers must be refunded through the bank manually.
+  // Never mark a manual payment refunded merely because an admin clicked a button.
+  if (payment.gateway !== 'razorpay') {
+    throw new AppError('This payment was not collected through Razorpay. Refund it through the bank first and record the manual refund with support.', 409);
   }
 
-  payment.status = 'refunded';
-  payment.refundAmount = refundAmount;
-  payment.refundReason = refundReason;
+  const amount = Number(refundAmount);
+  const alreadyRefunded = Number(payment.refundAmount || 0);
+  const remaining = Number(payment.amount) - alreadyRefunded;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) {
+    throw new AppError('Refund amount must be greater than zero and no more than the remaining refundable balance.', 400);
+  }
+  const gatewayPaymentId = payment.gatewayPaymentId || payment.gatewayTransactionId;
+  if (!gatewayPaymentId) {
+    throw new AppError('The original Razorpay payment reference is missing. No refund was attempted.', 409);
+  }
+
+  const adapter = PaymentAdapterFactory.getAdapter('razorpay');
+  const refund = await adapter.processRefund(gatewayPaymentId, amount, String(refundReason || '').slice(0, 500));
+  payment.refundAmount = alreadyRefunded + amount;
+  payment.refundReason = String(refundReason || '').slice(0, 500);
+  payment.refundId = refund.refundId;
   payment.refundedAt = new Date();
-
+  payment.status = payment.refundAmount >= Number(payment.amount) ? 'refunded' : 'partially_refunded';
   await payment.save();
-  res.json({ success: true, data: payment });
+
+  res.json({ success: true, message: 'Refund submitted to Razorpay.', data: payment });
 });
 
 // Support Management

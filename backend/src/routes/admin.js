@@ -1,17 +1,20 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminController.js';
-import { protect } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = Router();
 
-// All routes require authentication and admin role
-router.use(protect);
+// All admin APIs require an authenticated administrator.
+// Authentication alone is not sufficient: without this role guard any
+// signed-in customer or agent could read or mutate admin resources.
+router.use(protect, authorize('admin', 'superadmin'));
 
 // Analytics
 router.get('/analytics', ctrl.getAnalytics);
 
 // User management
 router.get('/users', ctrl.getUsers);
+router.post('/agents', ctrl.createAgent);
 router.get('/users/:id', ctrl.getUser);
 router.patch('/users/:id', ctrl.updateUser);
 router.delete('/users/:id', ctrl.deleteUser);

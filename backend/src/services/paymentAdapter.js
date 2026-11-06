@@ -104,9 +104,15 @@ class RazorpayAdapter extends PaymentAdapter {
 
   async processRefund(paymentId, refundAmount, reason) {
     try {
+      if (!this.isConfigured || !this.razorpay) {
+        throw new AppError('Razorpay is not configured. No refund was attempted.', 503);
+      }
+      if (!paymentId || !Number.isFinite(Number(refundAmount)) || Number(refundAmount) <= 0) {
+        throw new AppError('A valid Razorpay payment reference and refund amount are required.', 400);
+      }
       const refund = await this.razorpay.payments.refund(paymentId, {
-        amount: refundAmount * 100,
-        notes: { reason }
+        amount: Math.round(refundAmount * 100),
+        notes: { reason: String(reason || '').slice(0, 500) }
       });
 
       return {
@@ -140,51 +146,22 @@ class RazorpayAdapter extends PaymentAdapter {
 class BBPSAdapter extends PaymentAdapter {
   constructor() {
     super('bbps');
-    // BBPS integration would be implemented here
-    // Currently in sandbox mode
   }
 
-  async createOrder(orderData) {
-    // Sandbox mode - return mock response
-    return {
-      success: true,
-      orderId: `BBPS_${Date.now()}`,
-      amount: orderData.amount,
-      currency: 'INR',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async createOrder() {
+    throw new AppError('BBPS provider integration is not configured. No bill payment order was created.', 503);
   }
 
-  async verifyPayment(paymentData) {
-    // Sandbox mode
-    return {
-      success: true,
-      paymentId: paymentData.transactionId,
-      amount: paymentData.amount,
-      status: 'completed',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async verifyPayment() {
+    throw new AppError('BBPS provider integration is not configured. No bill payment can be verified.', 503);
   }
 
-  async processRefund(paymentId, refundAmount, reason) {
-    // Sandbox mode
-    return {
-      success: true,
-      refundId: `REFUND_${Date.now()}`,
-      amount: refundAmount,
-      status: 'processed',
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async processRefund() {
+    throw new AppError('BBPS provider integration is not configured. No bill refund was attempted.', 503);
   }
 
-  async getOrderStatus(orderId) {
-    // Sandbox mode
-    return {
-      success: true,
-      status: 'completed',
-      amount: 0,
-      note: 'Sandbox mode - BBPS integration pending'
-    };
+  async getOrderStatus() {
+    throw new AppError('BBPS provider integration is not configured. Bill status is unavailable.', 503);
   }
 }
 
@@ -193,32 +170,16 @@ class ManualPaymentAdapter extends PaymentAdapter {
     super('manual');
   }
 
-  async createOrder(orderData) {
-    return {
-      success: true,
-      orderId: `MANUAL_${Date.now()}`,
-      amount: orderData.amount,
-      currency: 'INR'
-    };
+  async createOrder() {
+    throw new AppError('Manual UPI payments must use the verified UPI QR flow. No gateway order was created.', 503);
   }
 
-  async verifyPayment(paymentData) {
-    // Manual payments are verified by admin
-    return {
-      success: true,
-      paymentId: paymentData.paymentId,
-      amount: paymentData.amount,
-      status: 'pending_admin_verification'
-    };
+  async verifyPayment() {
+    throw new AppError('Manual UPI payments can only be completed after an administrator verifies actual bank credit.', 503);
   }
 
-  async processRefund(paymentId, refundAmount, reason) {
-    return {
-      success: true,
-      refundId: `REFUND_${Date.now()}`,
-      amount: refundAmount,
-      status: 'processed'
-    };
+  async processRefund() {
+    throw new AppError('Manual UPI refunds must be completed through the bank and reconciled manually. No automatic refund was attempted.', 503);
   }
 
   async getOrderStatus(orderId) {

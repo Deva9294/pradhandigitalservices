@@ -78,10 +78,10 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     });
   }
 
-  if (!password || password.length < 6) {
+  if (!password || password.length < 8) {
     return res.status(400).json({
       success: false,
-      message: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए (Password must be at least 6 characters)'
+      message: 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए (Password must be at least 8 characters)'
     });
   }
 
@@ -101,6 +101,15 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
       message: isPhoneDuplicate
         ? 'इस मोबाइल नंबर से खाता पहले से मौजूद है। कृपया लॉगिन करें।'
         : 'इस ईमेल से खाता पहले से मौजूद है।'
+    });
+  }
+
+  // Agent accounts must be provisioned by an administrator. Public self-registration
+  // must never grant an operational role, even if the client submits role='agent'.
+  if (role === 'agent') {
+    return res.status(403).json({
+      success: false,
+      message: 'एजेंट खाता केवल एडमिन बना सकता है। कृपया Pradhan Digital Services से संपर्क करें।'
     });
   }
 
@@ -132,22 +141,7 @@ router.post('/register', authRateLimiter, asyncHandler(async (req, res) => {
     isPhoneVerified: false
   });
 
-  // If registering as an agent, create agent profile
-  let agentCode = null;
-  if (assignedRole === 'agent') {
-    agentCode = `PDS-AGT-${Date.now().toString().slice(-5)}`;
-    await AgentProfile.create({
-      user: user._id,
-      agentCode,
-      shopName: shopName || 'Digital Seva Kiosk',
-      businessName: `${user.name} Digital Center`,
-      shopAddress: {
-        city: city || 'Madhya Pradesh',
-        state: 'Madhya Pradesh'
-      },
-      kycStatus: 'pending'
-    });
-  }
+  const agentCode = null;
 
   const token = generateToken(user._id);
 
@@ -426,7 +420,12 @@ router.post('/forgot-password', authRateLimiter, asyncHandler(async (req, res) =
     user.passwordResetTokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
     await user.save();
-    const frontendUrl = (process.env.FRONTEND_URL || 'https://pradhandigitalservices.in').split(',')[0].trim().replace(/\/$/, '');
+    const frontendCandidates = (process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'https://pradhan-frontend-4g39.onrender.com')
+      .split(',')
+      .map((origin) => origin.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+    const frontendUrl = frontendCandidates.find((origin) => !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))
+      || 'https://pradhan-frontend-4g39.onrender.com';
     const resetUrl = frontendUrl + '/forgot-password?token=' + encodeURIComponent(rawToken) + (requestedRole === 'admin' ? '&role=admin' : '');
     const port = Number(process.env.SMTP_PORT || 587);
     const transporter = nodemailer.createTransport({ host: smtpHost, port, secure: port === 465, auth: { user: smtpUser, pass: smtpPass } });

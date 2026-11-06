@@ -10,21 +10,22 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed:catalogue": "node src/utils/seedCatalogue.js",
-    "cron:vacancies": "node src/scripts/syncRssVacancies.js"
+    "cron:vacancies": "node src/scripts/syncRssVacancies.js",
+    "test": "node --test src/__tests__/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "express": "^4.22.3",
     "express-rate-limit": "^8.7.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.3",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.16",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.3.1",
     "razorpay": "^2.9.5",
     "uuid": "^11.0.3",
     "rss-parser": "^3.13.0"

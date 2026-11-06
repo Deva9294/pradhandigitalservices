@@ -37,21 +37,44 @@ async function validateApplicationPayment(applicationId, user, amount) {
 
 export const createUpiPayment = catchAsync(async (req, res) => {
   const amount = Number(req.body.amount);
-  const { purpose = 'Pradhan Digital Services payment', applicationId, metadata = {} } = req.body;
-  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
-  const paymentType = allowedTypes.includes(req.body.type) ? req.body.type : 'service_application';
-  if (paymentType === 'membership') {
-    const plan = String(metadata.plan || '');
-    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
-    if (!expected || Math.round(amount * 100) !== expected * 100) throw new AppError('Membership amount does not match selected plan.', 400);
+  const { purpose = 'Pradhan Digital Services payment', applicationId } = req.body;
+  if (!applicationId) {
+    throw new AppError('Payment must be linked to a saved service application. Standalone wallet, recharge, bill and form-download payments are not enabled yet.', 400);
   }
-  if (paymentType === 'form_download' && Math.round(amount * 100) !== 50000) throw new AppError('Form download amount does not match catalogue price.', 400);
   if (!Number.isFinite(amount) || amount < 1 || amount > 500000) {
     throw new AppError('Amount must be between ₹1 and ₹5,00,000', 400);
   }
 
   const merchantUpiId = getMerchantUpiId();
   const application = await validateApplicationPayment(applicationId, req.user, amount);
+  const existingPayment = await Payment.findOne({
+    application: application._id,
+    user: req.user._id,
+    status: 'pending'
+  }).sort('-createdAt');
+
+  if (existingPayment && existingPayment.gateway !== 'manual') {
+    throw new AppError('A Razorpay payment is already pending for this application. Complete that checkout or wait for its status to update before starting UPI.', 409);
+  }
+
+  if (existingPayment) {
+    const note = `PDS-${existingPayment.paymentId}`;
+    const upiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Pradhan Digital Services')}&am=${Number(existingPayment.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: existingPayment._id,
+        paymentId: existingPayment.paymentId,
+        amount: existingPayment.amount,
+        upiId: merchantUpiId,
+        upiUri,
+        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(upiUri)}`,
+        status: existingPayment.status
+      }
+    });
+  }
+
+  const paymentType = 'service_application';
   const payment = await Payment.create({
     user: application ? application.user : req.user._id,
     application: application?._id,
@@ -66,7 +89,7 @@ export const createUpiPayment = catchAsync(async (req, res) => {
       paymentMethod: 'direct_upi_qr',
       merchantUpiId,
       purpose: String(purpose).slice(0, 160),
-      ...(metadata && typeof metadata === 'object' ? metadata : {}),
+      ...(req.body.metadata && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata) ? req.body.metadata : {}),
       utr: null,
       utrSubmittedAt: null,
       verificationStatus: 'awaiting_payment'
@@ -152,26 +175,34 @@ export const reviewUpiPayment = catchAsync(async (req, res) => {
 
   const payment = await Payment.findOne({ _id: req.params.id, gateway: 'manual' });
   if (!payment) throw new AppError('Payment not found', 404);
-  if (payment.status !== 'pending' || !payment.metadata?.utr) {
+  const alreadyApproved = payment.status === 'completed' && payment.metadata?.verificationStatus === 'admin_verified';
+  if (alreadyApproved && action !== 'approve') {
+    throw new AppError('An approved payment cannot be rejected. Use the refund process if required.', 409);
+  }
+  if (!alreadyApproved && (payment.status !== 'pending' || !payment.metadata?.utr)) {
     throw new AppError('Only UTR-submitted pending payments can be reviewed', 409);
   }
 
-  if (action === 'approve') {
-    payment.status = 'completed';
-    payment.verified = true;
-    payment.gatewayTransactionId = payment.metadata.utr;
-    payment.completedAt = new Date();
-    payment.metadata.verificationStatus = 'admin_verified';
-  } else {
-    payment.status = 'failed';
-    payment.failedAt = new Date();
-    payment.metadata.verificationStatus = 'rejected';
+  // Allow an approved UPI payment to be retried for application reconciliation
+  // if the payment save succeeded but the linked application save previously failed.
+  if (!alreadyApproved) {
+    if (action === 'approve') {
+      payment.status = 'completed';
+      payment.verified = true;
+      payment.gatewayTransactionId = payment.metadata.utr;
+      payment.completedAt = new Date();
+      payment.metadata.verificationStatus = 'admin_verified';
+    } else {
+      payment.status = 'failed';
+      payment.failedAt = new Date();
+      payment.metadata.verificationStatus = 'rejected';
+    }
+    payment.metadata.adminNote = String(note).slice(0, 500);
+    payment.metadata.reviewedBy = String(req.user._id);
+    payment.metadata.reviewedAt = new Date();
+    payment.markModified('metadata');
+    await payment.save();
   }
-  payment.metadata.adminNote = String(note).slice(0, 500);
-  payment.metadata.reviewedBy = String(req.user._id);
-  payment.metadata.reviewedAt = new Date();
-  payment.markModified('metadata');
-  await payment.save();
 
   if (action === 'approve' && payment.application) {
     const application = await ServiceApplication.findById(payment.application);

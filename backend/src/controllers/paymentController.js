@@ -71,9 +71,12 @@ async function validateApplicationPayment(applicationId, user, amount) {
 
 export const createOrder = catchAsync(async (req, res) => {
   const currency = String(req.body.currency || 'INR').toUpperCase();
-  const { type, applicationId, purpose, metadata } = req.body;
+  const { applicationId, purpose } = req.body;
 
   if (currency !== 'INR') throw new AppError('Only INR payments are supported.', 400);
+  if (!applicationId) {
+    throw new AppError('Payment must be linked to a saved service application. Standalone wallet, recharge, bill and form-download payments are not enabled yet.', 400);
+  }
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     throw new AppError('Online payment is temporarily unavailable. Razorpay credentials are not configured.', 503);
   }
@@ -103,35 +106,17 @@ export const createOrder = catchAsync(async (req, res) => {
     throw new AppError('Enter a valid INR amount between ₹1 and ₹5,00,000.', 400);
   }
 
-  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
-  const paymentType = application ? 'service_application' : (allowedTypes.includes(type) ? type : 'service_application');
+  const paymentType = 'service_application';
 
-  // Enforce catalogue prices on fixed-price products; never trust a browser-supplied amount.
-  if (!application && paymentType === 'membership') {
-    const plan = String(metadata?.plan || '');
-    const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;
-    if (!expected || Math.round(amount * 100) !== expected * 100) {
-      throw new AppError('Membership amount does not match the selected plan.', 400);
-    }
-  }
-
-  if (!application && paymentType === 'form_download') {
-    const allowedFormSlugs = new Set([
-      'income-certificate-form', 'caste-certificate-form', 'domicile-form',
-      'birth-certificate-form', 'death-certificate-form', 'marriage-registration-form',
-      'pension-forms', 'samagra-forms', 'labour-forms', 'pm-kisan-forms',
-      'madhya-pradesh-forms', 'uttar-pradesh-forms', 'rajasthan-forms',
-      'bihar-forms', 'all-state-government-forms'
-    ]);
-    if (!allowedFormSlugs.has(String(metadata?.formSlug || '')) || Math.round(amount * 100) !== 500) {
-      throw new AppError('Form download amount or catalogue item is invalid.', 400);
-    }
-  }
   let payment = null;
   if (application) {
-    payment = await Payment.findOne({ application: application._id }).sort('-createdAt');
-    if (payment && String(payment.user) !== String(application.user)) {
-      throw new AppError('Payment ownership does not match this application.', 403);
+    payment = await Payment.findOne({
+      application: application._id,
+      user: application.user,
+      status: 'pending'
+    }).sort('-createdAt');
+    if (payment && payment.gateway !== 'razorpay') {
+      throw new AppError('A Direct UPI payment is already pending for this application. Complete that UPI payment or wait for its status to update before starting Razorpay.', 409);
     }
     if (payment?.status === 'completed') throw new AppError('Payment already completed.', 409);
     if (payment && Math.round(Number(payment.amount) * 100) !== Math.round(amount * 100)) {
@@ -157,7 +142,7 @@ export const createOrder = catchAsync(async (req, res) => {
       },
       gateway: 'razorpay',
       status: 'pending',
-      metadata: { purpose: String(purpose || 'Pradhan Digital Services payment').slice(0, 120), ...(metadata || {}) },
+      metadata: { purpose: String(purpose || 'Pradhan Digital Services payment').slice(0, 120) },
       initiatedAt: new Date()
     });
   }
@@ -258,7 +243,13 @@ export const processRefund = catchAsync(async (req, res) => {
   if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) {
     throw new AppError('Invalid refund amount', 400);
   }
-  const adapter = PaymentAdapterFactory.getAdapter(payment.gateway);
+  if (payment.gateway !== 'razorpay') {
+    throw new AppError('Automatic refunds are only supported for captured Razorpay payments. Direct UPI / manual payments must be refunded through the bank and reconciled by an administrator; this endpoint will not mark them refunded.', 400);
+  }
+  if (!payment.gatewayTransactionId) {
+    throw new AppError('The captured Razorpay payment reference is missing. No refund was attempted.', 409);
+  }
+  const adapter = PaymentAdapterFactory.getAdapter('razorpay');
   const refund = await adapter.processRefund(payment.gatewayTransactionId, amount, refundReason);
   payment.refundAmount = Number(payment.refundAmount || 0) + amount;
   payment.refundReason = String(refundReason || '').slice(0, 500);

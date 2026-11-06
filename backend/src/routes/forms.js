@@ -1,6 +1,7 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { protect } from '../middleware/auth.js';
+import OfflineFormSubmission from '../models/OfflineFormSubmission.js';
 
 const router = express.Router();
 
@@ -108,6 +109,17 @@ router.get('/', asyncHandler(async (req, res) => {
   });
 }));
 
+// @route   GET /api/forms/history
+// @desc    Get the signed-in user's saved offline form submissions
+// @access  Private
+router.get('/history', protect, asyncHandler(async (req, res) => {
+  const submissions = await OfflineFormSubmission.find({ user: req.user._id })
+    .select('-formData -documents.url')
+    .sort('-createdAt')
+    .limit(100);
+  res.json({ success: true, data: submissions });
+}));
+
 // @route   GET /api/forms/:id
 // @desc    Get single form by ID
 // @access  Public
@@ -128,42 +140,64 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 // @route   POST /api/forms/submit
-// @desc    Submit offline form application
+// @desc    Validate and persist an offline form application
 // @access  Private
 router.post('/submit', protect, asyncHandler(async (req, res) => {
-  const { formId, formData, documents } = req.body;
-  
-  const form = offlineForms.find(f => f.id === formId);
-  if (!form) {
-    return res.status(404).json({
-      success: false,
-      message: 'Form not found'
-    });
+  const { formId, formData = {}, documents = [] } = req.body || {};
+  const form = offlineForms.find(item => item.id === formId);
+  if (!form) return res.status(404).json({ success: false, message: 'Form not found' });
+
+  if (!formData || typeof formData !== 'object' || Array.isArray(formData)) {
+    return res.status(400).json({ success: false, message: 'Applicant form data must be an object.' });
   }
-  
-  // Validate required documents
-  const missingDocs = form.documentsRequired.filter(
-    doc => !documents || !documents.some(d => d.type === doc)
+  if (!Array.isArray(documents) || documents.length > 20) {
+    return res.status(400).json({ success: false, message: 'Upload no more than 20 valid documents.' });
+  }
+
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const validDocuments = documents.filter(document => {
+    if (!document || typeof document.type !== 'string' || typeof document.url !== 'string' || !cloudName) return false;
+    try {
+      const url = new URL(document.url);
+      return url.protocol === 'https:' && url.hostname === 'res.cloudinary.com' &&
+        url.pathname.startsWith(`/${cloudName}/`);
+    } catch {
+      return false;
+    }
+  }).map(document => ({
+    type: document.type.trim().slice(0, 100),
+    url: document.url,
+    fileName: typeof document.fileName === 'string' ? document.fileName.slice(0, 180) : ''
+  }));
+
+  const missingDocs = form.documentsRequired.filter(required =>
+    !validDocuments.some(document => document.type === required)
   );
-  
-  if (missingDocs.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: `Missing required documents: ${missingDocs.join(', ')}`
-    });
+  if (missingDocs.length) {
+    return res.status(400).json({ success: false, message: `Missing required documents: ${missingDocs.join(', ')}` });
   }
-  
-  // In production, save to database and process
-  res.json({
+
+  const submission = await OfflineFormSubmission.create({
+    user: req.user._id,
+    formId: form.id,
+    formName: form.name,
+    formData,
+    documents: validDocuments,
+    status: 'submitted',
+    processingTime: form.processingTime,
+    estimatedCompletion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
+
+  res.status(201).json({
     success: true,
-    message: 'Form submitted successfully',
+    message: 'Your form submission has been saved. Our team will review it.',
     data: {
-      applicationId: `APP${Date.now()}`,
-      formId,
-      formName: form.name,
-      status: 'processing',
-      processingTime: form.processingTime,
-      estimatedCompletion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      submissionId: submission.submissionId,
+      formId: submission.formId,
+      formName: submission.formName,
+      status: submission.status,
+      processingTime: submission.processingTime,
+      estimatedCompletion: submission.estimatedCompletion
     }
   });
 }));

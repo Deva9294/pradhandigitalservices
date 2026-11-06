@@ -9,7 +9,6 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { whatsAppUrl } from "@/lib/utils";
 import { rechargeApi } from "@/lib/api";
-import RazorpayPayButton from "@/components/payment/RazorpayPayButton";
 import { useToast } from "@/components/common/Toast";
 import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/validation";
 
@@ -350,36 +349,14 @@ export default function RechargePage() {
 
               {pendingPayment ? (
                 <div className="space-y-3">
-                  <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
-                    Razorpay payment verified hone ke baad payment record banega. Actual operator recharge / BBPS fulfilment API abhi configured nahi hai; service execution pending manual confirmation rahega.
-                  </p>
-                  <RazorpayPayButton
-                    amount={pendingPayment.amount}
-                    purpose={pendingPayment.purpose}
-                    type={pendingPayment.paymentType}
-                    metadata={{
-                      serviceType: pendingPayment.serviceType,
-                      targetNumber: pendingPayment.targetNumber,
-                      provider: pendingPayment.provider,
-                      plan: pendingPayment.description,
-                      fulfilmentStatus: "pending_manual_processing"
-                    }}
-                    className="w-full py-4 bg-gradient-to-r from-saffron-600 to-saffron-500 hover:from-saffron-500 hover:to-saffron-400 text-white font-bold text-base rounded-2xl shadow-xl transition flex items-center justify-center gap-2"
-                    label={"Razorpay से ₹" + pendingPayment.amount + " भुगतान करें"}
-                    onSuccess={(payment) => {
-                      setReceipt({
-                        receiptNumber: payment?.paymentId || "Verified",
-                        type: pendingPayment.description,
-                        targetNumber: pendingPayment.targetNumber,
-                        provider: pendingPayment.provider,
-                        amount: pendingPayment.amount,
-                        timestamp: new Date().toISOString(),
-                        status: "PAYMENT_VERIFIED_PENDING_FULFILMENT"
-                      });
-                      setPendingPayment(null);
-                      showToast("success", "Razorpay payment verified. Service fulfilment is pending.");
-                    }}
-                  />
+                  <div role="status" className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+                    <strong className="block mb-1">भुगतान अस्थायी रूप से उपलब्ध नहीं है</strong>
+                    Live operator / BBPS fulfilment provider अभी integrate नहीं है। इसलिए आपकी राशि सुरक्षित रखने के लिए इस पेज पर कोई payment collect नहीं किया जाएगा।
+                    <span className="mt-2 block text-xs text-amber-200/80">चयन: {pendingPayment.description} · राशि ₹{pendingPayment.amount}</span>
+                  </div>
+                  <a href={whatsAppUrl("Namaste, mujhe " + pendingPayment.description + " ke liye manual assistance chahiye. Number/Account: " + pendingPayment.targetNumber + ".")} target="_blank" rel="noreferrer" className="block w-full rounded-xl bg-emerald-600 py-3 text-center text-sm font-bold text-white">
+                    WhatsApp पर सहायता लें
+                  </a>
                   <button type="button" onClick={() => setPendingPayment(null)} className="w-full rounded-xl border border-white/20 py-2 text-xs text-white">विवरण बदलें</button>
                 </div>
               ) : (

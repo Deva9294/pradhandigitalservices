@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://pradhan-frontend-4g39.onrender.com";
+import { SITE_URL } from "@/lib/utils";
+
+const BASE_URL = SITE_URL.replace(/\/$/, "");
 
 export default function robots(): MetadataRoute.Robots {
   return {

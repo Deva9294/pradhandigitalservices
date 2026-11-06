@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './utils/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { rateLimiter, sanitizeInput, preventNoSQLInjection, securityHeaders } from './middleware/security.js';
+import { rateLimiter, preventNoSQLInjection, securityHeaders } from './middleware/security.js';
 
 import authRoutes from './routes/auth.js';
 import serviceRoutes from './routes/services.js';
@@ -115,8 +115,6 @@ app.use(cors({
 
 app.use(securityHeaders);
 app.use(rateLimiter);
-app.use(sanitizeInput);
-app.use(preventNoSQLInjection);
 app.use(express.json({
   limit: '10mb',
   verify: (req, res, buffer) => {
@@ -126,6 +124,7 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(preventNoSQLInjection);
 app.use(['/api/services', '/api/applications'], async (req, res, next) => {
   try {
     await startupReady;

@@ -110,9 +110,13 @@ export const createOrder = catchAsync(async (req, res) => {
 
   let payment = null;
   if (application) {
-    payment = await Payment.findOne({ application: application._id }).sort('-createdAt');
-    if (payment && String(payment.user) !== String(application.user)) {
-      throw new AppError('Payment ownership does not match this application.', 403);
+    payment = await Payment.findOne({
+      application: application._id,
+      user: application.user,
+      status: 'pending'
+    }).sort('-createdAt');
+    if (payment && payment.gateway !== 'razorpay') {
+      throw new AppError('A Direct UPI payment is already pending for this application. Complete that UPI payment or wait for its status to update before starting Razorpay.', 409);
     }
     if (payment?.status === 'completed') throw new AppError('Payment already completed.', 409);
     if (payment && Math.round(Number(payment.amount) * 100) !== Math.round(amount * 100)) {

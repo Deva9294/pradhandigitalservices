@@ -420,7 +420,12 @@ router.post('/forgot-password', authRateLimiter, asyncHandler(async (req, res) =
     user.passwordResetTokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
     await user.save();
-    const frontendUrl = (process.env.FRONTEND_URL || 'https://pradhandigitalservices.in').split(',')[0].trim().replace(/\/$/, '');
+    const frontendCandidates = (process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'https://pradhan-frontend-4g39.onrender.com')
+      .split(',')
+      .map((origin) => origin.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+    const frontendUrl = frontendCandidates.find((origin) => !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))
+      || 'https://pradhan-frontend-4g39.onrender.com';
     const resetUrl = frontendUrl + '/forgot-password?token=' + encodeURIComponent(rawToken) + (requestedRole === 'admin' ? '&role=admin' : '');
     const port = Number(process.env.SMTP_PORT || 587);
     const transporter = nodemailer.createTransport({ host: smtpHost, port, secure: port === 465, auth: { user: smtpUser, pass: smtpPass } });

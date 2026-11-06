@@ -214,7 +214,7 @@ export default function ServiceApplyPage() {
             </button>
             <p className="text-center text-[11px] text-slate-500">भुगतान सत्यापित होने तक आवेदन draft रहेगा।</p>
             {pendingApplicationId && service && <div className="rounded-xl border p-4">
-              <p className="mb-3 text-sm font-bold text-navy-900 dark:text-white">Direct UPI Payment</p>
+              <p className="mb-3 text-sm font-bold text-navy-900 dark:text-white">सुरक्षित Online Payment</p>
               <DirectUpiPayButton amount={total} purpose={`${service.name} application`} type="service_application" applicationId={pendingApplicationId} className="w-full rounded-xl bg-orange-500 p-3 font-bold text-white" onSuccess={()=>{setInfo("आपका भुगतान Admin द्वारा बैंक में सत्यापित हो गया है। आवेदन Dashboard में उपलब्ध है।");router.replace("/dashboard");}}/>
             </div>}
           </form>

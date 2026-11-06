@@ -211,8 +211,8 @@ function LoginContent() {
         throw new Error(lang === "hi" ? "कृपया अपना पूरा नाम दर्ज करें" : "Please provide your full name");
       }
 
-      if (formData.password.length < 6) {
-        throw new Error(lang === "hi" ? "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए" : "Password must be at least 6 characters");
+      if (formData.password.length < 8) {
+        throw new Error(lang === "hi" ? "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए" : "Password must be at least 8 characters");
       }
 
       const payload: Record<string, any> = {
@@ -484,7 +484,7 @@ function LoginContent() {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="कम से कम 6 अक्षर"

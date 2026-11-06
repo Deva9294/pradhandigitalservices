@@ -232,8 +232,11 @@ export const attachDocuments = catchAsync(async (req, res) => {
     const fileUrl = String(file.fileUrl || '');
     let parsed;
     try { parsed = new URL(fileUrl); } catch { throw new AppError('Invalid uploaded document URL.', 400); }
-    if (parsed.host !== allowedHost || !parsed.pathname.startsWith('/uploads/')) {
-      throw new AppError('Document must be uploaded to the Pradhan secure upload endpoint.', 400);
+    const isLocalUpload = parsed.protocol === 'https:' && parsed.host === allowedHost && parsed.pathname.startsWith('/uploads/');
+    const isCloudinaryUpload = parsed.protocol === 'https:' && parsed.host === 'res.cloudinary.com' &&
+      parsed.pathname.startsWith(`/${process.env.CLOUDINARY_CLOUD_NAME || '__not_configured__'}/`);
+    if (!isLocalUpload && !isCloudinaryUpload) {
+      throw new AppError('Document must be uploaded to the configured secure storage provider.', 400);
     }
     return {
       type: String(file.documentType || 'Supporting Document').slice(0, 80),

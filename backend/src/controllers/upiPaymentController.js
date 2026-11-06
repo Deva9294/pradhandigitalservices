@@ -50,9 +50,12 @@ export const createUpiPayment = catchAsync(async (req, res) => {
   const existingPayment = await Payment.findOne({
     application: application._id,
     user: req.user._id,
-    gateway: 'manual',
     status: 'pending'
   }).sort('-createdAt');
+
+  if (existingPayment && existingPayment.gateway !== 'manual') {
+    throw new AppError('A Razorpay payment is already pending for this application. Complete that checkout or wait for its status to update before starting UPI.', 409);
+  }
 
   if (existingPayment) {
     const note = `PDS-${existingPayment.paymentId}`;

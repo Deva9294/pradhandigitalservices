@@ -239,7 +239,13 @@ export const processRefund = catchAsync(async (req, res) => {
   if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) {
     throw new AppError('Invalid refund amount', 400);
   }
-  const adapter = PaymentAdapterFactory.getAdapter(payment.gateway);
+  if (payment.gateway !== 'razorpay') {
+    throw new AppError('Automatic refunds are only supported for captured Razorpay payments. Direct UPI / manual payments must be refunded through the bank and reconciled by an administrator; this endpoint will not mark them refunded.', 400);
+  }
+  if (!payment.gatewayTransactionId) {
+    throw new AppError('The captured Razorpay payment reference is missing. No refund was attempted.', 409);
+  }
+  const adapter = PaymentAdapterFactory.getAdapter('razorpay');
   const refund = await adapter.processRefund(payment.gatewayTransactionId, amount, refundReason);
   payment.refundAmount = Number(payment.refundAmount || 0) + amount;
   payment.refundReason = String(refundReason || '').slice(0, 500);

@@ -132,7 +132,7 @@ export default function ServiceApplyPage() {
         })));
       }
 
-      setInfo("Application draft तैयार है। नीचे Direct UPI QR से भुगतान करें और UTR जमा करें। बैंक में राशि verify होने पर Admin आवेदन को submitted करेगा।");
+      setInfo("Application draft तैयार है। अब Razorpay या Direct UPI से भुगतान करें। Razorpay भुगतान gateway द्वारा verify होगा; Direct UPI भुगतान बैंक में राशि verify होने के बाद Admin approve करेगा।");
       setPendingApplicationId(application._id);
       setBusy(false);
     } catch (e: any) {
@@ -153,7 +153,7 @@ export default function ServiceApplyPage() {
           <header className="rounded-3xl bg-[#0A1B4D] p-6 text-white">
             <div className="flex items-center gap-2 text-xs font-bold text-orange-300"><ShieldCheck className="h-4 w-4" /> सुरक्षित ऑनलाइन आवेदन</div>
             <h1 className="mt-2 text-2xl font-black">{service?.nameHi || service?.name || "Service Application"}</h1>
-            <p className="mt-1 text-sm text-blue-100">अपनी जानकारी भरें, जरूरी दस्तावेज़ जोड़ें और Direct UPI से भुगतान करके आवेदन जमा करें।</p>
+            <p className="mt-1 text-sm text-blue-100">अपनी जानकारी भरें, जरूरी दस्तावेज़ जोड़ें और Razorpay या Direct UPI से सुरक्षित भुगतान करें।</p>
           </header>
 
           {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}

@@ -47,6 +47,30 @@ export const createUpiPayment = catchAsync(async (req, res) => {
 
   const merchantUpiId = getMerchantUpiId();
   const application = await validateApplicationPayment(applicationId, req.user, amount);
+  const existingPayment = await Payment.findOne({
+    application: application._id,
+    user: req.user._id,
+    gateway: 'manual',
+    status: 'pending'
+  }).sort('-createdAt');
+
+  if (existingPayment) {
+    const note = `PDS-${existingPayment.paymentId}`;
+    const upiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent('Pradhan Digital Services')}&am=${Number(existingPayment.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: existingPayment._id,
+        paymentId: existingPayment.paymentId,
+        amount: existingPayment.amount,
+        upiId: merchantUpiId,
+        upiUri,
+        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(upiUri)}`,
+        status: existingPayment.status
+      }
+    });
+  }
+
   const paymentType = 'service_application';
   const payment = await Payment.create({
     user: application ? application.user : req.user._id,

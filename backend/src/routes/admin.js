@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminController.js';
-import { protect } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = Router();
 
 // All routes require authentication and admin role
-router.use(protect);
+router.use(protect, authorize('admin', 'superadmin'));
 
 // Analytics
 router.get('/analytics', ctrl.getAnalytics);

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   backend-authorization-tests:
@@ -23,8 +23,19 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: backend/package-lock.json
+      - run: npm install --package-lock-only --no-audit --no-fund
       - run: npm ci
       - run: npm run test:authorization
+      - name: Commit synchronized backend lockfile
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if ! git diff --quiet -- backend/package-lock.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add backend/package-lock.json
+            git commit -m 'chore: sync backend package lockfile'
+            git push
+          fi
 
   frontend-production-build:
     runs-on: ubuntu-latest

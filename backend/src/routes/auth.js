@@ -397,6 +397,11 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
       role: user.role,
       walletBalance: user.walletBalance || 0,
       avatar: user.avatar,
+      addresses: user.addresses || [],
+      dateOfBirth: user.dateOfBirth || null,
+      gender: user.gender || '',
+      preferredLanguage: user.preferredLanguage || 'en',
+      notificationsEnabled: user.notificationsEnabled !== false,
       isVerified: user.isVerified,
       agentCode: agentProfile?.agentCode,
       shopName: agentProfile?.shopName

@@ -31,3 +31,14 @@ test('customer, agent, staff and anonymous users are denied privileged routes', 
     assert.equal(result.res.body?.success, false, String(role));
   }
 });
+
+import { assertTrackingPhone } from '../controllers/applicationController.js';
+
+test('public application tracking requires the registered mobile number', () => {
+  assert.equal(assertTrackingPhone('9876543210', '9876543210'), true);
+  assert.equal(assertTrackingPhone('+91 98765 43210', '9876543210'), true);
+  assert.throws(() => assertTrackingPhone('', '9876543210'), (error) => error.statusCode === 400);
+  assert.throws(() => assertTrackingPhone('12345', '9876543210'), (error) => error.statusCode === 400);
+  assert.throws(() => assertTrackingPhone('9876543211', '9876543210'), (error) => error.statusCode === 403);
+  assert.throws(() => assertTrackingPhone('9876543210', ''), (error) => error.statusCode === 403);
+});

@@ -476,7 +476,7 @@ router.post('/:id/apply-assistance', protect, asyncHandler(async (req, res) => {
 /**
  * Admin: POST /api/vacancies
  */
-router.post('/', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.post('/', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const vacancy = await Vacancy.create(req.body);
   res.status(201).json({ success: true, message: 'Vacancy created successfully', vacancy });
 }));
@@ -485,7 +485,7 @@ router.post('/', protect, authorize('admin'), asyncHandler(async (req, res) => {
  * Admin: PUT /api/vacancies/:id
  * Tracks revision history if dates, seats, or fees change
  */
-router.put('/:id', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.put('/:id', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const existing = await Vacancy.findById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'Vacancy not found' });
@@ -531,7 +531,7 @@ router.put('/:id', protect, authorize('admin'), asyncHandler(async (req, res) =>
 /**
  * Admin: DELETE /api/vacancies/:id
  */
-router.delete('/:id', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const vacancy = await Vacancy.findByIdAndDelete(req.params.id);
   if (!vacancy) {
     return res.status(404).json({ success: false, message: 'Vacancy not found' });
@@ -556,7 +556,7 @@ router.all('/sync', asyncHandler(async (req, res) => {
 /**
  * Manual Sync Trigger
  */
-router.post('/sync/manual', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.post('/sync/manual', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const syncModule = await import('../vacancy-sync/sync.js');
   const catalogue = await syncModule.syncAllVacancies();
   const rss = await syncRssVacancies();

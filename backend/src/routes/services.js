@@ -109,7 +109,7 @@ router.get('/:slug', asyncHandler(async (req, res) => {
 // @route   POST /api/services
 // @desc    Create a new service (Admin only)
 // @access  Private/Admin
-router.post('/', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.post('/', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const service = await Service.create(req.body);
   
   res.status(201).json({
@@ -122,7 +122,7 @@ router.post('/', protect, authorize('admin'), asyncHandler(async (req, res) => {
 // @route   PUT /api/services/:id
 // @desc    Update service (Admin only)
 // @access  Private/Admin
-router.put('/:id', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.put('/:id', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const service = await Service.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -146,7 +146,7 @@ router.put('/:id', protect, authorize('admin'), asyncHandler(async (req, res) =>
 // @route   DELETE /api/services/:id
 // @desc    Delete service (Admin only)
 // @access  Private/Admin
-router.delete('/:id', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const service = await Service.findByIdAndDelete(req.params.id);
   
   if (!service) {

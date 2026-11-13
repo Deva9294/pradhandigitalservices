@@ -94,7 +94,7 @@ router.get('/:id', protect, asyncHandler(async (req, res) => {
 // @route   PUT /api/bookings/:id/status
 // @desc    Update booking status (Admin only)
 // @access  Private/Admin
-router.put('/:id/status', protect, authorize('admin'), asyncHandler(async (req, res) => {
+router.put('/:id/status', protect, authorize('admin', 'superadmin'), asyncHandler(async (req, res) => {
   const { status, adminNotes, rejectionReason } = req.body;
   
   const booking = await Booking.findById(req.params.id);

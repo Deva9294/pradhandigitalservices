@@ -5,6 +5,18 @@ import User from '../models/User.js';
 import { catchAsync } from '../utils/catchAsync.js';
 import { AppError } from '../utils/AppError.js';
 
+export function assertTrackingPhone(phone, applicationPhone) {
+  const cleanAppPhone = String(applicationPhone || '').replace(/\D/g, '').slice(-10);
+  const cleanReqPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+  if (!/^\d{10}$/.test(cleanReqPhone)) {
+    throw new AppError('Enter the registered 10-digit mobile number to track this application.', 400);
+  }
+  if (!/^\d{10}$/.test(cleanAppPhone) || cleanAppPhone !== cleanReqPhone) {
+    throw new AppError('Phone number does not match application record', 403);
+  }
+  return true;
+}
+
 export const createApplication = catchAsync(async (req, res) => {
   const { serviceId, serviceSlug, applicantDetails, serviceData, paymentMethod = 'razorpay' } = req.body || {};
 
@@ -389,14 +401,7 @@ export const trackApplication = catchAsync(async (req, res) => {
 
   // A phone number is mandatory for public tracking; never reveal application
   // status or staff remarks based on the application ID alone.
-  const cleanAppPhone = String(application.applicantDetails?.phone || '').replace(/\D/g, '').slice(-10);
-  const cleanReqPhone = String(phone || '').replace(/\D/g, '').slice(-10);
-  if (!/^\d{10}$/.test(cleanReqPhone)) {
-    throw new AppError('Enter the registered 10-digit mobile number to track this application.', 400);
-  }
-  if (!/^\d{10}$/.test(cleanAppPhone) || cleanAppPhone !== cleanReqPhone) {
-    throw new AppError('Phone number does not match application record', 403);
-  }
+  assertTrackingPhone(phone, application.applicantDetails?.phone);
 
   // Don't expose sensitive data in public tracking
   const publicData = {

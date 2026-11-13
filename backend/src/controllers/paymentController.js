@@ -73,6 +73,12 @@ export const createOrder = catchAsync(async (req, res) => {
   const currency = String(req.body.currency || 'INR').toUpperCase();
   const { type, applicationId, purpose, metadata } = req.body;
 
+  // Only service applications have a complete payment-to-fulfilment workflow.
+  // Never collect money for wallet/recharge/bill/membership/form flows until
+  // their corresponding credit or fulfilment handler is implemented.
+  if (!applicationId || (type && type !== 'service_application')) {
+    throw new AppError('This payment flow is not enabled yet. Payments are currently accepted only for a linked service application.', 409);
+  }
   if (currency !== 'INR') throw new AppError('Only INR payments are supported.', 400);
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     throw new AppError('Online payment is temporarily unavailable. Razorpay credentials are not configured.', 503);

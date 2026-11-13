@@ -41,7 +41,9 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
     }
   }
 
+  const emailChanged = (email || '') !== (user.email || '');
   const updates = { name, email: email || undefined };
+  if (emailChanged) updates.isEmailVerified = false;
   if (typeof req.body.avatar === 'string') {
     const avatar = req.body.avatar.trim();
     if (avatar.length > 2048) return res.status(400).json({ success: false, message: 'Avatar URL is too long.' });

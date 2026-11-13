@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { allServices } from "@/data/services";
+import { MASTER_SERVICES } from "@/data/servicesCatalogue";
 
 const BASE_URL = "https://pradhan-frontend-4g39.onrender.com";
 
@@ -21,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/contact`, lastModified: currentDate, changeFrequency: "monthly", priority: 0.5 },
   ];
 
-  const servicePages: MetadataRoute.Sitemap = allServices.map((service) => ({
+  const servicePages: MetadataRoute.Sitemap = MASTER_SERVICES.map((service) => ({
     url: `${BASE_URL}/services/${service.slug}`,
     lastModified: currentDate,
     changeFrequency: "weekly",

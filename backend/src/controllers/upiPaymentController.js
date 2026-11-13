@@ -38,8 +38,10 @@ async function validateApplicationPayment(applicationId, user, amount) {
 export const createUpiPayment = catchAsync(async (req, res) => {
   const amount = Number(req.body.amount);
   const { purpose = 'Pradhan Digital Services payment', applicationId, metadata = {} } = req.body;
-  const allowedTypes = ['service_application', 'form_download', 'recharge', 'bill_payment', 'wallet_topup', 'membership'];
-  const paymentType = allowedTypes.includes(req.body.type) ? req.body.type : 'service_application';
+  if (!applicationId || (req.body.type && req.body.type !== 'service_application')) {
+    throw new AppError('This payment flow is not enabled yet. Direct UPI payments are currently accepted only for a linked service application.', 409);
+  }
+  const paymentType = 'service_application';
   if (paymentType === 'membership') {
     const plan = String(metadata.plan || '');
     const expected = plan === 'monthly' ? 99 : plan === 'yearly' ? 499 : 0;

@@ -11,7 +11,7 @@
     "start": "node src/index.js",
     "seed:catalogue": "node src/utils/seedCatalogue.js",
     "cron:vacancies": "node src/scripts/syncRssVacancies.js",
-    "test:authorization": "node --test src/__tests__/authorization.node.test.js"
+    "test:authorization": "node --test src/__tests__/*.node.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

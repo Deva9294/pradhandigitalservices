@@ -7,8 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# CI only needs to read the repository. It must not push generated lockfile
+# changes back to main; dependency lockfiles should be reviewed and committed
+# by maintainers in a normal pull request.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   backend-authorization-tests:
@@ -26,16 +29,6 @@ jobs:
       - run: npm install --package-lock-only --no-audit --no-fund
       - run: npm ci
       - run: npm run test:authorization
-      - name: Commit synchronized backend lockfile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          if ! git diff --quiet -- backend/package-lock.json; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add backend/package-lock.json
-            git commit -m 'chore: sync backend package lockfile'
-            git push
-          fi
 
   frontend-production-build:
     runs-on: ubuntu-latest

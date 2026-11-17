@@ -76,26 +76,66 @@ export const sanitizeInput = (req, res, next) => {
 
 // Prevent NoSQL injection
 export const preventNoSQLInjection = (req, res, next) => {
-  const checkForInjection = (obj) => {
-    if (typeof obj === 'string') {
-      if (obj.includes('$') || obj.includes('{') || obj.includes('}')) {
-        return true;
-      }
-    } else if (typeof obj === 'object' && obj !== null) {
-      for (const key in obj) {
-        if (checkForInjection(obj[key])) {
-          return true;
+  const forbiddenKeys = new Set(['__proto__', 'prototype', 'constructor']);
+  const inspect = (value) => {
+    if (!value || typeof value !== 'object') return false;
+    for (const [key, child] of Object.entries(value)) {
+      if (key.startsWith('
+
+// Mask sensitive data in logs
+export const maskSensitiveData = (data) => {
+  const sensitiveFields = [
+    'password',
+    'otp',
+    'aadhaar',
+    'pan',
+    'phone',
+    'email',
+    'token',
+    'secret',
+    'key'
+  ];
+
+  if (typeof data === 'object' && data !== null) {
+    const masked = { ...data };
+    Object.keys(masked).forEach(key => {
+      if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+        if (typeof masked[key] === 'string') {
+          masked[key] = masked[key].substring(0, 2) + '***' + masked[key].substring(masked[key].length - 2);
         }
       }
+    });
+    return masked;
+  }
+
+  return data;
+};
+
+// Validate API key
+export const validateApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  
+  if (!apiKey) {
+    throw new AppError('API key is required', 401);
+  }
+
+  // In production, validate against database
+  const validApiKey = process.env.API_KEY;
+  if (validApiKey && apiKey !== validApiKey) {
+    throw new AppError('Invalid API key', 401);
+  }
+
+  next();
+};) || key.includes('.') || forbiddenKeys.has(key)) return true;
+      if (inspect(child)) return true;
     }
     return false;
   };
 
-  if (checkForInjection(req.body) || checkForInjection(req.query)) {
-    throw new AppError('Invalid input detected', 400);
+  if (inspect(req.body) || inspect(req.query) || inspect(req.params)) {
+    return res.status(400).json({ success: false, message: 'Invalid request structure.' });
   }
-
-  next();
+  return next();
 };
 
 // Mask sensitive data in logs

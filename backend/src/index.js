@@ -169,8 +169,10 @@ app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection.readyState;
   const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
 
-  res.json({
-    status: dbState === 1 ? 'ok' : 'degraded',
+  const isReady = dbState === 1;
+
+  res.status(isReady ? 200 : 503).json({
+    status: isReady ? 'ok' : 'degraded',
     service: 'Pradhan Digital Services Backend API',
     database: {
       status: states[dbState] || 'unknown',
